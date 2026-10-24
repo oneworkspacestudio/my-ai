@@ -30,7 +30,7 @@ func TestChatProviderProtocols(t *testing.T) {
 					if r.URL.Path != "/responses" || body["store"] != false || body["input"] == nil {
 						t.Error("Responses API contract")
 					}
-					w.Write([]byte("data: {\"type\":\"response.output_text.delta\",\"delta\":\"hello\"}\n\ndata: {\"type\":\"response.output_text.delta\",\"delta\":\" world\"}\n\n"))
+					w.Write([]byte("data: {\"type\":\"response.output_text.delta\",\"delta\":\"hello\"}\n\ndata: {\"type\":\"response.output_text.delta\",\"delta\":\" world\"}\n\ndata: {\"type\":\"response.completed\"}\n\n"))
 				case "deepseek":
 					if r.URL.Path != "/chat/completions" || body["messages"] == nil {
 						t.Error("Chat completions contract")
@@ -150,4 +150,16 @@ func TestRealCodexHandshake(t *testing.T) {
 		t.Fatalf("invalid model/list %s", string(b))
 	}
 	t.Log("Official app-server handshake and model discovery passed; no provider turn or credentials used")
+}
+
+func TestTruncatedStreamIsInterrupted(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("data: {\"type\":\"response.output_text.delta\",\"delta\":\"partial\"}\n\n"))
+	}))
+	defer srv.Close()
+	a := &App{}
+	out, e := a.chat(context.Background(), Provider{ID: "openai", Base: srv.URL}, &Session{Model: "fixture-model"}, func(string, any) {})
+	if out != "partial" || e == nil {
+		t.Fatal("Truncated output was incorrectly completed", out, e)
+	}
 }

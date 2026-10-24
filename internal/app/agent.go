@@ -253,9 +253,17 @@ func (a *App) code(ctx context.Context, uid, root string, s *Session, p Provider
 	if s.Effort != "" && s.Effort != "default" {
 		turn["effort"] = s.Effort
 	}
-	if _, e = g.Call(ctx, "turn/start", turn); e != nil {
+	turnRaw, e := g.Call(ctx, "turn/start", turn)
+	if e != nil {
 		return "", e
 	}
+	var active struct {
+		Turn struct {
+			ID string `json:"id"`
+		} `json:"turn"`
+	}
+	_ = json.Unmarshal(turnRaw, &active)
+
 	var result strings.Builder
 	eventBytes := 0
 	for _, ev := range s.Events {
@@ -265,7 +273,7 @@ func (a *App) code(ctx context.Context, uid, root string, s *Session, p Provider
 		select {
 		case <-ctx.Done():
 			cancelCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			_, _ = g.Call(cancelCtx, "turn/interrupt", map[string]string{"threadId": s.Thread})
+			_, _ = g.Call(cancelCtx, "turn/interrupt", map[string]string{"threadId": s.Thread, "turnId": active.Turn.ID})
 			cancel()
 			return result.String(), errors.New("Coding turn stopped")
 		case <-g.done:

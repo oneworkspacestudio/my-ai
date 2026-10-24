@@ -203,7 +203,7 @@ func (a *App) models(w http.ResponseWriter, r *http.Request) {
 			if name == "" {
 				name = m.ID
 			}
-			out = append(out, Model{ID: m.ID, Name: name, Provider: id, Capabilities: []string{"streaming"}, Efforts: []string{}, Code: id == "openai" && codexPath() != "", Reason: map[bool]string{true: "Codex uses the OpenAI Responses protocol; model access is validated when a turn starts", false: "Chat only — coding-agent mode not supported by this configuration"}[id == "openai"]})
+			out = append(out, Model{ID: m.ID, Name: name, Provider: id, Capabilities: []string{}, Efforts: []string{}, Code: false, Reason: map[bool]string{true: "Codex uses the OpenAI Responses protocol; model access is validated when a turn starts", false: "Chat only — coding-agent mode not supported by this configuration"}[id == "openai"]})
 		}
 	}
 	apphost.JSON(w, 200, map[string]any{"models": out, "status": status, "catalogURL": "https://ollama.com/library", "installerURL": "https://ollama.com/download/windows"})
@@ -259,6 +259,7 @@ func (a *App) chat(ctx context.Context, p Provider, s *Session, send writer) (st
 	scanner := bufio.NewScanner(io.LimitReader(resp.Body, 32<<20))
 	scanner.Buffer(make([]byte, 64<<10), 2<<20)
 	var result strings.Builder
+	completed := false
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "data:") {
@@ -267,6 +268,7 @@ func (a *App) chat(ctx context.Context, p Provider, s *Session, send writer) (st
 			continue
 		}
 		if line == "[DONE]" {
+			completed = true
 			break
 		}
 		var v struct {
@@ -313,7 +315,11 @@ func (a *App) chat(ctx context.Context, p Provider, s *Session, send writer) (st
 			send("usage", v.Usage)
 		}
 		if v.Done {
+			completed = true
 			send("usage", map[string]int{"inputTokens": v.Prompt, "outputTokens": v.Eval})
+		}
+		if v.Type == "response.completed" {
+			completed = true
 		}
 		if v.Type == "response.failed" {
 			return result.String(), errors.New("OpenAI could not complete this response")
@@ -324,6 +330,9 @@ func (a *App) chat(ctx context.Context, p Provider, s *Session, send writer) (st
 	}
 	if ctx.Err() != nil {
 		return result.String(), errors.New("Generation stopped")
+	}
+	if !completed {
+		return result.String(), errors.New("Provider stream ended before completion; retry or continue this interrupted conversation")
 	}
 	if result.Len() == 0 {
 		return "", errors.New("The provider returned no text; choose a supported chat model")
