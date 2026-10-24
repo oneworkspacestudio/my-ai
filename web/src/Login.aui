@@ -1,0 +1,14 @@
+Page Login variant=login
+  Card variant=login
+    Image src="./logo.svg" width=64 height=64 alt="My AI"
+    Text variant=eyebrow "ONE WORKSPACE"
+    Heading level=1 "A little curiosity. Endless possibility."
+    Text "Chat, think and build with your own AI workspace."
+    If condition=$oidc
+      Button action=oidc variant=primary "Continue with MyAccounts"
+    Else
+      Input name=email type=email placeholder="Email address"
+      Input name=password type=password placeholder="Password"
+      Button action=login variant=primary "$loginLabel"
+    If condition=$error
+      Alert "$error"

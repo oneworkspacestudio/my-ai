@@ -1,0 +1,206 @@
+Page Workspace variant=$theme
+  Stack variant=rail
+    Image src="./logo.svg" width=36 height=36 alt="My AI"
+    For each=$rail
+      Button action=navigate item=$item.action icon=$item.icon label=$item.label variant=$item.variant
+    Spacer
+    Button action=theme icon=SunMoon label="Change theme" variant=rail
+    Button action=account icon=CircleUserRound label="Your account" variant=rail
+  Stack variant=sidebar
+    Row variant=brand
+      Button action=surface icon=ChevronDown variant=surface "$surfaceLabel"
+      Spacer
+      Button action=search icon=Search label="Search sessions" variant=icon
+      Button action=new icon=SquarePen label="New conversation" variant=icon
+    If condition=$surfaceMenu
+      Card variant=surface-menu
+        Button action=chat icon=MessageSquare label="Chat" variant=menu
+        Text "Explore ideas, ask anything"
+        Button action=code icon=CodeXml label="Code" variant=menu
+        Text "Build with projects and Codex"
+    Button action=new icon=Plus label="New conversation" variant=new
+    Input name=search placeholder="Search conversations" variant=search
+    Row variant=section-title
+      Text "PROJECTS"
+      Spacer
+      Button action=projects icon=FolderPlus label="Manage projects" variant=icon
+    For each=$groups
+      Stack variant=project-group
+        Button action=select-project item=$item.id icon=Folder label=$item.name variant=project
+        For each=$item.sessions
+          Button action=open item=$item.id label=$item.label variant=$item.variant
+    Text variant=section-title "$sessionGroup"
+    For each=$sessions
+      Button action=open item=$item.id label=$item.label variant=$item.variant
+    Spacer
+    Row variant=sidebar-footer
+      Text variant=dot "●"
+      Text "$storageLabel"
+      Spacer
+      Button action=archives icon=Archive label="Show archived" variant=icon
+  Stack variant=main
+    Row variant=topbar
+      Button action=mobile-menu icon=PanelLeft label="Toggle sidebar" variant=icon
+      Icon name=$modeIcon size=18
+      Text variant=title "$title"
+      Spacer
+      Button action=diff icon=GitCompareArrows label="Changes" disabled=$noProject variant=subtle
+      Button action=session-menu icon=Ellipsis label="Conversation actions" variant=icon
+      Button action=apps icon=Grid2X2 label="Apps" variant=icon
+    Stack variant=conversation
+      If condition=$empty
+        Stack variant=welcome
+          Card variant=welcome-icon
+            Icon name=Sparkles size=34
+          Text variant=eyebrow "YOUR SPACE TO THINK & BUILD"
+          Heading level=1 "$welcomeTitle"
+          Text "$welcomeDescription"
+          Row variant=suggestions
+            Button action=suggestion-chat icon=Lightbulb label="Explore an idea" variant=suggestion
+            Button action=suggestion-code icon=CodeXml label="Build something" variant=suggestion
+            Button action=models icon=Cpu label="Use a local model" variant=suggestion
+      For each=$messages
+        Card variant=$item.variant
+          Row variant=message-heading
+            Icon name=$item.icon size=18
+            Text variant=author "$item.author"
+            Spacer
+            Text variant=muted "$item.model"
+          Text variant=markdown "$item.content"
+          Text variant=muted "$item.status"
+      If condition=$streaming
+        Card variant=assistant
+          Row variant=message-heading
+            Icon name=Sparkles size=18
+            Text variant=author "My AI"
+            Text variant=muted "$workingLabel"
+          Text variant=markdown "$partial"
+      If condition=$hasEvents
+        Card variant=activity
+          Heading level=3 "Activity"
+          For each=$events
+            Card variant=event
+              Text variant=event-title "$item.method"
+              Text variant=pre "$item.content"
+      For each=$approvals
+        Card variant=approval
+          Row
+            Icon name=ShieldQuestionMark size=22
+            Heading level=3 "Approval required"
+          Text variant=pre "$item.content"
+          Row
+            Button action=approve item=$item.id variant=primary "Approve once"
+            Button action=deny item=$item.id "Deny"
+    Stack variant=composer-wrap
+      If condition=$message
+        Alert "$message"
+      If condition=$hasAttachments
+        Row variant=attachments
+          For each=$attachments
+            Button action=remove-attachment item=$item.id icon=FileText label=$item.name variant=subtle
+      Card variant=composer
+        Input name=prompt type=textarea placeholder=$placeholder variant=prompt
+        Row variant=composer-controls
+          Button action=attach icon=Plus label="Attach text or code" variant=icon disabled=$busy
+          Button action=policy icon=ShieldCheck variant=permission "$policyLabel"
+          Spacer
+          Select name=provider options=$providerOptions disabled=$busy
+          Select name=model options=$modelOptions disabled=$busy
+          If condition=$codeMode
+            Button action=effort icon=Gauge variant=effort "$effortLabel"
+          If condition=$busy
+            Button action=stop icon=Square label="Stop" variant=send
+          Else
+            Button action=send icon=ArrowUp label="Send message" variant=send disabled=$cannotSend
+        If condition=$effortOpen
+          Card variant=effort-popover
+            Row
+              Icon name=Zap size=18
+              Text variant=author "Reasoning effort"
+            For each=$efforts
+              Button action=set-effort item=$item.value label=$item.label variant=$item.variant
+      Row variant=composer-caption
+        Text "$providerNotice"
+        Spacer
+        Text "Ctrl + Enter to send"
+  If condition=$modal
+    Card variant=modal
+      Row variant=modal-heading
+        Heading level=2 "$modalTitle"
+        Spacer
+        Button action=close icon=X label="Close dialog" variant=icon
+      If condition=$settingsView
+        Text "API keys are protected by Windows on this host. They are never saved in conversations or returned by the server."
+        Text variant=field-label "OpenAI API key"
+        Input name=openaiKey type=password placeholder="Enter OpenAI API key"
+        Button action=save-openai variant=primary "Save OpenAI connection"
+        Text variant=field-label "DeepSeek API key"
+        Input name=deepseekKey type=password placeholder="Enter DeepSeek API key"
+        Button action=save-deepseek variant=primary "Save DeepSeek connection"
+        Divider
+        Text "$storageDetail"
+        Text "Custom endpoints, cloud budgets and voice/image attachments are unavailable in this preview."
+      If condition=$modelsView
+        Row
+          Text "Models run on the machine hosting My AI."
+          Spacer
+          Button action=refresh icon=RefreshCw label="Refresh models" variant=subtle
+        For each=$providerStatuses
+          Text variant=status "$item.label"
+        For each=$models
+          Card variant=model-card
+            Row
+              Icon name=Cpu size=22
+              Stack
+                Text variant=author "$item.name"
+                Text variant=muted "$item.detail"
+              Spacer
+              Button action=use-model item=$item.key "Use"
+              If condition=$item.local
+                Button action=delete-model item=$item.id icon=Trash2 label="Remove model" variant=icon
+        Divider
+        Heading level=3 "Download an Ollama model"
+        Text "Check a model’s licence and hardware needs in the official library. Ollama chooses storage using its existing service configuration. My AI does not change or move that library."
+        Link href="https://ollama.com/library" "Browse the official model library ↗"
+        Link href="https://ollama.com/download/windows" "Get Ollama for Windows ↗"
+        Input name=pullModel placeholder="Exact model tag, for example qwen3:0.6b"
+        Button action=pull variant=primary disabled=$pullBusy "Download model"
+        If condition=$pullBusy
+          Button action=cancel-pull "Cancel download"
+        Text variant=pre "$pullProgress"
+      If condition=$projectsView
+        Text "Approve a dedicated host folder. Code reads project files; workspace-write can change files after you select it. Remote members cannot register folders or run Code mode."
+        Input name=projectName placeholder="Project name"
+        Input name=projectPath placeholder="Absolute folder on the host PC"
+        Button action=add-project icon=FolderPlus variant=primary "Approve project folder"
+        For each=$projects
+          Row variant=project-card
+            Stack
+              Text variant=author "$item.name"
+              Text variant=muted "$item.path"
+            Spacer
+            Button action=choose-project item=$item.id "Open"
+            Button action=remove-project item=$item.id icon=X label="Remove project" variant=icon
+      If condition=$sessionView
+        Input name=title placeholder="Conversation title"
+        Button action=rename "Rename"
+        Button action=pin "$pinLabel"
+        Button action=archive "$archiveLabel"
+        Button action=fork "Fork conversation"
+        Button action=export-json "Export JSON"
+        Button action=export-markdown "Export Markdown"
+        Button action=import "Import JSON conversation"
+        Button action=retry disabled=$busy "Retry last prompt"
+        Button action=delete variant=danger "Move to private trash"
+      If condition=$diffView
+        Text "Changes come directly from your approved Git project. Staging and revert are unavailable in this preview."
+        Text variant=pre "$gitStatus"
+        Text variant=diff "$gitDiff"
+      If condition=$accountView
+        Text variant=author "$accountName"
+        Text "$accountDetail"
+        Text "My AI is independent. Codex uses app-owned configuration and explicitly entered API credentials."
+        Button action=logout "Sign out"
+      If condition=$message
+        Alert "$message"
+

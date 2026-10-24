@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "id": "myai",
+  "name": "My AI",
+  "version": "0.1.0-preview.1",
+  "workspaceInstallerIntegration": 3,
+  "minimumWorkspaceVersion": "0.3.0-preview.81",
+  "route": "/myai",
+  "executable": "MyAI.exe",
+  "health": "/healthz",
+  "oidc": true,
+  "defaultPort": 9019,
+  "portOffset": 29,
+  "sessionSchema": 1,
+  "runtimeDependencies": [
+    "Optional official Codex native executable for Code mode",
+    "Existing Ollama service for local inference"
+  ],
+  "embeddedFrontend": true
+}

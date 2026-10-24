@@ -1,0 +1,4 @@
+My AI
+Copyright 2026 One Workspace contributors
+Original application, not an Open WebUI fork or an official OpenAI product.
+Reuses One Workspace apphost (Apache-2.0). Codex CLI is an independently installed Apache-2.0 dependency. Ollama is independently installed; model licences vary.
