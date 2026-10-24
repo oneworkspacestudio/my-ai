@@ -60,7 +60,7 @@ func startAgent(home, cwd, key string) (*Agent, error) {
 	if e := os.MkdirAll(home, 0700); e != nil {
 		return nil, e
 	}
-	args := []string{"app-server", "--stdio", "-c", `model_provider="myai_openai"`, "-c", `model_providers.myai_openai={name="My AI OpenAI",base_url="https://api.openai.com/v1",env_key="MYAI_OPENAI_API_KEY",wire_api="responses"}`, "-c", `approval_policy="on-request"`, "-c", `sandbox_mode="read-only"`, "-c", `cli_auth_credentials_store="keyring"`, "-c", `features.multi_agent=false`, "-c", `web_search="disabled"`}
+	args := []string{"app-server", "--stdio", "-c", `model_provider="myai_openai"`, "-c", `model_providers.myai_openai={name="My AI OpenAI",base_url="https://api.openai.com/v1",env_key="MYAI_OPENAI_API_KEY",wire_api="responses"}`, "-c", `approval_policy="on-request"`, "-c", `sandbox_mode="read-only"`, "-c", `cli_auth_credentials_store="keyring"`, "-c", `features.multi_agent=false`, "-c", `web_search="disabled"`, "-c", `shell_environment_policy.inherit="core"`, "-c", `shell_environment_policy.exclude=["MYAI_OPENAI_API_KEY","*TOKEN*","*SECRET*","*KEY*"]`}
 	cmd := exec.Command(exe, args...)
 	cmd.Dir = cwd
 	cmd.Env = cleanEnv()
