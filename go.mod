@@ -1,6 +1,6 @@
 module github.com/oneworkspacestudio/my-ai
 
-go 1.27.2
+go 1.27.3
 
 require (
 	github.com/oneworkspacestudio/one-workspace v0.3.0-preview.80.0.20261024152254-083a28ada68b
