@@ -203,4 +203,3 @@ Page Workspace variant=$theme
         Button action=logout "Sign out"
       If condition=$message
         Alert "$message"
-
