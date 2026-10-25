@@ -4,3 +4,5 @@
 .card--sources{display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);padding:15px;border-radius:12px}.card--sources a{font-size:12px;overflow-wrap:anywhere}
 
 @media(max-width:760px){.card--model-card>.row>.stack{flex:1 1 calc(100% - 40px)}.card--model-card>.row>.spacer{display:none}.card--model-card>.row>.button{margin-top:3px}.card--model-card>.row>.button:first-of-type{margin-left:30px}}
+
+.card--project-card{display:flex;flex-direction:column;gap:12px;border:1px solid var(--border);padding:16px;border-radius:14px;min-width:0}.card--project-card .text{overflow-wrap:anywhere}.row--project-links,.row--project-actions{flex-wrap:wrap;gap:12px}.row--project-links a{font-size:13px}.row--project-actions .button{flex:1;justify-content:center;min-width:110px}

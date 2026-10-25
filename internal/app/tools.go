@@ -33,7 +33,10 @@ type toolSpec struct {
 	Description string         `json:"description"`
 	Schema      map[string]any `json:"inputSchema"`
 }
-type toolScope struct{ UID, Root, Role string }
+type toolScope struct {
+	UID, Root, Role, Project string
+	Writable                 bool
+}
 
 func spec(name, description string, fields map[string]string) toolSpec {
 	properties := map[string]any{}
@@ -54,14 +57,17 @@ func toolSpecs(scope toolScope) []toolSpec {
 	if scope.Root != "" {
 		out = append(out, spec("search_conversations", "Search only the signed-in user's saved My AI conversations.", map[string]string{"query": "Text to find"}), spec("read_conversation", "Read a conversation belonging to the signed-in user; IDs come from search_conversations.", map[string]string{"id": "Conversation ID"}), spec("read_attachment", "Read a UTF-8 attachment in the signed-in user's own My AI Drive area.", map[string]string{"id": "Attachment ID supplied in the conversation"}))
 	}
-	if scope.Role == "owner" && scope.UID != "" {
-		out = append(out, spec("list_projects", "List only the owner's explicitly approved project registrations.", map[string]string{}), spec("list_project_files", "List up to200 files in an owner's approved project folder. Linked paths are blocked.", map[string]string{"project": "Approved project ID", "path": "Relative folder, or ."}), spec("read_project_file", "Read one UTF-8 text file from an explicitly approved project. Never writes or executes code.", map[string]string{"project": "Approved project ID", "path": "Relative file path"}))
+	if scope.UID != "" {
+		out = append(out, spec("list_projects", "List the signed-in person's own My Drive projects and private Git links.", map[string]string{}), spec("list_project_files", "List up to200 files in the signed-in person's own project folder. Linked paths are blocked.", map[string]string{"project": "Approved project ID", "path": "Relative folder, or ."}), spec("read_project_file", "Read one UTF-8 text file from a project belonging to the signed-in person. Never writes or executes code.", map[string]string{"project": "Approved project ID", "path": "Relative file path"}))
+	}
+	if scope.Project != "" && scope.Writable {
+		out = append(out, spec("write_project_file", "Create or replace one UTF-8 text file in the selected project only. No shell commands. Git save happens automatically after the completed turn.", map[string]string{"path": "Relative file path in the selected project", "content": "Complete UTF-8 file content"}), spec("edit_project_file", "Replace text that occurs exactly once in a file in the selected project. Read the file first. No shell execution.", map[string]string{"path": "Relative project path", "find": "Exact existing text occurring once", "replace": "Replacement text"}))
 	}
 	return out
 }
 func (a *App) toolsInfo(w http.ResponseWriter, r *http.Request) {
 	u := apphost.Current(r).User
-	apphost.JSON(w, 200, map[string]any{"tools": toolSpecs(toolScope{UID: u.ID, Root: "own-private-scope", Role: u.Role}), "mcp": map[string]string{"transport": "stdio", "command": "MyAI.exe mcp-serve", "code": "App-owned Codex integration"}, "commands": []string{"/time Europe/London", "/calculate (12+3)*4", "/search current news", "/read https://example.com"}, "notice": "Tools run on the server. Web requests send the query or URL to public services. Private files are scoped to your own identity and approved owner projects. No general shell is exposed."})
+	apphost.JSON(w, 200, map[string]any{"tools": toolSpecs(toolScope{UID: u.ID, Root: "own-private-scope", Role: u.Role}), "mcp": map[string]string{"transport": "stdio", "command": "MyAI.exe mcp-serve", "code": "App-owned Codex integration"}, "commands": []string{"/time Europe/London", "/calculate (12+3)*4", "/search current news", "/read https://example.com"}, "notice": "Tools run on the server. Web requests send the query or URL to public services. Private files stay within your account. Project edits stay in the selected My Drive project and are saved to Git. No general shell is exposed."})
 }
 func publicIP(ip net.IP) bool {
 	a, ok := netip.AddrFromSlice(ip)
@@ -357,14 +363,29 @@ func (a *App) executeTool(ctx context.Context, scope toolScope, name string, arg
 			return nil, e
 		}
 		return boundedTextFile(p)
+	case "write_project_file", "edit_project_file":
+		return a.editProjectFile(ctx, scope, name, args)
 	case "list_projects":
-		if scope.Role != "owner" || scope.UID == "" {
+		if scope.UID == "" {
 			break
 		}
-		return a.allProjects(scope.UID), nil
+		ps, e := a.loadProjects(ctx, scope.UID)
+		if scope.Project != "" {
+			filtered := []Project{}
+			for _, p := range ps {
+				if p.ID == scope.Project {
+					filtered = append(filtered, p)
+				}
+			}
+			ps = filtered
+		}
+		return publicProjects(ps), e
 	case "list_project_files", "read_project_file":
-		if scope.Role != "owner" || scope.UID == "" {
+		if scope.UID == "" {
 			break
+		}
+		if scope.Project != "" && args["project"] != scope.Project {
+			return nil, errors.New("Read files only in the selected project")
 		}
 		project, e := a.findProject(scope.UID, args["project"])
 		if e != nil {
@@ -374,7 +395,7 @@ func (a *App) executeTool(ctx context.Context, scope toolScope, name string, arg
 		if filepath.IsAbs(rel) || strings.Contains(rel, ":") {
 			return nil, errors.New("use a relative project path")
 		}
-		p, e := safePath(project.Path, rel)
+		p, e := projectRelative(project.Path, rel)
 		if e != nil {
 			return nil, e
 		}
@@ -459,7 +480,7 @@ func RunMCP(in io.Reader, out io.Writer) error {
 		response := map[string]any{"jsonrpc": "2.0", "id": req.ID}
 		switch req.Method {
 		case "initialize":
-			response["result"] = map[string]any{"protocolVersion": "2025-06-18", "capabilities": map[string]any{"tools": map[string]bool{"listChanged": false}}, "serverInfo": map[string]string{"name": "my-ai-tools", "version": "0.1.0-preview.4"}}
+			response["result"] = map[string]any{"protocolVersion": "2025-06-18", "capabilities": map[string]any{"tools": map[string]bool{"listChanged": false}}, "serverInfo": map[string]string{"name": "my-ai-tools", "version": "0.1.0-preview.5"}}
 		case "ping":
 			response["result"] = map[string]any{}
 		case "tools/list":

@@ -1,42 +1,112 @@
 # Set up My AI
 
-Extract the portable ZIP under OneWorkspace/Apps/MyAI (or another program folder). MyAI.exe embeds all browser assets. Runtime needs no Docker, Node or Python. Keep its dedicated data folder on NTFS; persistent data stays outside the EXE. The first launch opens a single-use local owner setup page. On a managed install, MyAccounts handles sign-in instead. Never expose the standalone loopback listener directly to a network.
+With One Workspace88 or newer, select Workspace and My AI together. MyAccounts,
+My Drive and Git are required. Open My AI from Apps and sign in with MyAccounts.
+The app uses your existing local Ollama server, or your own OpenAI/DeepSeek API
+keys added through Settings. Cloud prompts leave this machine; the composer
+identifies the selected provider.
 
-In One Workspace86+, select Workspace and My AI together. Drive and MyAccounts are required. The manager registers the OIDC client and private Quantum source; per-identity read-only Drive scopes expose authoritative conversation files only to the corresponding identity. Files live under Private/myai-drive/My AI/users/<issuer-subject hash>/Sessions. The browser never receives an administrator Drive token. All users of an existing broad shared Files source are prevented from entering this separate source. Users may download their own stored files; edits/imports go through My AI and CSRF checks.
+## Create and work on a project
 
-Settings accepts per-user OpenAI/DeepSeek API keys. Windows DPAPI encrypts credentials under protected Private/myai/credentials, never in Drive or exports. An API key and its service's credits are required; My AI does not reuse the Codex desktop login. Model discovery queries each configured provider. Cloud prompts leave this machine; the composer identifies that provider.
+Open Projects, give the project a name, and choose Create project. My AI creates
+its folder in the private Projects area in My Drive, creates a private repository
+in your Git app, adds a README and confirms the first push before saying it is
+ready. Open in My Drive and View in Git link to those same files and history.
+Each person can create their own projects. No host folder or Git command is needed.
 
-Install Ollama from its official Windows installer if needed. My AI reuses http://127.0.0.1:11434 and never starts a second server or changes OLLAMA_MODELS. Models shows actual installed tags and sizes. Choose a tag using the official library and confirm its licence, memory needs and free disk before pulling. Cancellation closes the pull connection; Ollama governs retained partial data/retry. Removal affects the shared library, requires owner confirmation and is blocked while any My AI task is active. My AI cannot prevent another application from using a model.
+Ask My AI to create or change files in the selected project. Changes allowed is
+the default for a new project conversation; switch to Preview only to discuss
+changes without editing. Project conversations use the same provider/model
+catalogue as Chat. The model must support function calls. My AI supplies bounded
+file-list/read/write/exact-edit tools, saves the files, commits completed changes,
+pushes them to Git and checks the remote commit before showing Saved to Git.
+Basic project editing needs no Codex installation or Windows command sandbox.
+No shell commands, package installation, test runner or deployment is implied.
 
-Code requires an official Codex executable installed on the host; MYAI_CODEX_EXE can specify its absolute path. My AI also detects the installed official npm Windows executable. No Node runtime is needed to run that native executable. It uses Codex’s ephemeral in-memory credential mode and creates separate per-user/per-session CODEX_HOME directories under protected app data and does not read or change global Codex credentials/config/session histories. An OpenAI provider adapter passes the per-user key via a child-only environment variable, not a config file or command line. Read-only is default. Workspace-write requires explicit selection; commands and file permissions use Codex's sandbox and approval requests. Full access and generic remote shell endpoints are unavailable. Only the Workspace owner can register dedicated project folders and run Code mode. Review each requested action; approved tools may access network/files according to the specific Codex request. DeepSeek and unverified local models remain Chat only.
+If setup or a push is interrupted, the project stays in the list with Finish
+setup or Save to Git. Retry uses the same project and repository. A failed push
+keeps the files and local history. Changes made in Git fast-forward into the
+project before the next turn when safe. Competing changes are refused without
+force-pushing or overwriting either side; review them before continuing.
+Automatic conflict resolution is unavailable in this preview. Older manually
+registered host folders are retained unchanged; new project editing uses the
+managed My Drive/Git flow.
 
-Session changes use revision checks, atomic file replacement and one previous revision per session. Prompt is saved before provider dispatch. Stop/connection loss interrupts generation and retains an interrupted result. A Drive isolation failure prevents sending or saving a new prompt; the UI keeps your draft for retry. There is no encrypted offline queue in this preview. Sessions contain model/provider attribution; model switches are explicit in the composer. A new Code provider/project or imported/forked transcript starts a new app-owned thread; existing Code turns resume their own thread. Agent execution state is local and not fully portable across machines.
+Projects is a private source in the My Drive app, physically separate from broad
+shared Files. Each MyAccounts issuer+subject receives its own directory and
+read-only Drive scope. Edit through My AI; viewing and downloading through Drive
+remain available. Working files are under Private/myai-projects/Projects/users/
+<identity hash>. Protected Git metadata, project registry and temporary connection
+recovery records are outside that source and outside AI file access. Existing
+My AI conversation storage stays under its separate private source. Neither
+browser nor model receives a Drive administrator token or Git credential.
 
-JSON/Markdown exports and JSON import are available from Conversation actions. Deletion moves a session into private Trash. Archived sessions can be restored through Show archived. File backups use the normal Workspace verified-backup flow; standalone encrypted backups use the inherited --backup/--restore options with WORKSPACE_BACKUP_PASSWORD. Windows DPAPI credentials require their original Windows context; configure keys again after a move. No new Windows service is silently installed. Workspace supervises the process and uses its established optional startup mechanism. HTTPS and remote access use the existing Workspace proxy.
+The manager uses Git's existing protected recovery connection only on loopback.
+It validates the native MyAccounts source and exact subject mapping; it never
+links accounts by matching email. New Git accounts are ordinary, private users.
+Pushes use temporary repository-scope tokens, revoked after use; an interrupted
+connection is recovered from a credential-free lease record. Git hooks, global
+configuration and credential helpers are disabled for these operations. Credential
+files are excluded from automatic staging; no force push is used.
 
-Build locally: npm --prefix web ci; npm --prefix web run build; go test ./...; go vet ./...; go build -trimpath -o MyAI.exe ./cmd/my-ai. Release instructions are in scripts/build.ps1. GitHub Actions remain disabled. Builds are unsigned unless a signing credential is provided. See SUPPORT.md for acceptance gates.
+## Models and connections
 
+Settings accepts per-user OpenAI/DeepSeek API keys. Windows DPAPI encrypts them in
+protected app data, never Drive or exports. An API key and provider credits are
+required for cloud replies. My AI does not reuse a Codex desktop login. Native
+Ollama project editing has been demonstrated; cloud adapters have protocol checks,
+with live cloud-provider acceptance still requiring configured test keys.
 
-## Model lists and server downloads
+Models shows local models first, with independently expandable/filterable OpenAI
+and DeepSeek lists. Install Ollama from its official Windows installer if needed.
+My AI reuses http://127.0.0.1:11434 and never starts a second server or changes
+OLLAMA_MODELS. Owners confirm a model's licence, disk and memory requirements
+before queuing a shared download. Every authenticated user sees the same installed
+library and server progress. Downloads persist independently of the browser and
+resume after My AI restarts; explicit cancellation remains cancelled. Registry and
+connection errors remain visible with Retry. Models are shared per hosting server,
+not copied automatically between different machines.
 
-Local models appear first. OpenAI/DeepSeek are collapsed until expanded, with model-name filtering. Paste an exact tag, an official ollama.com model link, or the library's ollama run/pull command; My AI extracts the tag without executing shell text. Confirm its licence and resource requirements before queuing. Owners start/cancel/retry; every authenticated user sees the same installed local models and server job progress. The shared Ollama instance and its configured storage remain unchanged.
+## Chat tools and MCP
 
-Downloads run in a single server queue, independent of the browser request. Jobs and byte counts are persisted under protected app data/model-downloads/jobs.json, including failures. Closing a tab or signing out does not cancel a job. Return to Models to reconnect. Restarted My AI resumes queued/interrupted jobs using Ollama's retained partial blobs. Explicit owner cancellation remains cancelled. Ollama must confirm success before completion is shown; registry/connection errors remain visible with Retry. The queue belongs to each hosting machine; it does not duplicate multi-gigabyte models across machines.
+Tools & skills lists real clock/timezone, arithmetic, public internet search/page
+reading, own conversation/attachment lookup and own project reads. Tool activity
+and web sources are saved. /time Europe/London, /calculate (12+3)*4, /search your
+query and /read https://example.com work even when a chat model lacks automatic
+tool calls. A project model without tools is refused rather than pretending it
+edited files. Search uses Bing RSS and can be blocked or rate limited. Public
+requests disclose their query/URL; private networks, custom ports, credentials
+and non-web protocols are rejected at connection and redirect time.
 
-## Chat tools and bundled MCP
+MyAI.exe mcp-serve exposes only get_time, calculate, web_search and read_webpage
+through JSON-RPC stdio. It opens no account store or filesystem. The optional
+legacy Codex transport uses an isolated per-user home and ephemeral credentials,
+never global Codex configuration/login. Actual Codex command execution remains
+unverified without explicitly supported official Windows sandbox setup and keys;
+this is separate from the native project file-editing flow.
 
-Tools & skills lists actual capabilities. Each turn gets the current server/UTC timestamp. Tool-capable OpenAI Responses, DeepSeek Chat Completions and Ollama models can invoke real time/timezone, calculator, public web search, public page reader, own private conversations/attachments, and read-only approved owner projects. The server executes bounded calls and returns results to the same selected model; activity and web sources are saved with the conversation. A Sources panel makes retrieved URLs clickable independently of the model's wording.
+## Storage, recovery and portable use
 
-For models without native tool calls, use /time Europe/London, /calculate (12+3)*4, /search your query, or /read https://example.com. These explicitly run the tool before asking the model to explain its result. Model/server incompatibility is reported without silently switching models. Public search uses Bing RSS without requiring a separate search key and can be blocked/rate limited; failures are reported. Web requests disclose their query/URL to public services. Private-network destinations, credential URLs, arbitrary ports and non-web protocols are blocked at validation and connection/redirect time.
+Sessions have atomic current/previous versions and revision checks. Prompts are
+saved before provider dispatch. Stop or connection loss retains an interrupted
+result and any project edits; incomplete work is not falsely marked pushed.
+JSON/Markdown export, JSON import, pin/rename/archive/restore and private trash
+are available. Native Workspace backups retain working files, Git history,
+accounts and protected settings together. Do not remove the latest verified
+rollback to make room for an update.
 
-Project reads require an owner-approved registration, relative paths and UTF-8 text. Linked paths and common credential files are excluded. Conversation/attachment tools receive only the signed-in user's authoritative private scope. Chat has no general shell, file-writing, outgoing-message or purchase tools. Existing Code sandbox/approval controls remain.
+The portable EXE embeds browser assets and needs no Node, Python or Docker.
+Standalone loopback Chat has a first-owner setup page and protected NTFS storage;
+managed projects require the Workspace/My Drive/Git integration. Do not expose the
+standalone listener directly to a network. Workspace supplies its existing HTTPS
+proxy and optional startup mechanism. No service or OS elevation is installed
+silently. Reconfigure DPAPI-bound provider keys after a move to a different
+Windows context.
 
-MyAI.exe mcp-serve exposes get_time, calculate, web_search and read_webpage using standard JSON-RPC stdio MCP. It opens no account store and exposes no filesystem or shell. Isolated Codex sessions automatically configure this app-owned MCP server and live web search; no global Codex settings/credentials are imported or changed. No third-party MCP executable is installed.
-
-Protocol references: [OpenAI function calling](https://developers.openai.com/api/docs/guides/function-calling), [DeepSeek tool calls](https://api-docs.deepseek.com/guides/tool_calls/), [Ollama tool calling](https://docs.ollama.com/capabilities/tool-calling), [MCP tools](https://modelcontextprotocol.io/specification/2025-06-18/server/tools).
-
-Code now selects explicit myai_read/myai_write permission profiles with root reads denied, minimal runtime reads and only the registered project as a workspace root. The server must confirm that profile before any model turn starts. Legacy unelevated Windows restricted-token sandboxing cannot enforce split read restrictions and is refused by official Codex. For Code commands, an administrator must explicitly set up the official MXC or elevated sandbox backend in the isolated My AI Codex environment and set MYAI_CODEX_WINDOWS_SANDBOX=mxc or elevated for the My AI server process. No OS sandbox setup/elevation or credential/config migration is performed automatically. Native discovery/MCP transport and the expected fail-closed boundary were tested; full provider turns/sandbox command execution remain a separate acceptance gate.
-
-Managed release packaging: after creating the native executable, portable ZIP and package/ tree, run python scripts/package-managed.py <release-folder> --version <version>. This checks every embedded payload and emits workspace-update.json for all9 registered My AI packages. Validate the complete My AI-only plan against the current Workspace updater before publishing; compatibility.json alone is a portable runtime contract and cannot enable managed updates. Preview3 remains an immutable standalone build; preview4 supplies this managed contract.
-
-Managed preview4 updates require Workspace87 to support both minimal and full optional-document layouts. Portable/native runtime remains compatible with86. The87 bundle supplies My AI4 during the joint upgrade from86; future standalone metadata accepts both tracked layouts without moving or deleting other app packages.
+Build locally with npm --prefix web run build, go test ./... and go vet ./....
+The release scripts build locally with GitHub Actions disabled. After packaging,
+python scripts/package-managed.py <release-folder> --version <version> verifies
+all9 portable members and emits workspace-update.json. Managed preview5 requires
+Workspace88. Publish and promote the raw public update channel before delivery.
+Unsigned evaluation build; no clean-host, physical reboot or production
+certification is claimed. See SUPPORT.md for the acceptance matrix.

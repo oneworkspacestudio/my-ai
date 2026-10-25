@@ -197,14 +197,14 @@ func (a *App) models(w http.ResponseWriter, r *http.Request) {
 			if contains(m.Capabilities, "embedding") && !contains(m.Capabilities, "completion") {
 				continue
 			}
-			out = append(out, Model{ID: m.Name, Name: m.Name, Provider: id, Size: m.Size, Details: m.Details, Capabilities: m.Capabilities, Efforts: []string{}, Reason: "Chat only — this local model has not passed the Codex harness compatibility test"})
+			out = append(out, Model{ID: m.Name, Name: m.Name, Provider: id, Size: m.Size, Details: m.Details, Capabilities: m.Capabilities, Efforts: []string{}, Code: true, Reason: "Project file editing is available when this model supports tool calls"})
 		}
 		for _, m := range data.Data {
 			name := m.Name
 			if name == "" {
 				name = m.ID
 			}
-			out = append(out, Model{ID: m.ID, Name: name, Provider: id, Capabilities: []string{}, Efforts: []string{}, Code: false, Reason: map[bool]string{true: "Codex uses the OpenAI Responses protocol; model access is validated when a turn starts", false: "Chat only — coding-agent mode not supported by this configuration"}[id == "openai"]})
+			out = append(out, Model{ID: m.ID, Name: name, Provider: id, Capabilities: []string{}, Efforts: []string{}, Code: true, Reason: "Project file editing uses this model’s native tool calls"})
 		}
 	}
 	apphost.JSON(w, 200, map[string]any{"models": out, "status": status, "catalogURL": "https://ollama.com/library", "installerURL": "https://ollama.com/download/windows"})
@@ -273,9 +273,14 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 400, "Choose a model first")
 		return
 	}
-	if s.Mode == "code" && (apphost.Current(r).User.Role != "owner" || s.Provider != "openai" || s.Project == "") {
+	if s.Mode == "code" && s.Project == "" {
 		a.mu.Unlock()
-		apphost.Problem(w, 403, "Code mode needs the owner, an approved project and a configured OpenAI Responses model. Other providers are Chat only.")
+		apphost.Problem(w, 400, "Choose a project first")
+		return
+	}
+	if s.Mode == "code" && a.projectTurns[uid+":"+s.Project] {
+		a.mu.Unlock()
+		apphost.Problem(w, 409, "Another conversation is working on this project. Finish or stop it first")
 		return
 	}
 	for _, id := range in.Attachments {
@@ -294,6 +299,10 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Minute)
 	a.running[key] = cancel
+	if s.Mode == "code" {
+		a.projectTurns[uid+":"+s.Project] = true
+		defer func() { a.mu.Lock(); delete(a.projectTurns, uid+":"+s.Project); a.mu.Unlock() }()
+	}
 	s.Messages = append(s.Messages, Message{ID: apphost.ID(), Role: "user", Content: in.Text, At: now(), Provider: s.Provider, Model: s.Model})
 	if s.Title == "New conversation" {
 		s.Title = first(in.Text, 60)
@@ -313,7 +322,7 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	send("session", s)
 	var output string
 	if s.Mode == "code" {
-		output, e = a.code(ctx, uid, root, &s, p, in.Text, send)
+		output, e = a.projectCode(ctx, uid, root, &s, p, send)
 	} else {
 		output, e = a.chatWithTools(ctx, p, &s, send, toolScope{UID: uid, Root: root, Role: apphost.Current(r).User.Role})
 	}

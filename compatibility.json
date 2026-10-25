@@ -2,9 +2,9 @@
   "schema": 1,
   "id": "myai",
   "name": "My AI",
-  "version": "0.1.0-preview.4",
+  "version": "0.1.0-preview.5",
   "workspaceInstallerIntegration": 3,
-  "minimumWorkspaceVersion": "0.3.0-preview.86",
+  "minimumWorkspaceVersion": "0.3.0-preview.88",
   "route": "/myai",
   "executable": "MyAI.exe",
   "health": "/healthz",
@@ -13,8 +13,9 @@
   "portOffset": 29,
   "sessionSchema": 1,
   "runtimeDependencies": [
-    "Optional official Codex native executable for Code mode",
-    "Existing Ollama service for local inference"
+    "Workspace MyAccounts, My Drive and Git for managed projects",
+    "Existing Ollama service for local inference",
+    "Optional official Codex executable for the separate legacy transport"
   ],
   "embeddedFrontend": true
 }

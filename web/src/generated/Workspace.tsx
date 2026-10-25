@@ -24,7 +24,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
             <Button onClick={() => onAction("chat")} icon="MessageSquare" label="Chat" variant="menu" />
             <Text>Explore ideas, ask anything</Text>
             <Button onClick={() => onAction("code")} icon="CodeXml" label="Code" variant="menu" />
-            <Text>Build with projects and Codex</Text>
+            <Text>Build with your projects</Text>
           </Card>
         )}
         <Button onClick={() => onAction("new")} icon="Plus" label="New conversation" variant="new" />
@@ -152,7 +152,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
             <Row variant="composer-controls">
               <Button onClick={() => onAction("tools")} icon="Wrench" label="Tools & skills" variant="icon" disabled={data.busy} />
               <Button onClick={() => onAction("attach")} icon="Plus" label="Attach text or code" variant="icon" disabled={data.busy} />
-              <Button onClick={() => onAction("policy")} icon="ShieldCheck" variant="permission">{data.policyLabel}</Button>
+              <Button onClick={() => onAction("policy")} icon="ShieldCheck" variant="permission" disabled={data.busy}>{data.policyLabel}</Button>
               <Spacer />
               <Select name="provider" options={data.providerOptions} disabled={data.busy} />
               <Select name="model" options={data.modelOptions} disabled={data.busy} />
@@ -276,7 +276,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
           {data.toolsView && (
             <>
               <Text>{data.toolNotice}</Text>
-              <Text>Chat has live time, calculator, public web search/page reading, and private conversation/attachment reads. Owners can read registered projects. Automatic tool use depends on the selected model; explicit commands work with any chat model.</Text>
+              <Text>Chat has live time, calculator, public web search/page reading, and private conversation/attachment reads. You can read your own projects. Automatic tool use depends on the selected model; explicit commands work with any chat model.</Text>
               {data.toolCommands.map((item, i) => (
                 <Button key={i} onClick={() => onAction("tool-command")} item={item.value} label={item.value} variant="menu" />
               ))}
@@ -286,25 +286,35 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                   <Text variant="muted">{item.description}</Text>
                 </Card>
               ))}
-              <Text>Codex also receives these public read-only tools through the bundled stdio MCP server: MyAI.exe mcp-serve. Code keeps its project sandbox and approval controls.</Text>
+              <Text>Codex also receives these public read-only tools through the bundled stdio MCP server: MyAI.exe mcp-serve. Project editing stays inside the selected project and saves to your private Git repository.</Text>
             </>
           )}
           {data.projectsView && (
             <>
-              <Text>Approve a dedicated host folder. Code reads project files; workspace-write can change files after you select it. Remote members cannot register folders or run Code mode.</Text>
+              <Text>Give your project a name. We'll create its folder in My Drive and a private repository in Git. My AI saves completed changes to both automatically.</Text>
               <Input name="projectName" placeholder="Project name" />
-              <Input name="projectPath" placeholder="Absolute folder on the host PC" />
-              <Button onClick={() => onAction("add-project")} icon="FolderPlus" variant="primary">Approve project folder</Button>
+              <Button onClick={() => onAction("add-project")} icon="FolderPlus" variant="primary" disabled={data.projectBusy}>{data.createProjectLabel}</Button>
               {data.projects.map((item, i) => (
-                <Row key={i} variant="project-card">
-                  <Stack>
+                <Card key={i} variant="project-card">
+                  <Row>
+                    <Icon name="FolderCode" size={22} />
                     <Text variant="author">{item.name}</Text>
-                    <Text variant="muted">{item.path}</Text>
-                  </Stack>
-                  <Spacer />
-                  <Button onClick={() => onAction("choose-project")} item={item.id}>Open</Button>
-                  <Button onClick={() => onAction("remove-project")} item={item.id} icon="X" label="Remove project" variant="icon" />
-                </Row>
+                  </Row>
+                  <Text variant="muted">{item.location}</Text>
+                  <Text variant="status">{item.status}</Text>
+                  {item.hasLinks && (
+                    <Row variant="project-links">
+                      <Link href={item.driveUrl}>Open in My Drive</Link>
+                      <Link href={item.url}>View in Git</Link>
+                    </Row>
+                  )}
+                  <Row variant="project-actions">
+                    <Button onClick={() => onAction("choose-project")} item={item.id} disabled={item.disabledOpen} variant="primary">Open project</Button>
+                    {item.managed && (
+                      <Button onClick={() => onAction("save-project")} item={item.id} disabled={data.projectBusy}>{item.saveLabel}</Button>
+                    )}
+                  </Row>
+                </Card>
               ))}
             </>
           )}
@@ -324,7 +334,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
           )}
           {data.diffView && (
             <>
-              <Text>Changes come directly from your approved Git project. Staging and revert are unavailable in this preview.</Text>
+              <Text>Review the files changed in your project. Completed AI changes are saved to Git automatically.</Text>
               <Text variant="pre">{data.gitStatus}</Text>
               <Text variant="diff">{data.gitDiff}</Text>
             </>
@@ -333,7 +343,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
             <>
               <Text variant="author">{data.accountName}</Text>
               <Text>{data.accountDetail}</Text>
-              <Text>My AI is independent. Codex uses app-owned configuration and explicitly entered API credentials.</Text>
+              <Text>Your projects and conversations stay connected to your account.</Text>
               <Button onClick={() => onAction("logout")}>Sign out</Button>
             </>
           )}

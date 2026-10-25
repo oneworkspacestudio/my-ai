@@ -16,12 +16,14 @@ import (
 )
 
 type App struct {
-	downloads *downloadQueue
-	H         *apphost.Host
-	mu        sync.Mutex
-	client    *http.Client
-	running   map[string]context.CancelFunc
-	agents    map[string]*Agent
+	downloads    *downloadQueue
+	H            *apphost.Host
+	mu           sync.Mutex
+	projectIO    sync.Mutex
+	projectTurns map[string]bool
+	client       *http.Client
+	running      map[string]context.CancelFunc
+	agents       map[string]*Agent
 }
 type Message struct {
 	ID       string `json:"id"`
@@ -64,11 +66,11 @@ func New(h *apphost.Host) (*App, error) {
 	if e != nil {
 		return nil, e
 	}
-	a := &App{downloads: q, H: h, client: &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, running: map[string]context.CancelFunc{}, agents: map[string]*Agent{}}
+	a := &App{downloads: q, H: h, client: &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, projectTurns: map[string]bool{}, running: map[string]context.CancelFunc{}, agents: map[string]*Agent{}}
 	for _, v := range []struct {
 		p string
 		f http.HandlerFunc
-	}{{"GET /api/state", a.state}, {"GET /api/sessions", a.list}, {"POST /api/sessions", a.save}, {"GET /api/sessions/{id}", a.get}, {"DELETE /api/sessions/{id}", a.remove}, {"GET /api/sessions/{id}/export", a.export}, {"POST /api/sessions/{id}/turn", a.turn}, {"POST /api/sessions/{id}/stop", a.stop}, {"POST /api/sessions/{id}/approval", a.approval}, {"GET /api/code-models", a.codeModels}, {"GET /api/models", a.models}, {"GET /api/models/downloads", a.downloadList}, {"POST /api/models/downloads/{id}/cancel", a.downloadCancel}, {"GET /api/tools", a.toolsInfo}, {"POST /api/providers", a.providers}, {"POST /api/models/pull", a.pull}, {"POST /api/models/delete", a.deleteModel}, {"GET /api/projects", a.projects}, {"POST /api/projects", a.projectSave}, {"GET /api/projects/{id}/diff", a.diff}, {"POST /api/attachments", a.upload}, {"GET /api/attachments/{id}", a.attachment}} {
+	}{{"GET /api/state", a.state}, {"GET /api/sessions", a.list}, {"POST /api/sessions", a.save}, {"GET /api/sessions/{id}", a.get}, {"DELETE /api/sessions/{id}", a.remove}, {"GET /api/sessions/{id}/export", a.export}, {"POST /api/sessions/{id}/turn", a.turn}, {"POST /api/sessions/{id}/stop", a.stop}, {"POST /api/sessions/{id}/approval", a.approval}, {"GET /api/code-models", a.codeModels}, {"GET /api/models", a.models}, {"GET /api/models/downloads", a.downloadList}, {"POST /api/models/downloads/{id}/cancel", a.downloadCancel}, {"GET /api/tools", a.toolsInfo}, {"POST /api/providers", a.providers}, {"POST /api/models/pull", a.pull}, {"POST /api/models/delete", a.deleteModel}, {"GET /api/projects", a.projects}, {"POST /api/projects", a.projectSave}, {"GET /api/projects/{id}/diff", a.diff}, {"POST /api/projects/{id}/sync", a.projectAction}, {"POST /api/attachments", a.upload}, {"GET /api/attachments/{id}", a.attachment}} {
 		h.Mux.HandleFunc(v.p, h.Require(v.f))
 	}
 	return a, nil
@@ -225,7 +227,7 @@ func (a *App) state(w http.ResponseWriter, r *http.Request) {
 	for _, p := range settings {
 		safe = append(safe, map[string]any{"id": p.ID, "base": p.Base, "configured": p.Key != "" || p.ID == "ollama"})
 	}
-	apphost.JSON(w, 200, map[string]any{"storage": status, "storageReady": e == nil, "storagePath": filepath.Base(root), "providers": safe, "codexAvailable": codexPath() != "", "codeNotice": "Code runs only in explicitly registered owner projects. DeepSeek and unverified local models are Chat only."})
+	apphost.JSON(w, 200, map[string]any{"storage": status, "storageReady": e == nil, "storagePath": filepath.Base(root), "providers": safe, "codexAvailable": codexPath() != "", "codeNotice": "Projects are stored in My Drive and connected to your private Git repositories. Allow changes to let My AI edit the selected project."})
 }
 func (a *App) list(w http.ResponseWriter, r *http.Request) {
 	root, ok := a.root(w, r)

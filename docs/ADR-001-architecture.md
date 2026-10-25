@@ -11,3 +11,22 @@ Use official Codex app-server JSON-RPC, isolated CODEX_HOME per user and approve
 Sources: https://learn.chatgpt.com/docs/app-server ; https://github.com/openai/codex (Apache2.0); https://docs.ollama.com/api ; https://api-docs.deepseek.com/api/list-models/ .
 
 Default execution is read-only, registered projects only, owner only. Workspace-write requires explicit selection and Codex sandbox support; full access is unavailable. Unknown server requests are denied. No generic remote terminal endpoint. Approval events are tied to an authenticated session. No copied proprietary icons or live desktop inspection: supplied screenshots establish spatial layout. One main EXE embeds web assets; Codex and Ollama remain separate processes. No Docker or manual Node/Python at runtime. Release is an evaluation preview until real-provider and clean-host acceptance gates are demonstrated. Every limitation is tracked in SUPPORT.md.
+
+## October25: managed projects and native file tools
+
+This supersedes the original owner-folder/Codex-only project design above.
+Project creation is name-only and creates a private per-identity Projects Drive
+source plus a native private Git repository. A loopback capability broker in
+Workspace owns Git identity mapping, protected metadata, commits and verified
+pushes. Existing native Gitea is unchanged. Exact MyAccounts subject/source
+mapping is required; no email account linking or new administrator rights.
+Browser/model receive no Git/Drive administrative credential.
+
+Basic project editing uses the existing provider tool loop, scoped to one selected
+managed project, with bounded UTF-8 writes and exact edits. Members can work only
+on their own managed projects. Git internals/credentials stay outside editable
+files; no shell is exposed. Native Ollama editing and actual Git pushes passed.
+Completed changes sync automatically; failures preserve files, remote changes
+fast-forward only when safe, and conflicting history is never force-pushed.
+This removes the command sandbox prerequisite for basic editing; the optional
+legacy Codex transport and its separate acceptance limits remain.

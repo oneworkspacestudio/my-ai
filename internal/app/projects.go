@@ -17,9 +17,18 @@ import (
 )
 
 type Project struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Path string `json:"path"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Path     string `json:"path,omitempty"`
+	GitDir   string `json:"gitDir,omitempty"`
+	Folder   string `json:"folder,omitempty"`
+	URL      string `json:"url,omitempty"`
+	DriveURL string `json:"driveUrl,omitempty"`
+	Branch   string `json:"branch,omitempty"`
+	State    string `json:"state,omitempty"`
+	Commit   string `json:"commit,omitempty"`
+	Error    string `json:"error,omitempty"`
+	Managed  bool   `json:"managed"`
 }
 
 func (a *App) projectPath(uid string) string {
@@ -32,99 +41,78 @@ func (a *App) allProjects(uid string) []Project {
 	return out
 }
 func (a *App) findProject(uid, id string) (Project, error) {
+	if os.Getenv("MYAI_PROJECTS_URL") != "" {
+		if p, e := a.managedProject(context.Background(), uid, id); e == nil {
+			return p, nil
+		}
+	}
 	for _, p := range a.allProjects(uid) {
 		if p.ID == id {
 			if _, e := safePath(p.Path); e != nil {
 				return Project{}, e
 			}
 			if f, e := os.Stat(p.Path); e != nil || !f.IsDir() {
-				return Project{}, errors.New("project root is no longer available")
+				return Project{}, errors.New("Project folder is unavailable")
 			}
 			return p, nil
 		}
 	}
-	return Project{}, errors.New("Register and select an approved project first")
+	return Project{}, errors.New("Choose one of your projects")
 }
 func (a *App) projects(w http.ResponseWriter, r *http.Request) {
-	apphost.JSON(w, 200, a.allProjects(apphost.Current(r).User.ID))
-}
-func (a *App) projectSave(w http.ResponseWriter, r *http.Request) {
-	if apphost.Current(r).User.Role != "owner" {
-		apphost.Problem(w, 403, "Only the owner can approve a host directory")
+	ps, e := a.loadProjects(r.Context(), apphost.Current(r).User.ID)
+	if e != nil {
+		apphost.Problem(w, 503, e.Error())
 		return
 	}
+	apphost.JSON(w, 200, publicProjects(ps))
+}
+func (a *App) projectSave(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		Path    string `json:"path"`
-		Name    string `json:"name"`
-		Confirm bool   `json:"confirm"`
-		Remove  string `json:"remove,omitempty"`
+		ID   string `json:"id"`
+		Name string `json:"name"`
 	}
 	if !apphost.Decode(w, r, &in) {
 		return
 	}
+	if in.ID == "" {
+		in.ID = apphost.ID()
+	}
+	if !idRE.MatchString(in.ID) || strings.TrimSpace(in.Name) == "" {
+		apphost.Problem(w, 400, "Give your project a name")
+		return
+	}
 	uid := apphost.Current(r).User.ID
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	ps := a.allProjects(uid)
-	if in.Remove != "" {
-		out := []Project{}
-		for _, p := range ps {
-			if p.ID != in.Remove {
-				out = append(out, p)
-			}
-		}
-		if atomic(a.projectPath(uid), out) != nil {
-			apphost.Problem(w, 503, "Could not save projects")
-			return
-		}
-		apphost.JSON(w, 200, out)
+	var p Project
+	if e := a.projectBroker(r.Context(), uid, "POST", "", in, &p); e != nil {
+		apphost.Problem(w, 503, e.Error())
 		return
 	}
-	path := filepath.Clean(in.Path)
-	if !in.Confirm || !filepath.IsAbs(path) || filepath.Dir(path) == path || len(in.Name) > 100 {
-		apphost.Problem(w, 400, "Confirm one dedicated absolute project folder, not a whole drive")
+	a.H.Audit(uid, "project-create", p.ID)
+	ps, e := a.loadProjects(r.Context(), uid)
+	if e != nil {
+		apphost.Problem(w, 503, e.Error())
 		return
 	}
-	for _, v := range []string{a.H.Config.Data, os.Getenv("USERPROFILE"), os.Getenv("SystemRoot"), os.Getenv("APPDATA"), os.Getenv("LOCALAPPDATA"), filepath.Join(os.Getenv("USERPROFILE"), ".codex")} {
-		if v != "" && (strings.EqualFold(path, v) || within(v, path) && v != os.Getenv("USERPROFILE")) {
-			apphost.Problem(w, 400, "Choose a project outside application data, Windows and global Codex folders")
-			return
-		}
-	}
-	if _, e := safePath(path); e != nil {
-		apphost.Problem(w, 400, e.Error())
-		return
-	}
-	f, e := os.Stat(path)
-	if e != nil || !f.IsDir() {
-		apphost.Problem(w, 400, "The project folder does not exist on the host machine")
-		return
-	}
-	for _, p := range ps {
-		if strings.EqualFold(p.Path, path) {
-			apphost.JSON(w, 200, ps)
-			return
-		}
-	}
-	name := in.Name
-	if name == "" {
-		name = filepath.Base(path)
-	}
-	ps = append(ps, Project{ID: apphost.ID(), Name: name, Path: path})
-	if e = atomic(a.projectPath(uid), ps); e != nil {
-		apphost.Problem(w, 503, "Could not save projects")
-		return
-	}
-	a.H.Audit(uid, "project-register", path)
-	apphost.JSON(w, 200, ps)
+	apphost.JSON(w, 200, publicProjects(ps))
 }
 func within(root, p string) bool {
 	rel, e := filepath.Rel(root, p)
 	return e == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 func (a *App) diff(w http.ResponseWriter, r *http.Request) {
+	uid := apphost.Current(r).User.ID
+	if p, e := a.managedProject(r.Context(), uid, r.PathValue("id")); e == nil {
+		var changes map[string]string
+		if e = a.projectBroker(r.Context(), uid, "POST", "/"+p.ID+"/changes", map[string]string{}, &changes); e != nil {
+			apphost.Problem(w, 503, e.Error())
+			return
+		}
+		apphost.JSON(w, 200, changes)
+		return
+	}
 	if apphost.Current(r).User.Role != "owner" {
-		apphost.Problem(w, 403, "Owner project access required")
+		apphost.Problem(w, 403, "Choose one of your managed projects")
 		return
 	}
 	p, e := a.findProject(apphost.Current(r).User.ID, r.PathValue("id"))

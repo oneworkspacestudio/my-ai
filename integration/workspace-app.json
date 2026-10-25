@@ -10,9 +10,21 @@
   "route": "/myai",
   "stripPrefix": true,
   "health": "/healthz",
-  "depends": ["accounts", "drive"],
+  "depends": [
+    "accounts",
+    "drive",
+    "gitea"
+  ],
   "oidc": true,
   "callback": "/myai/auth/callback",
-  "args": ["--data", "${DATA}/myai", "--listen", "127.0.0.1:${PORT}", "--origin", "${ORIGIN}/myai", "--no-browser"],
+  "args": [
+    "--data",
+    "${DATA}/myai",
+    "--listen",
+    "127.0.0.1:${PORT}",
+    "--origin",
+    "${ORIGIN}/myai",
+    "--no-browser"
+  ],
   "source": "SOURCE"
 }
