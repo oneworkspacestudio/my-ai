@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Divider, Heading, Icon, Image, Input, Link, Page, Row, Select, Spacer, Stack, Text } from "@/components/ui"
+import { Alert, Button, Card, Divider, Heading, Icon, Image, Input, Link, Metric, Page, Row, Select, Spacer, Stack, Text } from "@/components/ui"
 
 export function Workspace({ data, onAction }: { data: any; onAction: (name: string) => void }) {
   return (
@@ -64,6 +64,9 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
           <Button onClick={() => onAction("session-menu")} icon="Ellipsis" label="Conversation actions" variant="icon" />
           <Button onClick={() => onAction("apps")} icon="Grid2X2" label="Apps" variant="icon" />
         </Row>
+        {data.hasActiveDownloads && (
+          <Button onClick={() => onAction("models")} icon="Download" variant="download-banner">{data.downloadSummary}</Button>
+        )}
         <Stack variant="conversation">
           {data.empty && (
             <Stack variant="welcome">
@@ -98,6 +101,14 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                 <Text variant="muted">{data.workingLabel}</Text>
               </Row>
               <Text variant="markdown">{data.partial}</Text>
+            </Card>
+          )}
+          {data.hasSources && (
+            <Card variant="sources">
+              <Heading level={3}>Sources</Heading>
+              {data.sources.map((item, i) => (
+                <Link key={i} href={item.url}>{item.title}</Link>
+              ))}
             </Card>
           )}
           {data.hasEvents && (
@@ -139,6 +150,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
           <Card variant="composer">
             <Input name="prompt" type="textarea" placeholder={data.placeholder} variant="prompt" />
             <Row variant="composer-controls">
+              <Button onClick={() => onAction("tools")} icon="Wrench" label="Tools & skills" variant="icon" disabled={data.busy} />
               <Button onClick={() => onAction("attach")} icon="Plus" label="Attach text or code" variant="icon" disabled={data.busy} />
               <Button onClick={() => onAction("policy")} icon="ShieldCheck" variant="permission">{data.policyLabel}</Button>
               <Spacer />
@@ -203,20 +215,33 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               {data.providerStatuses.map((item, i) => (
                 <Text key={i} variant="status">{item.label}</Text>
               ))}
-              {data.models.map((item, i) => (
-                <Card key={i} variant="model-card">
-                  <Row>
-                    <Icon name="Cpu" size={22} />
-                    <Stack>
-                      <Text variant="author">{item.name}</Text>
-                      <Text variant="muted">{item.detail}</Text>
-                    </Stack>
-                    <Spacer />
-                    <Button onClick={() => onAction("use-model")} item={item.key}>Use</Button>
-                    {item.local && (
-                      <Button onClick={() => onAction("delete-model")} item={item.id} icon="Trash2" label="Remove model" variant="icon" />
-                    )}
-                  </Row>
+              <Input name="modelSearch" placeholder="Filter model names" />
+              {data.modelGroups.map((item, i) => (
+                <Card key={i} variant="provider-group">
+                  <Button onClick={() => onAction("toggle-provider")} item={item.id} icon={item.icon} expanded={item.expanded} label={item.label} variant="provider-toggle" />
+                  {item.expanded && (
+                    <>
+                      <Text variant="status">{item.status}</Text>
+                      <Stack variant="model-list">
+                        {item.models.map((item, i) => (
+                          <Card key={i} variant="model-card">
+                            <Row>
+                              <Icon name="Cpu" size={22} />
+                              <Stack>
+                                <Text variant="author">{item.name}</Text>
+                                <Text variant="muted">{item.detail}</Text>
+                              </Stack>
+                              <Spacer />
+                              <Button onClick={() => onAction("use-model")} item={item.key}>Use</Button>
+                              {item.canRemove && (
+                                <Button onClick={() => onAction("delete-model")} item={item.id} icon="Trash2" label="Remove model" variant="icon" />
+                              )}
+                            </Row>
+                          </Card>
+                        ))}
+                      </Stack>
+                    </>
+                  )}
                 </Card>
               ))}
               <Divider />
@@ -224,12 +249,44 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               <Text>Check a model’s licence and hardware needs in the official library. Ollama chooses storage using its existing service configuration. My AI does not change or move that library.</Text>
               <Link href="https://ollama.com/library">Browse the official model library ↗</Link>
               <Link href="https://ollama.com/download/windows">Get Ollama for Windows ↗</Link>
-              <Input name="pullModel" placeholder="Exact model tag, for example qwen3:0.6b" />
-              <Button onClick={() => onAction("pull")} variant="primary" disabled={data.pullBusy}>Download model</Button>
-              {data.pullBusy && (
-                <Button onClick={() => onAction("cancel-pull")}>Cancel download</Button>
+              <Text>Downloads continue on this server when you close the page. Progress and installed local models are shared by all users of this server.</Text>
+              {data.isOwner && (
+                <>
+                  <Input name="pullModel" placeholder="Exact model tag, for example qwen3:0.6b" />
+                  <Button onClick={() => onAction("pull")} variant="primary">Download model</Button>
+                </>
               )}
-              <Text variant="pre">{data.pullProgress}</Text>
+              <Heading level={3}>Server downloads</Heading>
+              {data.downloads.map((item, i) => (
+                <Card key={i} variant="download-row">
+                  <Text variant="author">{item.label}</Text>
+                  <Metric value={item.completed} max={item.total} label={item.label} />
+                  <Text variant="muted">{item.bytes}</Text>
+                  <Text variant="status">{item.detail}</Text>
+                  {item.canCancel && (
+                    <Button onClick={() => onAction("cancel-pull")} item={item.id}>Cancel download</Button>
+                  )}
+                  {item.canRetry && (
+                    <Button onClick={() => onAction("retry-pull")} item={item.model}>Retry download</Button>
+                  )}
+                </Card>
+              ))}
+            </>
+          )}
+          {data.toolsView && (
+            <>
+              <Text>{data.toolNotice}</Text>
+              <Text>Chat has live time, calculator, public web search/page reading, and private conversation/attachment reads. Owners can read registered projects. Automatic tool use depends on the selected model; explicit commands work with any chat model.</Text>
+              {data.toolCommands.map((item, i) => (
+                <Button key={i} onClick={() => onAction("tool-command")} item={item.value} label={item.value} variant="menu" />
+              ))}
+              {data.toolList.map((item, i) => (
+                <Card key={i} variant="tool-card">
+                  <Text variant="author">{item.name}</Text>
+                  <Text variant="muted">{item.description}</Text>
+                </Card>
+              ))}
+              <Text>Codex also receives these public read-only tools through the bundled stdio MCP server: MyAI.exe mcp-serve. Code keeps its project sandbox and approval controls.</Text>
             </>
           )}
           {data.projectsView && (

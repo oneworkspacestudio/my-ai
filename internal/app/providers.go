@@ -1,12 +1,10 @@
 package app
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/oneworkspacestudio/one-workspace/pkg/apphost"
 	"io"
 	"net/http"
@@ -145,8 +143,11 @@ func request(ctx context.Context, p Provider, method, path string, body any) (*h
 		return nil, errors.New("Provider is unavailable or the request was interrupted")
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		resp.Body.Close()
-		return nil, fmt.Errorf("Provider returned HTTP %d. Check credentials, quota and the selected model", resp.StatusCode)
+		text := strings.ToLower(string(raw))
+		unsupported := strings.Contains(text, "does not support tools") || strings.Contains(text, "not support tool") || strings.Contains(text, "tools is not supported") || strings.Contains(text, "tool use is not supported")
+		return nil, &providerHTTPError{Status: resp.StatusCode, ToolsUnsupported: unsupported}
 	}
 	return resp, nil
 }
@@ -231,114 +232,6 @@ func streamWriter(w http.ResponseWriter) writer {
 		}
 	}
 }
-func (a *App) chat(ctx context.Context, p Provider, s *Session, send writer) (string, error) {
-	messages := []map[string]string{}
-	for _, m := range s.Messages {
-		if m.Role == "user" || m.Role == "assistant" {
-			messages = append(messages, map[string]string{"role": m.Role, "content": m.Content})
-		}
-	}
-	body := map[string]any{"model": s.Model, "stream": true}
-	path := "/chat/completions"
-	if p.ID == "openai" {
-		path = "/responses"
-		body["input"] = messages
-		body["store"] = false
-	} else {
-		body["messages"] = messages
-	}
-	if p.ID == "ollama" {
-		path = "/api/chat"
-		body["think"] = false
-	}
-	resp, e := request(ctx, p, "POST", path, body)
-	if e != nil {
-		return "", e
-	}
-	defer resp.Body.Close()
-	scanner := bufio.NewScanner(io.LimitReader(resp.Body, 32<<20))
-	scanner.Buffer(make([]byte, 64<<10), 2<<20)
-	var result strings.Builder
-	completed := false
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "data:") {
-			line = strings.TrimSpace(strings.TrimPrefix(line, "data:"))
-		} else if p.ID != "ollama" {
-			continue
-		}
-		if line == "[DONE]" {
-			completed = true
-			break
-		}
-		var v struct {
-			Type    string          `json:"type"`
-			Delta   string          `json:"delta"`
-			Error   json.RawMessage `json:"error"`
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-			Choices []struct {
-				Delta struct {
-					Content string `json:"content"`
-				} `json:"delta"`
-			} `json:"choices"`
-			Usage  json.RawMessage `json:"usage"`
-			Done   bool            `json:"done"`
-			Prompt int             `json:"prompt_eval_count"`
-			Eval   int             `json:"eval_count"`
-		}
-		if json.Unmarshal([]byte(line), &v) != nil {
-			continue
-		}
-		if len(v.Error) > 0 && string(v.Error) != "null" {
-			return result.String(), errors.New("Provider reported a generation error. Check the model and your account quota")
-		}
-		delta := ""
-		if p.ID == "openai" && v.Type == "response.output_text.delta" {
-			delta = v.Delta
-		}
-		if p.ID == "ollama" {
-			delta = v.Message.Content
-		}
-		if len(v.Choices) > 0 {
-			delta = v.Choices[0].Delta.Content
-		}
-		if delta != "" {
-			if result.Len()+len(delta) > 4<<20 {
-				return result.String(), errors.New("Response exceeded the 4 MB limit")
-			}
-			result.WriteString(delta)
-			send("delta", delta)
-		}
-		if len(v.Usage) > 0 {
-			send("usage", v.Usage)
-		}
-		if v.Done {
-			completed = true
-			send("usage", map[string]int{"inputTokens": v.Prompt, "outputTokens": v.Eval})
-		}
-		if v.Type == "response.completed" {
-			completed = true
-		}
-		if v.Type == "response.failed" {
-			return result.String(), errors.New("OpenAI could not complete this response")
-		}
-	}
-	if e = scanner.Err(); e != nil {
-		return result.String(), errors.New("Provider stream ended unexpectedly")
-	}
-	if ctx.Err() != nil {
-		return result.String(), errors.New("Generation stopped")
-	}
-	if !completed {
-		return result.String(), errors.New("Provider stream ended before completion; retry or continue this interrupted conversation")
-	}
-	if result.Len() == 0 {
-		return "", errors.New("The provider returned no text; choose a supported chat model")
-	}
-	return result.String(), nil
-}
 func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	root, ok := a.root(w, r)
 	if !ok {
@@ -422,7 +315,7 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	if s.Mode == "code" {
 		output, e = a.code(ctx, uid, root, &s, p, in.Text, send)
 	} else {
-		output, e = a.chat(ctx, p, &s, send)
+		output, e = a.chatWithTools(ctx, p, &s, send, toolScope{UID: uid, Root: root, Role: apphost.Current(r).User.Role})
 	}
 	status := "completed"
 	if e != nil {
@@ -467,47 +360,22 @@ func (a *App) pull(w http.ResponseWriter, r *http.Request) {
 	if !apphost.Decode(w, r, &in) {
 		return
 	}
-	if !modelRE.MatchString(in.Model) || !in.Confirm {
-		apphost.Problem(w, 400, "Confirm the exact model tag and shared storage before downloading")
-		return
-	}
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Hour)
-	defer cancel()
-	key := apphost.Current(r).User.ID + ":pull"
-	a.mu.Lock()
-	if a.running[key] != nil {
-		a.mu.Unlock()
-		apphost.Problem(w, 409, "A model download is already active")
-		return
-	}
-	a.running[key] = cancel
-	a.mu.Unlock()
-	defer func() { a.mu.Lock(); delete(a.running, key); a.mu.Unlock() }()
-	p, e := a.provider(apphost.Current(r).User.ID, "ollama")
-	if e != nil {
-		apphost.Problem(w, 400, e.Error())
-		return
-	}
-	resp, e := request(ctx, p, "POST", "/api/pull", map[string]any{"model": in.Model, "stream": true})
-	if e != nil {
-		apphost.Problem(w, 502, e.Error())
-		return
-	}
-	defer resp.Body.Close()
-	a.H.Audit(apphost.Current(r).User.ID, "model-pull", in.Model)
-	send := streamWriter(w)
-	scan := bufio.NewScanner(io.LimitReader(resp.Body, 32<<20))
-	for scan.Scan() {
-		var v any
-		if json.Unmarshal(scan.Bytes(), &v) == nil {
-			send("progress", v)
+	model, e := normalizeModelTag(in.Model)
+	if e != nil || !in.Confirm {
+		message := "Confirm the model and shared storage before downloading"
+		if e != nil {
+			message = e.Error()
 		}
+		apphost.Problem(w, 400, message)
+		return
 	}
-	if scan.Err() != nil || ctx.Err() != nil {
-		send("error", "Download stopped. Ollama decides whether a retry can reuse partial data.")
-	} else {
-		send("done", map[string]string{"model": in.Model})
+	job, e := a.downloads.add(model)
+	if e != nil {
+		apphost.Problem(w, 503, "The server could not persist the download job")
+		return
 	}
+	a.H.Audit(apphost.Current(r).User.ID, "model-pull", in.Model)
+	apphost.JSON(w, http.StatusAccepted, job)
 }
 func (a *App) deleteModel(w http.ResponseWriter, r *http.Request) {
 	if apphost.Current(r).User.Role != "owner" {
@@ -526,7 +394,7 @@ func (a *App) deleteModel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.mu.Lock()
-	busy := len(a.running) > 0
+	busy := len(a.running) > 0 || a.downloads.busy()
 	a.mu.Unlock()
 	if busy {
 		apphost.Problem(w, 409, "Wait for all active turns and downloads before removing a shared model")

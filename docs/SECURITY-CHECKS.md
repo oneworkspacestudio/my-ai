@@ -7,3 +7,5 @@ Use govulncheck against ./... from the repository root and npm audit --omit=dev 
 Reference: https://pkg.go.dev/vuln/GO-2026-6809 .
 
 Go1.27.3 scan: zero reachable vulnerabilities and zero advisories in imported packages; three findings occur only in unused required-module symbols. Production npm audit: zero advisories. Codex is started in ephemeral credential mode, with an isolated home and a child-only provider key; no existing login is adopted.
+
+Preview3 adds bounded read-only tool execution and a bundled public-only MCP server. URL tests reject loopback/private/link-local/metadata/CGNAT destinations, custom ports, credential URLs and non-web schemes; the actual resolved address is checked and pinned at connection time and redirects are revalidated. Identity-scoped conversation reads and cross-user denial tests pass. New Go scan: zero reachable/imported-package advisories; one unused required-module symbol advisory remains. Production npm audit: zero.

@@ -4,11 +4,13 @@
 |---|---|
 | Original Codex-inspired layout, rail, project/session sidebar, composer, effort popover, dark/light and mobile drawer | Implemented; native desktop/tablet/phone browser checks |
 | Provider discovery and real streamed chat | Ollama demonstrated; OpenAI Responses and DeepSeek adapters tested with protocol fixtures; live API keys required for provider acceptance |
+| Time, search and basic tools | Real clock/timezone, safe arithmetic, live public web search/page reading, private conversation/attachment lookup and approved owner project reads; bounded provider function loops, explicit-command fallbacks, persisted activity and clickable sources |
+| Bundled MCP | Native stdio public read-only tool server, automatically configured in isolated Codex sessions; no account/filesystem/shell access through MCP |
 | Per-session provider/model, per-response attribution, explicit cloud indicator | Implemented; native Ollama persistence demonstrated |
 | MyAccounts PKCE and stable issuer+subject | Existing apphost contract reused; real fresh-install OIDC/PKCE acceptance passed |
 | My Drive authoritative storage | Default-deny Quantum source, isolated physical user scopes, guard before access; real same-user Quantum download, second-browser reopen and cross-user denial passed |
-| Local model downloads/removal | Real Ollama API and streamed progress; owner confirmation, cancel and task guard; exact tag/library links, no invented catalog metadata |
-| Codex app-server | Real stdio handshake/model metadata demonstrated on0.157.1; thread/turn/resume/events/approvals/interrupt integrated; actual provider edit/test turn requires live key and Windows sandbox acceptance |
+| Model picker and server downloads | Local first; collapsed/filterable cloud lists. Persistent shared server queue, byte progress, browser-independent execution, restart resume, owner cancel/retry, truthful upstream errors and real Ollama integration tests |
+| Codex app-server | Real stdio handshake/model metadata demonstrated on0.157.1; thread/turn/resume/events/approvals/interrupt integrated; thread profile and MCP transport checked; legacy Windows unelevated backend refuses restricted profiles; actual edit/test turn requires live key and explicit MXC/elevated sandbox setup/acceptance |
 | Local/DeepSeek coding | Disabled with reason until the individual harness/protocol combination is demonstrated |
 | Projects, Git status/diff, activity and approval panel | Owner registrations, actual Git reads; no generic terminal, staging or destructive revert |
 | Sessions | Search titles, pin/rename/archive/restore, revision conflict checks, JSON/Markdown export, JSON import, transcript fork, retry, Stop |

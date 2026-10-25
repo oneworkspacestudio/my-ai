@@ -16,11 +16,12 @@ import (
 )
 
 type App struct {
-	H       *apphost.Host
-	mu      sync.Mutex
-	client  *http.Client
-	running map[string]context.CancelFunc
-	agents  map[string]*Agent
+	downloads *downloadQueue
+	H         *apphost.Host
+	mu        sync.Mutex
+	client    *http.Client
+	running   map[string]context.CancelFunc
+	agents    map[string]*Agent
 }
 type Message struct {
 	ID       string `json:"id"`
@@ -59,16 +60,22 @@ var idRE = regexp.MustCompile(`^[a-f0-9]{48}$`)
 var modelRE = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.:/+-]{0,159}$`)
 
 func New(h *apphost.Host) (*App, error) {
-	a := &App{H: h, client: &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, running: map[string]context.CancelFunc{}, agents: map[string]*Agent{}}
+	q, e := newDownloadQueue(h.Config.Data)
+	if e != nil {
+		return nil, e
+	}
+	a := &App{downloads: q, H: h, client: &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, running: map[string]context.CancelFunc{}, agents: map[string]*Agent{}}
 	for _, v := range []struct {
 		p string
 		f http.HandlerFunc
-	}{{"GET /api/state", a.state}, {"GET /api/sessions", a.list}, {"POST /api/sessions", a.save}, {"GET /api/sessions/{id}", a.get}, {"DELETE /api/sessions/{id}", a.remove}, {"GET /api/sessions/{id}/export", a.export}, {"POST /api/sessions/{id}/turn", a.turn}, {"POST /api/sessions/{id}/stop", a.stop}, {"POST /api/sessions/{id}/approval", a.approval}, {"GET /api/code-models", a.codeModels}, {"GET /api/models", a.models}, {"POST /api/providers", a.providers}, {"POST /api/models/pull", a.pull}, {"POST /api/models/delete", a.deleteModel}, {"GET /api/projects", a.projects}, {"POST /api/projects", a.projectSave}, {"GET /api/projects/{id}/diff", a.diff}, {"POST /api/attachments", a.upload}, {"GET /api/attachments/{id}", a.attachment}} {
+	}{{"GET /api/state", a.state}, {"GET /api/sessions", a.list}, {"POST /api/sessions", a.save}, {"GET /api/sessions/{id}", a.get}, {"DELETE /api/sessions/{id}", a.remove}, {"GET /api/sessions/{id}/export", a.export}, {"POST /api/sessions/{id}/turn", a.turn}, {"POST /api/sessions/{id}/stop", a.stop}, {"POST /api/sessions/{id}/approval", a.approval}, {"GET /api/code-models", a.codeModels}, {"GET /api/models", a.models}, {"GET /api/models/downloads", a.downloadList}, {"POST /api/models/downloads/{id}/cancel", a.downloadCancel}, {"GET /api/tools", a.toolsInfo}, {"POST /api/providers", a.providers}, {"POST /api/models/pull", a.pull}, {"POST /api/models/delete", a.deleteModel}, {"GET /api/projects", a.projects}, {"POST /api/projects", a.projectSave}, {"GET /api/projects/{id}/diff", a.diff}, {"POST /api/attachments", a.upload}, {"GET /api/attachments/{id}", a.attachment}} {
 		h.Mux.HandleFunc(v.p, h.Require(v.f))
 	}
 	return a, nil
 }
 func (a *App) Run(ctx context.Context) error {
+	done := make(chan struct{})
+	go func() { a.downloads.run(ctx); close(done) }()
 	<-ctx.Done()
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -78,6 +85,7 @@ func (a *App) Run(ctx context.Context) error {
 	for _, g := range a.agents {
 		g.Close()
 	}
+	<-done
 	return nil
 }
 func now() string { return time.Now().UTC().Format(time.RFC3339Nano) }
