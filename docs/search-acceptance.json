@@ -25,5 +25,32 @@
   "fullCodexModelOrShellTurn": false,
   "ownerAccountUsedAsFixture": false,
   "githubActionsUsed": false,
-  "twoPCInstallation": "pending"
+  "twoPCInstallation": {
+    "primary": {
+      "version": "0.1.0-preview.7",
+      "normalBackedUpUpdate": true,
+      "exactTestedExecutableAndManagerHashesVerified": true,
+      "allOtherExecutableBytesContractsPackagesRetained": true,
+      "configurationIdentityAndCredentialsRetained": true,
+      "all27ServicesHealthy": true,
+      "servedFrontendMatchesTestedBuild": true,
+      "installedPrivateSearXNGRunningLoopbackOnly": true,
+      "anonymousSearchAccessRejected": true,
+      "latestRecoveryVerifiedAndRetained": true
+    },
+    "secondary": {
+      "version": "0.1.0-preview.7",
+      "normalBackedUpUpdate": true,
+      "completedHealthyInSeconds": 1946,
+      "freshWorkspace90UpdaterShowsMyAI7Current": true,
+      "verificationSource": "Parallel My Tube task independently observed completion and fresh installed-version check, recorded in its repository history and browser version rows",
+      "independentRemoteFilesystemAndCredentialAudit": false,
+      "separateSubsequentMyTubeUpdateInProgressAtVerification": true
+    },
+    "githubActionsUsed": false,
+    "ownerAccountUsedAsFunctionalFixture": false
+  },
+  "allBaselineModelNamesAndSizesRetained": true,
+  "additionalModelPreserved": true,
+  "allSyntheticFixtureProcessesStoppedAndPrivateFixtureRemoved": true
 }
