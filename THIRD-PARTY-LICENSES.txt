@@ -1,3 +1,5 @@
+Private search runtime: SearXNG54ca1d9cfb08674f66261d7f351b063558dfcc62 (AGPL-3.0-or-later), CPython3.13.18 (PSF), Waitress and dependencies (their original licences). Complete licence files and pinned SHA256 provenance are inside internal/searchruntime/payload.zip. Corresponding source, dependency wheels and patches are supplied as my-ai-searxng-corresponding-source.zip with the release, with the source-offer link in Tools & skills.
+
 Third-party notices for My AI
 
 One Workspace apphost and Codex protocol source: Apache-2.0. Codex/Ollama binaries are not redistributed. Models have independent licences. No Open WebUI source or assets are included.

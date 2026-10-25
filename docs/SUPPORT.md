@@ -4,7 +4,7 @@
 |---|---|
 | Original Codex-inspired layout, rail, project/session sidebar, composer, effort popover, dark/light and mobile drawer | Implemented; native desktop/tablet/phone browser checks |
 | Provider discovery and real streamed chat | Ollama demonstrated; OpenAI Responses and DeepSeek adapters tested with protocol fixtures; live API keys required for provider acceptance |
-| Time, search and basic tools | Real clock/timezone, safe arithmetic, live public web search/page reading, private conversation/attachment lookup and own managed project reads; bounded provider function loops, explicit-command fallbacks, persisted activity and clickable sources |
+| Time, search and basic tools | Real clock/timezone, safe arithmetic, included SearXNG web search/page reading, explicit Search web composer control, private conversation/attachment lookup and own managed project reads; bounded provider function loops, explicit-command fallbacks, persisted activity and clickable sources |
 | Bundled MCP | Native stdio public read-only tool server, automatically configured in isolated Codex sessions; no account/filesystem/shell access through MCP |
 | Per-session provider/model, per-response attribution, explicit cloud indicator | Implemented; native Ollama persistence demonstrated |
 | MyAccounts PKCE and stable issuer+subject | Existing apphost contract reused; real fresh-install OIDC/PKCE acceptance passed |
@@ -36,3 +36,5 @@ full Codex command, clean-host or reboot test is implied.
 My AI distinguishes Ollama model-format/version failures, insufficient memory, missing models and oversized conversations from cloud account errors. Both HTTP and streamed failures use safe fixed messages; upstream error bodies are never displayed. Models lists show the installed Ollama runtime version when available. Download completion confirms stored files, not that every model fits or is supported by the installed runtime.
 
 For newer community model formats, update Ollama on the server using its official installer, then retry the same downloaded model. Existing models stay in place. Bonsai2 testing targets official Ollama 0.40.11; a basic isolated CPU test also passed on 0.40.7. A successful pull on an older runtime does not establish inference compatibility.
+
+Preview7 native checks: included patched Python3.13.18 and SearXNG return live documentation sources; anonymous runtime access is refused. Official Codex discovers all four public MCP tools in an isolated home without a provider key/global login. Chat and managed-project forced-search/privacy/failure regression tests pass. Discovery is not a full Codex model or shell turn.

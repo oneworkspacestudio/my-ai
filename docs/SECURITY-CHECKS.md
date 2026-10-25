@@ -21,3 +21,5 @@ project edits occurred. Repeat dependency scans on final release sources.
 
 
 Preview6 adds regression checks for model-format/memory/context/not-found errors and streamed failures without exposing upstream prompts, keys, paths or HTML. Tool compatibility fallback remains Chat-only; managed projects still refuse models lacking file-tool support. Runtime/version metadata is length/format bounded.
+
+Preview7 replaces Bing RSS with a bundled private SearXNG process. Runtime extraction validates trusted embedded hashes, file paths, reparse points and unexpected files before execution. Only authenticated loopback GET search/health is exposed. Child environments exclude app credentials; parent exit ends the server. Search results are bounded, sanitized public URLs and treated as untrusted reference. Explicit searches use typed text before attachment expansion. The interpreter is patched CPython3.13.18, built locally from verified official source;32 pinned Python wheels pass pip-audit without known advisories.

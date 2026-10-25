@@ -257,6 +257,7 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	}
 	var in struct {
 		Text        string   `json:"text"`
+		WebSearch   bool     `json:"webSearch"`
 		Attachments []string `json:"attachments"`
 	}
 	if !apphost.Decode(w, r, &in) {
@@ -264,6 +265,10 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(strings.TrimSpace(in.Text)) == 0 || len(in.Text) > 200000 || len(in.Attachments) > 5 {
 		apphost.Problem(w, 400, "Enter a prompt up to 200000 characters and at most five text attachments")
+		return
+	}
+	if in.WebSearch && !validSearchQuery(in.Text) {
+		apphost.Problem(w, 400, "For web search, enter a question of up to500 characters. Attached files are never sent as search queries")
 		return
 	}
 	uid := apphost.Current(r).User.ID
@@ -300,6 +305,10 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		a.mu.Unlock()
 		apphost.Problem(w, 409, "Another conversation is working on this project. Finish or stop it first")
 		return
+	}
+	s.ToolInput = in.Text
+	if in.WebSearch {
+		s.SearchQuery = strings.TrimSpace(in.Text)
 	}
 	for _, id := range in.Attachments {
 		if !idRE.MatchString(id) {

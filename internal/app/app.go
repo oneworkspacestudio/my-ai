@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/oneworkspacestudio/my-ai/internal/searchruntime"
 	"github.com/oneworkspacestudio/one-workspace/pkg/apphost"
 	"net/http"
 	"os"
@@ -16,14 +17,18 @@ import (
 )
 
 type App struct {
-	downloads    *downloadQueue
-	H            *apphost.Host
-	mu           sync.Mutex
-	projectIO    sync.Mutex
-	projectTurns map[string]bool
-	client       *http.Client
-	running      map[string]context.CancelFunc
-	agents       map[string]*Agent
+	searchMu                 sync.Mutex
+	search                   *searchruntime.Runtime
+	searchTemp               string
+	searchConnectionOverride func(context.Context) (searchruntime.Connection, error)
+	downloads                *downloadQueue
+	H                        *apphost.Host
+	mu                       sync.Mutex
+	projectIO                sync.Mutex
+	projectTurns             map[string]bool
+	client                   *http.Client
+	running                  map[string]context.CancelFunc
+	agents                   map[string]*Agent
 }
 type Message struct {
 	ID       string `json:"id"`
@@ -40,22 +45,24 @@ type Event struct {
 	Data   json.RawMessage `json:"data"`
 }
 type Session struct {
-	Schema   int       `json:"schema"`
-	ID       string    `json:"id"`
-	Title    string    `json:"title"`
-	Mode     string    `json:"mode"`
-	Project  string    `json:"project,omitempty"`
-	Provider string    `json:"provider"`
-	Model    string    `json:"model"`
-	Effort   string    `json:"effort"`
-	Policy   string    `json:"policy"`
-	Pinned   bool      `json:"pinned"`
-	Archived bool      `json:"archived"`
-	Revision int       `json:"revision"`
-	Updated  string    `json:"updated"`
-	Thread   string    `json:"thread,omitempty"`
-	Messages []Message `json:"messages"`
-	Events   []Event   `json:"events"`
+	ToolInput   string    `json:"-"`
+	SearchQuery string    `json:"-"`
+	Schema      int       `json:"schema"`
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Mode        string    `json:"mode"`
+	Project     string    `json:"project,omitempty"`
+	Provider    string    `json:"provider"`
+	Model       string    `json:"model"`
+	Effort      string    `json:"effort"`
+	Policy      string    `json:"policy"`
+	Pinned      bool      `json:"pinned"`
+	Archived    bool      `json:"archived"`
+	Revision    int       `json:"revision"`
+	Updated     string    `json:"updated"`
+	Thread      string    `json:"thread,omitempty"`
+	Messages    []Message `json:"messages"`
+	Events      []Event   `json:"events"`
 }
 
 var idRE = regexp.MustCompile(`^[a-f0-9]{48}$`)
@@ -76,6 +83,8 @@ func New(h *apphost.Host) (*App, error) {
 	return a, nil
 }
 func (a *App) Run(ctx context.Context) error {
+	defer a.closeSearch()
+	go func() { _, _ = a.searchConnection(ctx) }()
 	done := make(chan struct{})
 	go func() { a.downloads.run(ctx); close(done) }()
 	<-ctx.Done()

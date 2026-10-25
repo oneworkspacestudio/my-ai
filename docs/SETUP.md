@@ -74,12 +74,23 @@ reading, own conversation/attachment lookup and own project reads. Tool activity
 and web sources are saved. /time Europe/London, /calculate (12+3)*4, /search your
 query and /read https://example.com work even when a chat model lacks automatic
 tool calls. A project model without tools is refused rather than pretending it
-edited files. Search uses Bing RSS and can be blocked or rate limited. Public
+edited files. Turn on Search web in the composer, or use /search. A private
+SearXNG service is included in MyAI.exe and starts automatically in the background;
+there is no URL, Python, Docker or account to configure. Chat and managed Code
+projects share this search service. Only the typed search question is sent;
+attached file text is not added to an explicit search. Search engines can still
+be blocked, rate limited or temporarily unavailable. Public
 requests disclose their query/URL; private networks, custom ports, credentials
 and non-web protocols are rejected at connection and redirect time.
 
 MyAI.exe mcp-serve exposes only get_time, calculate, web_search and read_webpage
-through JSON-RPC stdio. It opens no account store or filesystem. The optional
+through JSON-RPC stdio. It opens no account store or project filesystem. The
+app-owned Codex session uses this same SearXNG search tool, with its built-in
+search disabled. The private server binds only to a random loopback port,
+requires a process secret and ends when My AI exits. SearXNG (AGPL-3.0-or-later),
+its patches, build inputs and source are offered through Tools & skills and
+the corresponding-source ZIP on the My AI release page. Licences and provenance
+are retained inside the runtime. Standalone MCP starts its own private server. The optional
 legacy Codex transport uses an isolated per-user home and ephemeral credentials,
 never global Codex configuration/login. Actual Codex command execution remains
 unverified without explicitly supported official Windows sandbox setup and keys;
@@ -95,7 +106,8 @@ are available. Native Workspace backups retain working files, Git history,
 accounts and protected settings together. Do not remove the latest verified
 rollback to make room for an update.
 
-The portable EXE embeds browser assets and needs no Node, Python or Docker.
+The portable EXE embeds browser assets, SearXNG and its private patched Python
+3.13.18 runtime; it needs no separately installed Node, Python or Docker.
 Standalone loopback Chat has a first-owner setup page and protected NTFS storage;
 managed projects require the Workspace/My Drive/Git integration. Do not expose the
 standalone listener directly to a network. Workspace supplies its existing HTTPS
