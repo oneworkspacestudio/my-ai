@@ -1,0 +1,18 @@
+{
+  "id": "myai",
+  "name": "My AI",
+  "description": "Chat with AI models and build with your code projects",
+  "version": "VERSION",
+  "kind": "process",
+  "package": "myai",
+  "executable": "MyAI.exe",
+  "port": 9019,
+  "route": "/myai",
+  "stripPrefix": true,
+  "health": "/healthz",
+  "depends": ["accounts", "drive"],
+  "oidc": true,
+  "callback": "/myai/auth/callback",
+  "args": ["--data", "${DATA}/myai", "--listen", "127.0.0.1:${PORT}", "--origin", "${ORIGIN}/myai", "--no-browser"],
+  "source": "SOURCE"
+}
