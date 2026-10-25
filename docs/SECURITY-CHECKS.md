@@ -18,3 +18,6 @@ repository ownership, no-force conflict preservation, credential staging
 exclusions, temporary token revocation and interruption recovery that retains
 unrelated user tokens. Provider tool failures never fall back to pretending
 project edits occurred. Repeat dependency scans on final release sources.
+
+
+Preview6 adds regression checks for model-format/memory/context/not-found errors and streamed failures without exposing upstream prompts, keys, paths or HTML. Tool compatibility fallback remains Chat-only; managed projects still refuse models lacking file-tool support. Runtime/version metadata is length/format bounded.

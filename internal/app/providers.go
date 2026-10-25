@@ -140,14 +140,18 @@ func request(ctx context.Context, p Provider, method, path string, body any) (*h
 	client := http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	resp, e := client.Do(req)
 	if e != nil {
-		return nil, errors.New("Provider is unavailable or the request was interrupted")
+		if ctx.Err() != nil {
+			return nil, errors.New("Generation stopped or timed out")
+		}
+		if p.ID == "ollama" {
+			return nil, errors.New("The local Ollama server is unavailable. Ask the server owner to start Ollama, then try again")
+		}
+		return nil, errors.New("The AI provider is unavailable. Try again shortly")
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		resp.Body.Close()
-		text := strings.ToLower(string(raw))
-		unsupported := strings.Contains(text, "does not support tools") || strings.Contains(text, "not support tool") || strings.Contains(text, "tools is not supported") || strings.Contains(text, "tool use is not supported")
-		return nil, &providerHTTPError{Status: resp.StatusCode, ToolsUnsupported: unsupported}
+		return nil, providerFailure(p.ID, resp.StatusCode, raw)
 	}
 	return resp, nil
 }
@@ -193,6 +197,20 @@ func (a *App) models(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		status[id] = "Connected"
+		if id == "ollama" {
+			versionCtx, stop := context.WithTimeout(r.Context(), 2*time.Second)
+			if vr, err := request(versionCtx, p, "GET", "/api/version", nil); err == nil {
+				var version struct {
+					Version string `json:"version"`
+				}
+				err = json.NewDecoder(io.LimitReader(vr.Body, 1024)).Decode(&version)
+				vr.Body.Close()
+				if err == nil && validOllamaVersion(version.Version) {
+					status[id] += " · Ollama " + version.Version
+				}
+			}
+			stop()
+		}
 		for _, m := range data.Models {
 			if contains(m.Capabilities, "embedding") && !contains(m.Capabilities, "completion") {
 				continue

@@ -480,7 +480,7 @@ func RunMCP(in io.Reader, out io.Writer) error {
 		response := map[string]any{"jsonrpc": "2.0", "id": req.ID}
 		switch req.Method {
 		case "initialize":
-			response["result"] = map[string]any{"protocolVersion": "2025-06-18", "capabilities": map[string]any{"tools": map[string]bool{"listChanged": false}}, "serverInfo": map[string]string{"name": "my-ai-tools", "version": "0.1.0-preview.5"}}
+			response["result"] = map[string]any{"protocolVersion": "2025-06-18", "capabilities": map[string]any{"tools": map[string]bool{"listChanged": false}}, "serverInfo": map[string]string{"name": "my-ai-tools", "version": "0.1.0-preview.6"}}
 		case "ping":
 			response["result"] = map[string]any{}
 		case "tools/list":

@@ -1,0 +1,11 @@
+# Local model loading — 25 October
+
+User reports HTTP500 after installing eriktonon/bonsai-2-uncensored:4b; authorizes fix, push, release and installation on both PCs. Preserve downloaded model libraries, all owner identity/settings, unrelated apps and newer concurrent releases. No Actions/subagents or live owner chat/account/Drive fixtures.
+
+Secondary Ollama version verified through its local API as0.33.3. Publisher requests0.40.11 for this Q2_0 format. Isolated official0.40.11 CPU successfully answered a real MyAI native tool-protocol request with the exact model. Primary0.40.7 also passed both direct and MyAI requests in an isolated store: do not claim that every earlier version fails or that the secondary raw500 was reproduced. Official installer0.40.11 and ZIP verified against GitHub asset digests; installer signature Ollama Inc valid. Runtime upgrades in progress; installed libraries must be compared/preserved.
+
+Preview6 classifies bounded JSON HTTP/stream errors into fixed safe local format/runtime, memory, missing model, context and busy messages. No upstream content, prompts or credentials displayed. Cloud failures remain provider-specific. Existing Chat tool fallback retained, project tool enforcement remains closed. Models status adds strictly validated Ollama version with independent2-second timeout; failed version request does not hide installed models. No UI tree, model selection, access scope or managed-project behavior changed. Minimum manager88 retained.
+
+Verification: full Go tests/vet, frontend build/audit0, govulncheck0 reachable/imported (one unused required-module advisory). Added classification/stream/tool-fallback and version sanitization regression tests. Two real native protocol tests passed with isolated Bonsai4b on0.40.7 and0.40.11; no owner conversation created. Temporary acceptance source removed, tracked fixture servers stopped. Artifacts under tooling/my-ai-model-fix-20261025 outside repo; task private NTFS profile cleanup still required.
+
+Resume: finalize preview6 source and build/package/immutable publication; refresh public update index and suite MyAI pin without changing concurrent Social/manager89. Install MyAI-only through normal protected updater on both PCs, verify runtime0.40.11, retained libraries/other app state and running health. Do not report completed delivery until receipts confirm.

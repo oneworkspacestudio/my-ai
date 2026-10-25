@@ -30,3 +30,9 @@ member creation, physical/Git cross-user denial, incoming Git changes, competing
 change preservation, retry/idempotence, credential exclusion and temporary-token
 recovery. Current receipts identify the exact tested candidates. No live cloud,
 full Codex command, clean-host or reboot test is implied.
+
+## Local model loading errors
+
+My AI distinguishes Ollama model-format/version failures, insufficient memory, missing models and oversized conversations from cloud account errors. Both HTTP and streamed failures use safe fixed messages; upstream error bodies are never displayed. Models lists show the installed Ollama runtime version when available. Download completion confirms stored files, not that every model fits or is supported by the installed runtime.
+
+For newer community model formats, update Ollama on the server using its official installer, then retry the same downloaded model. Existing models stay in place. Bonsai2 testing targets official Ollama 0.40.11; a basic isolated CPU test also passed on 0.40.7. A successful pull on an older runtime does not establish inference compatibility.

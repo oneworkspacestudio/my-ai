@@ -19,14 +19,7 @@ type generation struct {
 	Output    []any
 	Reasoning string
 }
-type providerHTTPError struct {
-	Status           int
-	ToolsUnsupported bool
-}
 
-func (e *providerHTTPError) Error() string {
-	return fmt.Sprintf("Provider returned HTTP%d. Check credentials, quota and the selected model", e.Status)
-}
 func toolDefinitions(provider string, scope toolScope) []any {
 	out := []any{}
 	for _, s := range toolSpecs(scope) {
@@ -241,7 +234,7 @@ func (a *App) generate(ctx context.Context, p Provider, model string, messages [
 			continue
 		}
 		if len(v.Error) > 0 && string(v.Error) != "null" {
-			return g, errors.New("Provider reported a generation error. Check the model and account quota")
+			return g, providerFailure(p.ID, 0, v.Error)
 		}
 		delta := ""
 		if p.ID == "openai" && v.Type == "response.output_text.delta" {
