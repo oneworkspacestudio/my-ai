@@ -151,7 +151,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
             <Input name="prompt" type="textarea" placeholder={data.placeholder} variant="prompt" />
             <Row variant="composer-controls">
               <Button onClick={() => onAction("tools")} icon="Wrench" label="Tools & skills" variant="icon" disabled={data.busy} />
-              <Button onClick={() => onAction("web-search")} icon="Globe" label={data.webSearchLabel} pressed={data.webSearch} variant={data.webSearchVariant} disabled={data.busy} />
+              <Select name="searchMode" label="Web search" options={data.searchModeOptions} variant="search-mode" disabled={data.busy} />
               <Button onClick={() => onAction("attach")} icon="Plus" label="Attach text or code" variant="icon" disabled={data.busy} />
               <Button onClick={() => onAction("policy")} icon="ShieldCheck" variant="permission" disabled={data.busy}>{data.policyLabel}</Button>
               <Spacer />
@@ -291,6 +291,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                   <Text variant="muted">{item.description}</Text>
                 </Card>
               ))}
+              <Text>Search: Auto checks current public questions before the model answers. On searches every question. Off blocks web tools for the turn. Private files and attachments are never included in an automatic search query.</Text>
               <Text>Codex uses the same private SearXNG search through My AI’s included tools. Project editing stays inside the selected project and saves to your private Git repository.</Text>
             </>
           )}

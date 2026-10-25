@@ -1,7 +1,7 @@
 {
   "name": "@oneworkspacestudio/my-ai",
   "private": true,
-  "version": "0.1.0-preview.7",
+  "version": "0.1.0-preview.8",
   "type": "module",
   "scripts": {
     "generate": "node scripts/generate.mjs",

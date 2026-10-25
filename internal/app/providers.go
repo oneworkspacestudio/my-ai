@@ -258,6 +258,8 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Text        string   `json:"text"`
 		WebSearch   bool     `json:"webSearch"`
+		SearchMode  string   `json:"searchMode"`
+		TimeZone    string   `json:"timeZone"`
 		Attachments []string `json:"attachments"`
 	}
 	if !apphost.Decode(w, r, &in) {
@@ -267,7 +269,23 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 400, "Enter a prompt up to 200000 characters and at most five text attachments")
 		return
 	}
-	if in.WebSearch && !validSearchQuery(in.Text) {
+	if in.SearchMode == "" {
+		in.SearchMode = "auto"
+	}
+	if in.WebSearch && in.SearchMode != "off" {
+		in.SearchMode = "on"
+	}
+	if in.SearchMode != "auto" && in.SearchMode != "on" && in.SearchMode != "off" {
+		apphost.Problem(w, 400, "Choose Auto, On or Off for web search")
+		return
+	}
+	if in.TimeZone != "" {
+		if _, e := time.LoadLocation(in.TimeZone); e != nil || len(in.TimeZone) > 80 {
+			apphost.Problem(w, 400, "Choose a valid timezone")
+			return
+		}
+	}
+	if in.SearchMode == "on" && !validSearchQuery(in.Text) {
 		apphost.Problem(w, 400, "For web search, enter a question of up to500 characters. Attached files are never sent as search queries")
 		return
 	}
@@ -307,7 +325,9 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.ToolInput = in.Text
-	if in.WebSearch {
+	s.SearchMode = in.SearchMode
+	s.SearchTimeZone = in.TimeZone
+	if in.SearchMode == "on" {
 		s.SearchQuery = strings.TrimSpace(in.Text)
 	}
 	for _, id := range in.Attachments {

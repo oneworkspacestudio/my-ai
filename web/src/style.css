@@ -10,3 +10,5 @@
 .button--search-active{background:var(--accent,#77b9ff);color:#101823;border:1px solid transparent}.button--search-active span{font-weight:600}
 
 .button--search-active:hover{background:var(--mint);color:#101823}
+
+.select--search-mode{max-width:135px;color:var(--text)}

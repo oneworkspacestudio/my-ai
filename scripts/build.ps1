@@ -1,4 +1,4 @@
-param([string]$Go='go',[string]$Out='dist',[string]$Version='0.1.0-preview.7')
+param([string]$Go='go',[string]$Out='dist',[string]$Version='0.1.0-preview.8')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 npm --prefix (Join-Path $root 'web') ci --no-audit --no-fund

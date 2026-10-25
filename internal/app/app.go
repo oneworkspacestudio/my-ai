@@ -45,24 +45,26 @@ type Event struct {
 	Data   json.RawMessage `json:"data"`
 }
 type Session struct {
-	ToolInput   string    `json:"-"`
-	SearchQuery string    `json:"-"`
-	Schema      int       `json:"schema"`
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Mode        string    `json:"mode"`
-	Project     string    `json:"project,omitempty"`
-	Provider    string    `json:"provider"`
-	Model       string    `json:"model"`
-	Effort      string    `json:"effort"`
-	Policy      string    `json:"policy"`
-	Pinned      bool      `json:"pinned"`
-	Archived    bool      `json:"archived"`
-	Revision    int       `json:"revision"`
-	Updated     string    `json:"updated"`
-	Thread      string    `json:"thread,omitempty"`
-	Messages    []Message `json:"messages"`
-	Events      []Event   `json:"events"`
+	ToolInput      string    `json:"-"`
+	SearchMode     string    `json:"-"`
+	SearchTimeZone string    `json:"-"`
+	SearchQuery    string    `json:"-"`
+	Schema         int       `json:"schema"`
+	ID             string    `json:"id"`
+	Title          string    `json:"title"`
+	Mode           string    `json:"mode"`
+	Project        string    `json:"project,omitempty"`
+	Provider       string    `json:"provider"`
+	Model          string    `json:"model"`
+	Effort         string    `json:"effort"`
+	Policy         string    `json:"policy"`
+	Pinned         bool      `json:"pinned"`
+	Archived       bool      `json:"archived"`
+	Revision       int       `json:"revision"`
+	Updated        string    `json:"updated"`
+	Thread         string    `json:"thread,omitempty"`
+	Messages       []Message `json:"messages"`
+	Events         []Event   `json:"events"`
 }
 
 var idRE = regexp.MustCompile(`^[a-f0-9]{48}$`)

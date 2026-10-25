@@ -2,7 +2,7 @@
   "schema": 1,
   "id": "myai",
   "name": "My AI",
-  "version": "0.1.0-preview.7",
+  "version": "0.1.0-preview.8",
   "workspaceInstallerIntegration": 3,
   "minimumWorkspaceVersion": "0.3.0-preview.88",
   "route": "/myai",
