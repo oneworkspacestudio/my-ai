@@ -31,5 +31,12 @@
   "fullCodexModelOrShellTurn": false,
   "ownerAccountUsedAsFixture": false,
   "githubActionsUsed": false,
-  "twoPCInstallation": "Pending normal protected MyAI-only update"
+  "twoPCInstallation": {
+    "primary": "One normal protected MyAI-only update started; verification pending",
+    "secondary": "Waiting for existing separate Tube4 update; MyAI8 not started"
+  },
+  "publicReleaseAndAnonymousExecutableVerified": true,
+  "publicChannelPromotion": "823aab1",
+  "allBaseline18ModelNamesAndSizesRetained": true,
+  "syntheticFixtureProcessesStoppedAndPrivateRootsRemoved": true
 }
