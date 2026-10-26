@@ -21,5 +21,12 @@
   "newBonsaiOrCloudOrFullCodexTurn": false,
   "ownerChatUsedAsFixture": false,
   "githubActionsUsed": false,
-  "twoPCInstallation": "Pending normal protected MyAI-only updates"
+  "twoPCInstallation": "Secondary original normal MyAI-only update in progress; primary awaiting protected-backup storage reserve. No repeat apply.",
+  "publicRelease": "https://github.com/oneworkspacestudio/my-ai/releases/tag/v0.1.0-preview.9",
+  "sourceCommit": "f5d135b2074c2bfd7d723082818bbd165ff30422",
+  "anonymousPublicExecutableVerified": true,
+  "allPublicAssetDigestsVerified": true,
+  "publicChannelPromotion": "f2f3bf6",
+  "allPriorChannelRowsRetained": true,
+  "taskSyntheticProcessesAndNamedCFixturesCleaned": true
 }
