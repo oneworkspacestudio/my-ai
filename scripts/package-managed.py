@@ -35,6 +35,6 @@ with zipfile.ZipFile(out / asset) as archive:
         archive_member = 'MyAI/' + member
         assert archive.read(archive_member) == payload, archive_member
         packages[key] = {'file': target, 'size': len(payload), 'sha256': hashlib.sha256(payload).hexdigest(), 'asset': asset, 'member': archive_member}
-manifest = {'schema': 2, 'integration': 3, 'repository': repo, 'tag': tag, 'minimumManager': '0.3.0-preview.88', 'apps': [app], 'packages': packages}
+manifest = {'schema': 2, 'integration': 3, 'repository': repo, 'tag': tag, 'minimumManager': json.loads((out / 'package/compatibility.json').read_text(encoding='utf-8'))['minimumWorkspaceVersion'], 'apps': [app], 'packages': packages}
 (out / 'workspace-update.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
 print('Verified and emitted managed-update metadata for all9 My AI payloads')

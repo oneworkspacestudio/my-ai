@@ -351,10 +351,6 @@ func (a *App) code(ctx context.Context, uid, root string, s *Session, p Provider
 	}
 }
 func (a *App) approval(w http.ResponseWriter, r *http.Request) {
-	if apphost.Current(r).User.Role != "owner" {
-		apphost.Problem(w, 403, "Owner approval required")
-		return
-	}
 	var in struct {
 		ID       string `json:"id"`
 		Decision string `json:"decision"`
@@ -364,6 +360,14 @@ func (a *App) approval(w http.ResponseWriter, r *http.Request) {
 	}
 	if in.Decision != "accept" && in.Decision != "decline" {
 		apphost.Problem(w, 400, "Choose approve once or deny")
+		return
+	}
+	if a.answerWorkspaceReview(apphost.Current(r).User.ID, r.PathValue("id"), in.ID, in.Decision == "accept") {
+		apphost.JSON(w, 200, map[string]bool{"answered": true})
+		return
+	}
+	if apphost.Current(r).User.Role != "owner" {
+		apphost.Problem(w, 403, "This action review expired or belongs to another conversation")
 		return
 	}
 	a.mu.Lock()

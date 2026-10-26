@@ -33,6 +33,7 @@ type App struct {
 	client                   *http.Client
 	running                  map[string]context.CancelFunc
 	agents                   map[string]*Agent
+	workspaceApprovals       map[string]chan bool
 }
 type Message struct {
 	ID             string `json:"id"`
@@ -50,29 +51,31 @@ type Event struct {
 	Data   json.RawMessage `json:"data"`
 }
 type Session struct {
-	ToolInput       string                 `json:"-"`
-	SearchMode      string                 `json:"-"`
-	SearchTimeZone  string                 `json:"timeZone,omitempty"`
-	TurnTime        time.Time              `json:"-"`
-	SearchQuery     string                 `json:"-"`
-	WebDisabled     bool                   `json:"webDisabled,omitempty"`
-	ResearchContext *publicResearchContext `json:"researchContext,omitempty"`
-	Schema          int                    `json:"schema"`
-	ID              string                 `json:"id"`
-	Title           string                 `json:"title"`
-	Mode            string                 `json:"mode"`
-	Project         string                 `json:"project,omitempty"`
-	Provider        string                 `json:"provider"`
-	Model           string                 `json:"model"`
-	Effort          string                 `json:"effort"`
-	Policy          string                 `json:"policy"`
-	Pinned          bool                   `json:"pinned"`
-	Archived        bool                   `json:"archived"`
-	Revision        int                    `json:"revision"`
-	Updated         string                 `json:"updated"`
-	Thread          string                 `json:"thread,omitempty"`
-	Messages        []Message              `json:"messages"`
-	Events          []Event                `json:"events"`
+	WorkspaceSession string                 `json:"-"`
+	WorkspaceContext bool                   `json:"workspaceContext,omitempty"`
+	ToolInput        string                 `json:"-"`
+	SearchMode       string                 `json:"-"`
+	SearchTimeZone   string                 `json:"timeZone,omitempty"`
+	TurnTime         time.Time              `json:"-"`
+	SearchQuery      string                 `json:"-"`
+	WebDisabled      bool                   `json:"webDisabled,omitempty"`
+	ResearchContext  *publicResearchContext `json:"researchContext,omitempty"`
+	Schema           int                    `json:"schema"`
+	ID               string                 `json:"id"`
+	Title            string                 `json:"title"`
+	Mode             string                 `json:"mode"`
+	Project          string                 `json:"project,omitempty"`
+	Provider         string                 `json:"provider"`
+	Model            string                 `json:"model"`
+	Effort           string                 `json:"effort"`
+	Policy           string                 `json:"policy"`
+	Pinned           bool                   `json:"pinned"`
+	Archived         bool                   `json:"archived"`
+	Revision         int                    `json:"revision"`
+	Updated          string                 `json:"updated"`
+	Thread           string                 `json:"thread,omitempty"`
+	Messages         []Message              `json:"messages"`
+	Events           []Event                `json:"events"`
 }
 
 var idRE = regexp.MustCompile(`^[a-f0-9]{48}$`)
@@ -84,6 +87,7 @@ func New(h *apphost.Host) (*App, error) {
 		return nil, e
 	}
 	a := &App{downloads: q, H: h, client: &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, projectTurns: map[string]bool{}, running: map[string]context.CancelFunc{}, agents: map[string]*Agent{}}
+	h.Mux.HandleFunc("GET /api/workspace", h.Require(a.workspaceInfo))
 	for _, v := range []struct {
 		p string
 		f http.HandlerFunc
@@ -318,12 +322,16 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 		}
 		s.Messages = old.Messages
 		s.Events = old.Events
+		s.WorkspaceContext = old.WorkspaceContext
 		s.Thread = old.Thread
 		if s.Provider != old.Provider || s.Project != old.Project {
 			s.Thread = ""
 		}
 	} else {
 		s.Thread = ""
+		// Imported history may contain private app output. Only an empty new
+		// conversation starts without a private-history boundary.
+		s.WorkspaceContext = s.WorkspaceContext || len(s.Messages) > 0 || len(s.Events) > 0
 		s.Revision = 0
 		if len(s.Messages) > 0 {
 			for i := range s.Messages {

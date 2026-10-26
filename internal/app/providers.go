@@ -335,6 +335,9 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.ToolInput = in.Text
+	if c, err := r.Cookie("workspace_session"); err == nil {
+		s.WorkspaceSession = c.Value
+	}
 	if noWebRequest.MatchString(in.Text) {
 		s.WebDisabled = true
 	} else if allowWebRequest.MatchString(strings.TrimSpace(in.Text)) {

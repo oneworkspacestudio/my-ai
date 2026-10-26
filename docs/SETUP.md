@@ -139,7 +139,8 @@ Windows context.
 Build locally with npm --prefix web run build, go test ./... and go vet ./....
 The release scripts build locally with GitHub Actions disabled. After packaging,
 python scripts/package-managed.py <release-folder> --version <version> verifies
-all9 portable members and emits workspace-update.json. Managed preview5 requires
-Workspace88. Publish and promote the raw public update channel before delivery.
+all9 portable members and emits workspace-update.json. Managed preview12 requires
+Workspace93 for its native app gateway. See [Workspace app actions](workspace-apps.md).
+Publish and promote the raw public update channel before delivery.
 Unsigned evaluation build; no clean-host, physical reboot or production
 certification is claimed. See SUPPORT.md for the acceptance matrix.

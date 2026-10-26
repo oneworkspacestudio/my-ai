@@ -1,0 +1,28 @@
+{
+  "myAI": "0.1.0-preview.12",
+  "manager": "0.3.0-preview.93",
+  "realNativeServices": [
+    "Accounts",
+    "Drive",
+    "Git",
+    "Notes",
+    "Tasks",
+    "Hosting"
+  ],
+  "model": "qwen3.5:4b",
+  "reviewedTaskVisibleInNativeUI": true,
+  "reviewedNoteVisibleInNativeUI": true,
+  "driveFileVisibleInNativeUI": true,
+  "driveBytes": 31,
+  "driveExactContentVerified": true,
+  "generalCreatedAutomatically": true,
+  "remoteGitMatchesDriveBytesAndRegistry": true,
+  "immutableCommit": "bc60fab61cb93957f2da2dae821ff73b9188ac58",
+  "reviewedStaticSiteAndExactRevisionDeployment": true,
+  "deploymentState": "published",
+  "actualPreviewPageOpenedAndVerified": true,
+  "unknownUploadRecoveryCoveredByTests": true,
+  "ownerUsedAsFixture": false,
+  "otherRegisteredAppsNotIndividuallyCertified": true,
+  "cloudAndFullCodexNotCertified": true
+}

@@ -96,8 +96,8 @@ Page Workspace variant=$theme
             Heading level=3 "Approval required"
           Text variant=pre "$item.content"
           Row
-            Button action=approve item=$item.id variant=primary "Approve once"
-            Button action=deny item=$item.id "Deny"
+            Button action=approve item=$item.id variant=primary disabled=$item.submitting "Approve once"
+            Button action=deny item=$item.id disabled=$item.submitting "Deny"
     Stack variant=composer-wrap
       If condition=$message
         Alert "$message"
@@ -198,9 +198,17 @@ Page Workspace variant=$theme
             If condition=$item.canRetry
               Button action=retry-pull item=$item.model "Retry download"
       If condition=$toolsView
+        Heading level=3 "Your Workspace apps"
+        Text "$workspaceNotice"
+        For each=$workspaceApps
+          Card variant=tool-card
+            Text variant=author "$item.name"
+            Text variant=muted "$item.description"
+            Text variant=status "$item.capabilityLabel"
+            Link href=$item.url "Open app ↗"
         Heading level=3 "Web search"
         Text "$searchProvider"
-        Text "Turn on Search web in the composer to search before answering. It works in Chat and projects with every chat model. Only your question is searched; attached files are kept private."
+        Text "Ask normally. My AI searches public information when needed. Private app content stays out of public web searches."
         Link href=$searchSource "SearXNG source and licences ↗"
         Text "$toolNotice"
         Text "Chat has live time, calculator, public web search/page reading, and private conversation/attachment reads. You can read your own projects. Automatic tool use depends on the selected model; explicit commands work with any chat model."

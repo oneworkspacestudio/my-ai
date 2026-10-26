@@ -130,8 +130,8 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               </Row>
               <Text variant="pre">{item.content}</Text>
               <Row>
-                <Button onClick={() => onAction("approve")} item={item.id} variant="primary">Approve once</Button>
-                <Button onClick={() => onAction("deny")} item={item.id}>Deny</Button>
+                <Button onClick={() => onAction("approve")} item={item.id} variant="primary" disabled={item.submitting}>Approve once</Button>
+                <Button onClick={() => onAction("deny")} item={item.id} disabled={item.submitting}>Deny</Button>
               </Row>
             </Card>
           ))}
@@ -281,9 +281,19 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
           )}
           {data.toolsView && (
             <>
+              <Heading level={3}>Your Workspace apps</Heading>
+              <Text>{data.workspaceNotice}</Text>
+              {data.workspaceApps.map((item, i) => (
+                <Card key={i} variant="tool-card">
+                  <Text variant="author">{item.name}</Text>
+                  <Text variant="muted">{item.description}</Text>
+                  <Text variant="status">{item.capabilityLabel}</Text>
+                  <Link href={item.url}>Open app ↗</Link>
+                </Card>
+              ))}
               <Heading level={3}>Web search</Heading>
               <Text>{data.searchProvider}</Text>
-              <Text>Turn on Search web in the composer to search before answering. It works in Chat and projects with every chat model. Only your question is searched; attached files are kept private.</Text>
+              <Text>Ask normally. My AI searches public information when needed. Private app content stays out of public web searches.</Text>
               <Link href={data.searchSource}>SearXNG source and licences ↗</Link>
               <Text>{data.toolNotice}</Text>
               <Text>Chat has live time, calculator, public web search/page reading, and private conversation/attachment reads. You can read your own projects. Automatic tool use depends on the selected model; explicit commands work with any chat model.</Text>

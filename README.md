@@ -10,6 +10,8 @@ Choose a provider and model in each conversation. Models shows local models firs
 
 In Code, choose your project above the message box or select New project. You can also start typing and send: My AI uses your private General project automatically. Your draft stays with you while choosing or creating a project.
 
+Ask My AI to use your Workspace apps: save a document in Drive, organise tasks and notes, inspect Git, or deploy a saved project with My Hosting. It discovers installed apps automatically and shows app changes for review. See [supported app actions](docs/workspace-apps.md) for the available connections.
+
 Chat includes real clock/timezone, arithmetic, public web search/page reading, private conversation/attachment lookup, and your own project reads. Use Tools & skills to see available tools and explicit commands for models without automatic function calling. Project conversations can also create and edit text files inside the selected project using a model with tool support. The public read-only tools are available through a bundled MCP server.
 
 Just ask your question. My AI plans public searches, reads source pages and refines weak results before answering with source links. It checks quotations and citations before displaying researched answers. Every turn receives server time and your timezone, so relative dates refer to the requested day; undated event questions ask for the latest relevant result. You can follow up normally, ask it to search, or say “don’t search the web.” Search engines and source sites can fail or omit information; My AI reports uncertainty rather than treating missing results as proof that an event did not happen.

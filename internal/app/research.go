@@ -87,7 +87,7 @@ var privateMarker = regexp.MustCompile(`(?i)\bprivate[_-]`)
 var publicFollowup = regexp.MustCompile(`(?i)^(?:(?:yes(?: please)?|please do|go ahead|who scored|who won|how much|how many|what happened next|tell me more)[?.! ]*$|when was (it|that)\b|where was (it|that)\b|and\b|what about\b|how about\b|what (did|was|is|were) (they|their)\b|who (did|do|are) they\b)`)
 
 func safePublicQuestion(input string) bool {
-	return strings.TrimSpace(input) != "" && len(input) <= 6000 && utf8.ValidString(input) && !privateQuestion.MatchString(strings.Join(strings.Fields(input), " ")) && !outgoingSecret.MatchString(input) && !privateMarker.MatchString(input)
+	return strings.TrimSpace(input) != "" && len(input) <= 6000 && utf8.ValidString(input) && !workspaceRequest.MatchString(input) && !privateQuestion.MatchString(strings.Join(strings.Fields(input), " ")) && !outgoingSecret.MatchString(input) && !privateMarker.MatchString(input)
 }
 func previousPublicQuestion(history []Message) string {
 	for i := len(history) - 1; i >= 0; i-- {
