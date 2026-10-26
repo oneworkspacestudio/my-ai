@@ -10,8 +10,101 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 )
+
+func TestGeneralProjectRetriesAndAccounts(t *testing.T) {
+	db, e := sql.Open("sqlite", ":memory:")
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+	_, e = db.Exec(`CREATE TABLE host_users(id TEXT,subject TEXT,issuer TEXT,name TEXT,role TEXT)`)
+	if e != nil {
+		t.Fatal(e)
+	}
+	issuer := "https://accounts.example.test"
+	for _, subject := range []string{"one", "two"} {
+		_, e = db.Exec(`INSERT INTO host_users VALUES(?,?,?,?,?)`, apphost.Identity(issuer, subject), subject, issuer, "Fixture", "member")
+		if e != nil {
+			t.Fatal(e)
+		}
+	}
+	var mu sync.Mutex
+	created := map[string]string{}
+	posts := 0
+	broken := false
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		if broken {
+			http.Error(w, "unavailable", 503)
+			return
+		}
+		if r.Method == "GET" {
+			id := created[r.Header.Get("X-MyAI-Subject")]
+			if id == "" || r.URL.Path != "/_integration/myai/projects/"+id {
+				http.NotFound(w, r)
+				return
+			}
+			_ = json.NewEncoder(w).Encode(Project{ID: id, Name: "General", Managed: true, Commit: "verified-head", State: "changes"})
+			return
+		}
+		var body map[string]string
+		if r.Method != "POST" || r.URL.Path != "/_integration/myai/projects" || r.Header.Get("Authorization") != "Bearer fixture" || json.NewDecoder(r.Body).Decode(&body) != nil || body["name"] != "General" {
+			http.Error(w, "bad request", 400)
+			return
+		}
+		subject := r.Header.Get("X-MyAI-Subject")
+		posts++
+		if prior := created[subject]; prior != "" && prior != body["id"] {
+			t.Error("duplicate General identity")
+		}
+		created[subject] = body["id"]
+		_ = json.NewEncoder(w).Encode(Project{ID: body["id"], Name: "General", Managed: true, Commit: "verified-head", State: "synced"})
+	}))
+	defer srv.Close()
+	t.Setenv("MYAI_PROJECTS_URL", srv.URL+"/_integration/myai/projects")
+	t.Setenv("MYAI_STORAGE_GUARD_TOKEN", "fixture")
+	a := &App{H: &apphost.Host{DB: db, Config: apphost.Config{Issuer: issuer}}}
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			s := Session{Mode: "code", Thread: "old-thread"}
+			uid := apphost.Identity(issuer, "one")
+			if e := a.ensureCodeProject(context.Background(), uid, &s); e != nil || s.Project != generalProjectID(uid) || s.Thread != "" {
+				t.Error("fallback", s.Project, e)
+			}
+		}()
+	}
+	wg.Wait()
+	// A new app process and a different account keep their own stable project.
+	a = &App{H: a.H}
+	s := Session{Mode: "code"}
+	if e = a.ensureCodeProject(context.Background(), apphost.Identity(issuer, "two"), &s); e != nil {
+		t.Fatal(e)
+	}
+	if len(created) != 2 || posts != 2 || created["one"] == created["two"] || !idRE.MatchString(s.Project) {
+		t.Fatal("account isolation", created)
+	}
+	mu.Lock()
+	broken = true
+	mu.Unlock()
+	for _, s := range []Session{{Mode: "chat"}, {Mode: "code", Project: "explicit", Thread: "keep"}} {
+		before := s
+		if e = a.ensureCodeProject(context.Background(), "unregistered", &s); e != nil || s.Project != before.Project || s.Thread != before.Thread || s.Mode != before.Mode {
+			t.Fatal("explicit/Chat project changed", e)
+		}
+	}
+	missing := Session{Mode: "code"}
+	if e = a.ensureCodeProject(context.Background(), apphost.Identity(issuer, "one"), &missing); e == nil || missing.Project != "" {
+		t.Fatal("failed setup accepted")
+	}
+}
 
 func TestManagedProjectFileBoundary(t *testing.T) {
 	root := t.TempDir()

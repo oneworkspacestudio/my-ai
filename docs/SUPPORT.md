@@ -13,6 +13,7 @@
 | Codex app-server | Real stdio handshake/model metadata demonstrated on0.157.1; thread/turn/resume/events/approvals/interrupt integrated; thread profile and MCP transport checked; legacy Windows unelevated backend refuses restricted profiles; actual edit/test turn requires live key and explicit MXC/elevated sandbox setup/acceptance |
 | Native project editing | Provider-native bounded file tools; real local Ollama edit/commit/push demonstrated. OpenAI/DeepSeek transport fixtures pass; live cloud turns need configured keys. No shell/test runner. |
 | Projects and Git | Name-only creation, private per-account My Drive/Git, initial push, automatic completed-turn commit/push, safe incoming fast-forward, retry and no-force conflict refusal; actual native Git/OIDC/Drive/cross-user checks |
+| Code project choice | Visible composer picker and New project on desktop/phone; unsent drafts retained; automatic private General project when none selected, stable across tabs/restarts; existing empty-project Code sessions recover on their next turn |
 | Sessions | Search titles, pin/rename/archive/restore, revision conflict checks, JSON/Markdown export, JSON import, transcript fork, retry, Stop |
 | Attachments | UTF-8 text/code up to1MB; stored in private Drive scope; image/document/audio inference unavailable |
 | Markdown/code/tables | Safe React Markdown and GFM, raw HTML disabled; syntax colouring unavailable |

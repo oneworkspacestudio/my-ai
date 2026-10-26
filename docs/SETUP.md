@@ -8,6 +8,17 @@ identifies the selected provider.
 
 ## Create and work on a project
 
+In Code, the project button above your message lets you select an existing
+project. Choose New project to create one by name. Your unsent message stays in
+the composer when you select or create a project. Changing the project after a
+conversation has started opens a new conversation in that project.
+
+You can also send straight away: when nothing is selected, My AI creates or
+reuses your private General project in My Drive / Projects and connects it to
+Git. This is one General project per account across conversations, tabs and
+restarts. Chat does not create a project. If setup fails, your draft stays in
+place and no message is sent to the model.
+
 Open Projects, give the project a name, and choose Create project. My AI creates
 its folder in the private Projects area in My Drive, creates a private repository
 in your Git app, adds a README and confirms the first push before saying it is

@@ -148,6 +148,12 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
             </Row>
           )}
           <Card variant="composer">
+            {data.isCodeMode && (
+              <Row variant="composer-project">
+                <Button onClick={() => onAction("projects")} icon="FolderOpen" variant="project-picker" disabled={data.busy} label={data.projectLabel} />
+                <Button onClick={() => onAction("create-project")} icon="FolderPlus" variant="subtle" disabled={data.busy}>New project</Button>
+              </Row>
+            )}
             <Input name="prompt" type="textarea" placeholder={data.placeholder} variant="prompt" />
             <Row variant="composer-controls">
               <Button onClick={() => onAction("tools")} icon="Wrench" label="Tools & skills" variant="icon" disabled={data.busy} />
@@ -296,6 +302,8 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
           )}
           {data.projectsView && (
             <>
+              <Text>Choose a project for this conversation, or use General to get started.</Text>
+              <Button onClick={() => onAction("general-project")} icon="Folder" variant="primary" disabled={data.projectBusy}>Use General project</Button>
               <Text>Give your project a name. We'll create its folder in My Drive and a private repository in Git. My AI saves completed changes to both automatically.</Text>
               <Input name="projectName" placeholder="Project name" />
               <Button onClick={() => onAction("add-project")} icon="FolderPlus" variant="primary" disabled={data.projectBusy}>{data.createProjectLabel}</Button>

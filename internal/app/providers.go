@@ -316,8 +316,18 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	}
 	if s.Mode == "code" && s.Project == "" {
 		a.mu.Unlock()
-		apphost.Problem(w, 400, "Choose a project first")
-		return
+		// Also recover older saved Code conversations that predate the fallback.
+		if e = a.ensureCodeProject(r.Context(), uid, &s); e != nil {
+			apphost.Problem(w, 503, e.Error())
+			return
+		}
+		a.mu.Lock()
+		latest, readErr := a.read(root, s.ID)
+		if readErr != nil || latest.Revision != s.Revision || a.running[key] != nil {
+			a.mu.Unlock()
+			apphost.Problem(w, 409, "Conversation changed in another tab; reopen it before sending")
+			return
+		}
 	}
 	if s.Mode == "code" && a.projectTurns[uid+":"+s.Project] {
 		a.mu.Unlock()

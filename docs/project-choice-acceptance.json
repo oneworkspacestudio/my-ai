@@ -1,0 +1,35 @@
+{
+  "version": "0.1.0-preview.11",
+  "localBuildAndChecks": {
+    "goAllPackages": true,
+    "goVet": true,
+    "includedNativeSearXNG": true,
+    "auiTypescriptVite": true,
+    "concurrentGeneralRetryAndAccountIsolation": true,
+    "existingGeneralDoesNotSyncUnfinishedEdits": true,
+    "setupFailureDoesNotAssignProject": true,
+    "explicitProjectAndChatRetained": true,
+    "productionNpmVulnerabilities": 0,
+    "reachableGoVulnerabilities": 0,
+    "unusedRequiredModuleAdvisories": 1
+  },
+  "syntheticIntegration": {
+    "workspace": "0.3.0-preview.92",
+    "realAccountsDriveAndGit": true,
+    "namedProjectCreateAndDraftRetention": true,
+    "mobileEffectiveWidth": 434,
+    "horizontalOverflow": false,
+    "automaticGeneralRealModel": "qwen3.5:4b",
+    "generatedHtmlBytes": 15098,
+    "remoteGitHeadAndFileMatchDrive": true,
+    "completedConversationReopensAfterAppRestart": true,
+    "finalCandidatePickerReflectsServerAssignedGeneral": true,
+    "ownerAccountsUsedAsFixtures": false
+  },
+  "delivery": "Publication and both normal protected installations pending",
+  "limitations": [
+    "File editing requires a model with tool support",
+    "No live cloud model or full Codex shell acceptance",
+    "No clean-host, service or reboot certification"
+  ]
+}

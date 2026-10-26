@@ -10,3 +10,5 @@
 .button--search-active{background:var(--accent,#77b9ff);color:#101823;border:1px solid transparent}.button--search-active span{font-weight:600}
 
 .button--search-active:hover{background:var(--mint);color:#101823}
+
+.row--composer-project{border-bottom:1px solid var(--border);padding:0 0 8px;margin-bottom:8px;gap:6px}.button--project-picker{background:transparent;border:0;color:var(--link);justify-content:flex-start;flex:1;min-width:0;padding:6px;font-size:12px}.button--project-picker span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row--composer-project>.button--subtle{flex:none;font-size:11px}.row--composer-project svg{flex:none}.card--project-card{border:1px solid var(--border);border-radius:12px;padding:13px;display:flex;flex-direction:column;gap:9px}

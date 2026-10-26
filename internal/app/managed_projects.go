@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,6 +18,35 @@ import (
 
 	"github.com/oneworkspacestudio/one-workspace/pkg/apphost"
 )
+
+// A stable per-account ID makes creation safe to retry across tabs and restarts.
+// The Workspace broker still owns storage, authorization and private Git setup.
+func generalProjectID(uid string) string {
+	sum := sha256.Sum256([]byte("my-ai/general-project/v1/" + uid))
+	return fmt.Sprintf("%x", sum[:24])
+}
+
+func (a *App) ensureCodeProject(ctx context.Context, uid string, s *Session) error {
+	if s.Mode != "code" || s.Project != "" {
+		return nil
+	}
+	a.projectSetup.Lock()
+	defer a.projectSetup.Unlock()
+	id := generalProjectID(uid)
+	var p Project
+	// Reusing General must not sync another conversation's unfinished edits.
+	if e := a.projectBroker(ctx, uid, "GET", "/"+id, nil, &p); e != nil || p.Commit == "" || p.State == "creating" || p.State == "setup-needed" {
+		if e := a.projectBroker(ctx, uid, "POST", "", map[string]string{"id": id, "name": "General"}, &p); e != nil {
+			return fmt.Errorf("General project could not be prepared. Your message has not been sent. %w", e)
+		}
+	}
+	if p.ID != id || !p.Managed || p.Commit == "" || p.State == "creating" || p.State == "setup-needed" {
+		return errors.New("General project setup is incomplete. Your message has not been sent; try again shortly")
+	}
+	s.Project = p.ID
+	s.Thread = ""
+	return nil
+}
 
 func (a *App) projectBroker(ctx context.Context, uid, method, path string, body any, out any) error {
 	endpoint := os.Getenv("MYAI_PROJECTS_URL")

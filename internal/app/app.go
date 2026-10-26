@@ -28,6 +28,7 @@ type App struct {
 	H                        *apphost.Host
 	mu                       sync.Mutex
 	projectIO                sync.Mutex
+	projectSetup             sync.Mutex
 	projectTurns             map[string]bool
 	client                   *http.Client
 	running                  map[string]context.CancelFunc
@@ -297,6 +298,10 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 	}
 	if !validSession(s) {
 		apphost.Problem(w, 400, "Check session fields")
+		return
+	}
+	if e := a.ensureCodeProject(r.Context(), apphost.Current(r).User.ID, &s); e != nil {
+		apphost.Problem(w, 503, e.Error())
 		return
 	}
 	a.mu.Lock()
