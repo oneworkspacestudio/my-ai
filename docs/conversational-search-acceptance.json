@@ -21,12 +21,36 @@
   "newBonsaiOrCloudOrFullCodexTurn": false,
   "ownerChatUsedAsFixture": false,
   "githubActionsUsed": false,
-  "twoPCInstallation": "Secondary original normal MyAI-only update in progress; primary awaiting protected-backup storage reserve. No repeat apply.",
+  "twoPCInstallation": "Secondary complete and verified; primary awaits protected-backup storage reserve, remains healthy on preview8. No primary9 apply started.",
   "publicRelease": "https://github.com/oneworkspacestudio/my-ai/releases/tag/v0.1.0-preview.9",
   "sourceCommit": "f5d135b2074c2bfd7d723082818bbd165ff30422",
   "anonymousPublicExecutableVerified": true,
   "allPublicAssetDigestsVerified": true,
   "publicChannelPromotion": "f2f3bf6",
   "allPriorChannelRowsRetained": true,
-  "taskSyntheticProcessesAndNamedCFixturesCleaned": true
+  "taskSyntheticProcessesAndNamedCFixturesCleaned": true,
+  "secondaryInstallation": {
+    "version": "0.1.0-preview.9",
+    "normalProtectedMyAIOnlyUpdate": true,
+    "duration": "25m27s",
+    "all27ServicesHealthy": true,
+    "all25OtherDisplayedGroupsRetained": true,
+    "manager90Retained": true,
+    "freshUpdateCheckCurrent": true,
+    "deployedNoSearchModeSelector": true,
+    "servedStylesheetBytesMatch": true,
+    "contentAddressedJSAndCSSNamesMatch": true,
+    "independentJSByteHash": false,
+    "independentRemoteDiskCredentialAudit": false,
+    "latestRecoveryVerifiedAndRetained": true
+  },
+  "primaryInstallation": {
+    "currentVersion": "0.1.0-preview.8",
+    "all27ServicesHealthy": true,
+    "preview9ApplyStarted": false,
+    "waitingForAdditionalFreeSpace": true,
+    "newestRecoveryBeforeAndAfterSDKVerificationPassed": true,
+    "backupGuardsBypassed": false,
+    "all18BaselineModelsRetained": true
+  }
 }
