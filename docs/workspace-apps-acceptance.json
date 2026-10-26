@@ -1,5 +1,5 @@
 {
-  "myAI": "0.1.0-preview.13",
+  "myAI": "0.1.0-preview.14",
   "manager": "0.3.0-preview.93",
   "realNativeServices": [
     "Accounts",
@@ -24,5 +24,11 @@
   "unknownUploadRecoveryCoveredByTests": true,
   "ownerUsedAsFixture": false,
   "otherRegisteredAppsNotIndividuallyCertified": true,
-  "cloudAndFullCodexNotCertified": true
+  "cloudAndFullCodexNotCertified": true,
+  "finalDirectDriveRead": true,
+  "finalDirectGitStatus": true,
+  "finalDirectReviewedHostingDeployment": "published",
+  "final14PublishedPageOpened": true,
+  "localModelRecoveredFromInvalidArguments": true,
+  "mobileViewportNotCertified": true
 }

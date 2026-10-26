@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -59,6 +60,114 @@ type workspaceArgs struct {
 	Parameters map[string]string `json:"parameters"`
 	Query      map[string]string `json:"query"`
 	Body       json.RawMessage   `json:"body"`
+}
+
+type workspaceNativeTool struct {
+	App       string
+	Operation workspaceOperation
+	Spec      toolSpec
+}
+
+func registerWorkspaceNative(scope toolScope, app workspaceApp) {
+	if scope.WorkspaceNative == nil {
+		return
+	}
+	for _, op := range app.Operations {
+		if len(scope.WorkspaceNative) >= 48 {
+			break
+		} // Leave room under provider tool-count limits.
+		properties := map[string]any{}
+		required := []string{}
+		for _, key := range op.Parameters {
+			properties[key] = map[string]string{"type": "string", "description": "Exact " + key + " returned by the app"}
+			required = append(required, key)
+		}
+		for _, key := range op.Query {
+			properties[key] = map[string]string{"type": "string"}
+		}
+		collision := false
+		if body, ok := op.BodySchema["properties"].(map[string]any); ok {
+			for key, value := range body {
+				if _, exists := properties[key]; exists {
+					collision = true
+				}
+				properties[key] = value
+			}
+		}
+		switch values := op.BodySchema["required"].(type) {
+		case []any:
+			for _, value := range values {
+				if key, ok := value.(string); ok {
+					required = append(required, key)
+				}
+			}
+		case []string:
+			required = append(required, values...)
+		}
+		if collision {
+			continue
+		}
+		name := "workspace_" + strings.ReplaceAll(app.ID, "-", "_") + "_" + strings.ReplaceAll(op.ID, "-", "_")
+		if len(name) > 64 || !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(name) {
+			continue
+		}
+		description := app.Name + ": " + op.Title + ". " + op.Description + " Use exact IDs from app results. Native permissions apply; changes require the conversation review. Never claim a queued deployment is published."
+		scope.WorkspaceNative[name] = workspaceNativeTool{App: app.ID, Operation: op, Spec: toolSpec{Name: name, Description: description, Schema: map[string]any{"type": "object", "properties": properties, "required": required, "additionalProperties": false}}}
+	}
+}
+
+func workspaceNativeSpecs(scope toolScope) []toolSpec {
+	if scope.WorkspaceSession == "" {
+		return nil
+	}
+	names := []string{}
+	for name := range scope.WorkspaceNative {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	out := []toolSpec{}
+	for _, name := range names {
+		out = append(out, scope.WorkspaceNative[name].Spec)
+	}
+	return out
+}
+
+func workspaceNativeArguments(tool workspaceNativeTool, raw string) (map[string]string, error) {
+	var fields map[string]json.RawMessage
+	if len(raw) > 290<<10 || json.Unmarshal([]byte(raw), &fields) != nil || fields == nil {
+		return nil, errors.New("Use the app action's named JSON fields")
+	}
+	properties, _ := tool.Spec.Schema["properties"].(map[string]any)
+	args := workspaceArgs{Parameters: map[string]string{}, Query: map[string]string{}}
+	body := map[string]json.RawMessage{}
+	for key, value := range fields {
+		if _, ok := properties[key]; !ok {
+			return nil, fmt.Errorf("Unknown field %q; follow this app action's schema", key)
+		}
+		path, query := false, false
+		for _, k := range tool.Operation.Parameters {
+			path = path || k == key
+		}
+		for _, k := range tool.Operation.Query {
+			query = query || k == key
+		}
+		if path || query {
+			var text string
+			if json.Unmarshal(value, &text) != nil {
+				return nil, fmt.Errorf("%s must be a string", key)
+			}
+			if path {
+				args.Parameters[key] = text
+			} else {
+				args.Query[key] = text
+			}
+		} else {
+			body[key] = value
+		}
+	}
+	args.Body, _ = json.Marshal(body)
+	encoded, _ := json.Marshal(args)
+	return map[string]string{"app": tool.App, "operation": tool.Operation.ID, "arguments": string(encoded)}, nil
 }
 
 func workspaceActionSpec() toolSpec {
@@ -199,6 +308,7 @@ func (a *App) workspaceDiscovery(ctx context.Context, scope toolScope, name, id 
 				if scope.WorkspaceKnown != nil {
 					scope.WorkspaceKnown[id] = true
 				}
+				registerWorkspaceNative(scope, app)
 				app.Probe = ""
 				examples := []map[string]any{}
 				for _, op := range app.Operations {

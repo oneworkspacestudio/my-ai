@@ -40,6 +40,7 @@ type toolScope struct {
 	WorkspaceSession         string
 	PrivateAppRead           *bool
 	WorkspaceKnown           map[string]bool
+	WorkspaceNative          map[string]workspaceNativeTool
 	WorkspaceDeclined        *bool
 }
 
@@ -74,6 +75,7 @@ func toolSpecs(scope toolScope) []toolSpec {
 	if scope.WorkspaceSession != "" {
 		out = append(out, spec("get_workspace_apps", "Discover every app actually installed in this One Workspace, including its name, purpose, state and whether native actions are registered. Use this before saying an app is unavailable. No public internet search is needed for private Workspace apps.", map[string]string{}), spec("describe_workspace_app", "Discover registered actions and complete callExamples for one installed app. Copy their structure when calling use_workspace_app; do not invent URLs, IDs or API actions.", map[string]string{"app": "Installed app ID from get_workspace_apps"}), workspaceActionSpec())
 	}
+	out = append(out, workspaceNativeSpecs(scope)...)
 	return out
 }
 func (a *App) toolsInfo(w http.ResponseWriter, r *http.Request) {

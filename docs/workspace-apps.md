@@ -3,7 +3,7 @@
 Ask My AI about the apps in your Workspace, then ask it to do something with
 them. It receives the installed app list automatically in Chat and Code.
 References to installed app names load their supported actions automatically;
-other apps remain discoverable as the task develops. Requires My AI13 and Workspace93.
+other apps remain discoverable as the task develops. Requires My AI14 and Workspace93.
 
 For example:
 
@@ -68,7 +68,7 @@ native cookies and native CSRF proof. Neither credentials nor a generic HTTP
 proxy are supplied to the model. App credentials are never serialized into a
 conversation, tool result or review.
 
-App calls use structured JSON objects and server-side validation. OpenAI uses
+App calls use directly named native action functions with flat, typed fields and server-side validation. Only relevant/discovered apps add their functions. These adapt to the same registered gateway, permissions and reviews; the model receives no new authority. OpenAI uses
 explicit non-strict function calling for this operation-specific native body;
 fixed public tool schemas retain strict mode. This follows the
 [official function calling schema contract](https://developers.openai.com/api/docs/guides/function-calling).

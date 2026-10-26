@@ -163,3 +163,26 @@ verified after synthetic restart. Phone viewport override did not change the Chr
 extension viewport (still1794px), so mobile-specific rendering is NOT certified.
 Desktop app cards render correctly. Continue app13 packaging/publication, suite93
 source/package, channel generation (exclude12), protected installs and cleanup.
+
+
+## Final14 direct native tools accepted
+
+The local4B model's occasional invented dispatcher/app names motivated direct
+workspace_APP_ACTION functions with flat typed fields, generated from registered
+native schemas for relevant/discovered apps. They adapt to exactly the same
+registered gateway, native permissions, privacy flags and conversation reviews.
+Only current browser scopes receive them;48-action cap retains provider headroom.
+Unit tests cover typed fields, path/query/body separation, unknown authority and
+absence in public scopes. Full app tests plus final targeted cases and both vets
+passed. Frontend assets unchanged from validated AUI build.
+
+Real final14 candidate read the Drive acceptance file correctly in one call,
+read Git status, reviewed/submitted a new intentional preview of the same pushed
+commit, and polled the native job to published. Opened its actual returned page
+and verified the expected heading. It recovered from some invalid native arguments;
+do not claim perfect4B behaviour. Native permissions/reviews held throughout.
+12/13 remain immutable, never installed and explicitly withheld;14 is the final
+promoted app target with manager93. Preserve main7663857 Maps6/Tasks4 changes.
+Normal compatibility checks require manager93 first, then app14, each through the
+protected updater. Neither owner installation has started yet. SDK/installer
+updates and cleanup remain; no further feature expansion needed before delivery.

@@ -225,3 +225,29 @@ func TestWorkspacePrivateFollowupNeverUsesRawRequestForResearch(t *testing.T) {
 		t.Fatal("Private request became public follow-up context", researched, e)
 	}
 }
+
+func TestWorkspaceDirectActionSchemasAndArguments(t *testing.T) {
+	scope := toolScope{WorkspaceSession: "browser", WorkspaceNative: map[string]workspaceNativeTool{}}
+	registerWorkspaceNative(scope, workspaceApp{ID: "drive", Name: "Drive", Operations: []workspaceOperation{{ID: "save_text", Review: true, BodySchema: map[string]any{"properties": map[string]any{"content": map[string]string{"type": "string"}, "overwrite": map[string]string{"type": "boolean"}}, "required": []any{"content"}}}, {ID: "read_file", Query: []string{"source", "file"}}}})
+	specs := workspaceNativeSpecs(scope)
+	if len(specs) != 2 || specs[0].Name != "workspace_drive_read_file" {
+		t.Fatal(specs)
+	}
+	args, e := workspaceNativeArguments(scope.WorkspaceNative["workspace_drive_save_text"], `{"content":"Fixture","overwrite":false}`)
+	if e != nil || args["app"] != "drive" || args["operation"] != "save_text" || !strings.Contains(args["arguments"], `"overwrite":false`) {
+		t.Fatal(args, e)
+	}
+	args, e = workspaceNativeArguments(scope.WorkspaceNative["workspace_drive_read_file"], `{"source":"My Drive","file":"/Documents/fixture.txt"}`)
+	if e != nil || !strings.Contains(args["arguments"], `"query":{"file":"/Documents/fixture.txt","source":"My Drive"}`) {
+		t.Fatal(args, e)
+	}
+	for _, raw := range []string{`{"headers":{"Authorization":"forged"}}`, `{"reviewed":true}`, `{"source":3}`} {
+		if _, e := workspaceNativeArguments(scope.WorkspaceNative["workspace_drive_read_file"], raw); e == nil {
+			t.Fatal("Unregistered authority or shape accepted", raw)
+		}
+	}
+	scope.WorkspaceSession = ""
+	if len(workspaceNativeSpecs(scope)) != 0 {
+		t.Fatal("Direct app tools escaped browser scope")
+	}
+}

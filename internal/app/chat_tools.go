@@ -29,7 +29,7 @@ func toolDefinitions(provider string, scope toolScope) []any {
 			f["type"] = "function"
 			// Native app JSON differs per registered operation. The manager still
 			// validates every operation; fixed public tools retain strict schemas.
-			f["strict"] = s.Name != "use_workspace_app"
+			f["strict"] = s.Name != "use_workspace_app" && !strings.HasPrefix(s.Name, "workspace_")
 			out = append(out, f)
 		} else {
 			out = append(out, map[string]any{"type": "function", "function": f})
@@ -66,6 +66,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 		scope.WorkspaceSession = s.WorkspaceSession
 	}
 	scope.WorkspaceKnown = map[string]bool{}
+	scope.WorkspaceNative = map[string]workspaceNativeTool{}
 	var namedApps []workspaceApp
 	if scope.WorkspaceSession != "" {
 		if catalog, err := a.workspaceApps(ctx, scope); err == nil {
@@ -96,6 +97,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 			}
 		}
 		system += " Read each app's bodySchema before using an operation. Supply only fields needed by the person's request and preserve unchanged fields when updating a record. Leave optional fields at the app's defaults. Never invent priorities, dates, IDs, audiences or record values. A declined app change ends app changes for this turn."
+		system += " Prefer directly named workspace_APP_ACTION functions when supplied: their fields are flat native action arguments. Do not invent a tool named after an app. describe_workspace_app makes that app's direct functions available for the next call."
 		for _, app := range namedApps {
 			if described, err := a.workspaceDiscovery(ctx, scope, "describe_workspace_app", app.ID); err == nil {
 				encoded, _ := json.Marshal(described)
@@ -249,10 +251,14 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 			messages = append(messages, assistant)
 		}
 		for _, c := range g.Calls {
+			invokedName := c.Name
 			args := map[string]string{}
 			result := ""
 			var argumentErr error
-			if c.Name == "use_workspace_app" && len(c.Arguments) <= toolArgumentLimit(c.Name) {
+			if native, ok := scope.WorkspaceNative[c.Name]; ok && scope.WorkspaceSession != "" {
+				c.Name = "use_workspace_app"
+				args, argumentErr = workspaceNativeArguments(native, c.Arguments)
+			} else if c.Name == "use_workspace_app" && len(c.Arguments) <= toolArgumentLimit(c.Name) {
 				args, argumentErr = workspaceModelArguments(c.Arguments)
 			} else {
 				argumentErr = json.Unmarshal([]byte(c.Arguments), &args)
@@ -291,7 +297,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 			if p.ID == "openai" {
 				messages = append(messages, map[string]any{"type": "function_call_output", "call_id": c.ID, "output": result})
 			} else {
-				messages = append(messages, map[string]any{"role": "tool", "tool_call_id": c.ID, "tool_name": c.Name, "content": result})
+				messages = append(messages, map[string]any{"role": "tool", "tool_call_id": c.ID, "tool_name": invokedName, "content": result})
 			}
 		}
 	}
