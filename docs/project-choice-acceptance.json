@@ -26,7 +26,39 @@
     "finalCandidatePickerReflectsServerAssignedGeneral": true,
     "ownerAccountsUsedAsFixtures": false
   },
-  "delivery": "Publication and both normal protected installations pending",
+  "delivery": {
+    "status": "Complete on both PCs",
+    "release": "https://github.com/oneworkspacestudio/my-ai/releases/tag/v0.1.0-preview.11",
+    "sourceCommit": "2c314f580075735751191a9f6b717e9e6381281c",
+    "executableSHA256": "24891dac5a39efd5396942606863562dcdc4d4b507722fcbf676207cfe704523",
+    "allEightPublicAssetDigestsVerified": true,
+    "anonymousExecutableAndPublicChannelVerified": true,
+    "publicChannelPromotion": "f17c1ff",
+    "normalProtectedMyAIOnlyUpdates": true,
+    "managerRetained": "0.3.0-preview.92",
+    "primary": {
+      "exactTestedBinaryInstalled": true,
+      "ownerConfigurationAndIdentitiesRetained": true,
+      "allOtherAppContractsPackagesAndExecutableBytesRetained": true,
+      "all27ServicesRunning": true,
+      "servedFrontendBytesMatch": true,
+      "all18ModelNamesAndSizesRetained": true,
+      "privateSearchRuntimeHealthyAndLoopbackOnly": true,
+      "newVerifiedRecoveryKept": true
+    },
+    "secondary": {
+      "normalCompletion": "4m44s",
+      "freshUpdaterShowsMyAI11Current": true,
+      "all25OtherDisplayedVersionGroupsRetained": true,
+      "all27ServicesRunning": true,
+      "myAIHealthVersion": "0.1.0-preview.11",
+      "servedContentAddressedAssetNamesMatch": true,
+      "newVerifiedRecoveryKept": true,
+      "independentRemoteDiskOrCredentialAudit": false
+    },
+    "syntheticTestProcessesAndPrivateRootsCleaned": true,
+    "githubActionsUsed": false
+  },
   "limitations": [
     "File editing requires a model with tool support",
     "No live cloud model or full Codex shell acceptance",
