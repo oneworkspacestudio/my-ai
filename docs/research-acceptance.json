@@ -80,8 +80,8 @@
   "globalModelLibraryChanged": false,
   "cleanHostServiceOrRebootCertification": false,
   "githubActionsUsed": false,
-  "publicRelease": "pending",
-  "twoPCInstallation": "pending; coordinated to follow the separate Workspace91 rollout",
+  "publicRelease": "https://github.com/oneworkspacestudio/my-ai/releases/tag/v0.1.0-preview.10",
+  "twoPCInstallation": "Complete: normal protected MyAI-only updates on both PCs, preserving installed Workspace91 and all other dynamic app versions.",
   "limitations": [
     "Finite live matrix; no guarantee of coverage for every public question.",
     "Small models can require literal sourced-quotation fallback rather than a fluent synthesis.",
@@ -90,5 +90,79 @@
   "reachableGoVulnerabilities": 0,
   "importedPackageGoAdvisories": 0,
   "unusedRequiredModuleAdvisories": 1,
-  "productionNpmAdvisories": 0
+  "productionNpmAdvisories": 0,
+  "sourceCommit": "a08c4c6e360c12d634bd85a2e0a430d3f812c5f9",
+  "allPublicAssetDigestsVerified": true,
+  "anonymousPublicExecutableVerified": true,
+  "taskSyntheticProcessesAndNamedCFixturesCleaned": true,
+  "primaryInstallation": {
+    "allOtherExecutableBytesRetained": true,
+    "appCount": 28,
+    "exactTestedBinariesInstalled": true,
+    "identityAndCredentialsRetained": true,
+    "managerSHA256": "03e594e9397d5fc222b776d1d72ffabc7879db6963fed7a0f16674ac1a035470",
+    "myaiSHA256": "b0cad46690fcecc023ee7ef998f5833baf78a24bbd732525175bba2ba46a334b",
+    "myaiVersion": "0.1.0-preview.10",
+    "normalBackedUpUpdate": true,
+    "otherAppContractsAndPackagesRetained": true,
+    "ownerConfigurationRetained": true,
+    "previousVersion": "0.3.0-preview.91",
+    "version": "0.3.0-preview.91",
+    "healthyServices": 27,
+    "allServicesRunning": true,
+    "appHealth": {
+      "app": "myai",
+      "status": "ok",
+      "version": "0.1.0-preview.10"
+    },
+    "servedAssetsMatchTestedBuild": true,
+    "assetNames": [
+      "assets/index-BcLO3oJI.js",
+      "assets/index-BM7bzCfc.css"
+    ],
+    "testedExecutableSHA256": "b0cad46690fcecc023ee7ef998f5833baf78a24bbd732525175bba2ba46a334b",
+    "allPreUpdateModelNamesAndSizesRetained": true,
+    "baselineCount": 18,
+    "currentCount": 18,
+    "modelPullDeleteOrGlobalSettingsChangeByTask": false,
+    "privateSearchRuntime": {
+      "python": "Python 3.13.18",
+      "anonymousAccessRejected": true,
+      "loopbackOnly": true,
+      "appOwnedSearchRunning": true,
+      "publicRuntimeDigest": "3d7f95db6657460516aa0cd48d748dc09b375b40d3096d99a0dfea2bee4d5f73"
+    },
+    "recovery": "update-20261026T153102-3d79fc5a82fb",
+    "recoveryVerifiedAndRetained": true,
+    "recoveryCheckedMB": 68.8
+  },
+  "secondaryInstallation": {
+    "healthyServices": 27,
+    "allServicesRunning": true,
+    "appHealth": {
+      "app": "myai",
+      "status": "ok",
+      "version": "0.1.0-preview.10"
+    },
+    "normalProtectedMyAIOnlyUpdate": true,
+    "duration": "2m34s",
+    "freshUpdateCheckCurrent": true,
+    "manager91Retained": true,
+    "all25OtherDisplayedGroupsRetained": true,
+    "servedStylesheetBytesMatch": true,
+    "contentAddressedJSAndCSSNamesMatch": true,
+    "independentJSByteHash": false,
+    "independentRemoteDiskCredentialAudit": false,
+    "latestRecoveryVerifiedAndRetained": true,
+    "recovery": "update-20261026T152800-d17bb7d8d6d8",
+    "CSSSHA256": "5e1a0e54065ba259b5898c4ce50f85944d6f1b588283b953a28ee3665b193857"
+  },
+  "publicChannel": {
+    "publicRawURLContains10": true,
+    "anonymousRequest": true,
+    "everyAssetDigestMatchesVerifiedPublicRelease": true,
+    "promotionPerformedByCoordinatedWorkspace91Task": true,
+    "thisTaskDidNotMutateChannelOrPins": true
+  },
+  "finalSourceCommit": "a08c4c6e360c12d634bd85a2e0a430d3f812c5f9"
 }

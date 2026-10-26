@@ -52,5 +52,6 @@
     "newestRecoveryBeforeAndAfterSDKVerificationPassed": true,
     "backupGuardsBypassed": false,
     "all18BaselineModelsRetained": true
-  }
+  },
+  "historicalStatusNote": "Primary9 was never applied. The prior primary storage wait was superseded by the protected8->10 installation on26October after Workspace91 deployment; both PCs now have10. See research-acceptance.json."
 }
