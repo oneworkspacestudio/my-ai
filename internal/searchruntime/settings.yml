@@ -1,6 +1,6 @@
 use_default_settings:
   engines:
-    keep_only: [duckduckgo, brave, wikipedia, google, bing]
+    keep_only: [duckduckgo, brave, wikipedia, google, bing, yahoo]
 general:
   debug: false
   enable_metrics: false
@@ -16,3 +16,12 @@ server:
 outgoing:
   request_timeout: 5.0
   max_request_timeout: 8.0
+engines:
+  - name: google
+    disabled: false
+  - name: bing
+    disabled: false
+  - name: wikipedia
+    display_type: [list]
+  - name: yahoo
+    disabled: false

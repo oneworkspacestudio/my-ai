@@ -1,0 +1,13 @@
+# Public web research
+
+My AI uses its bundled private SearXNG service for Chat and app-owned Code tools. No search mode or server setup is needed. The implementation follows the public agent pattern of search, page reading, refinement and citations described in https://developers.openai.com/api/docs/guides/tools-web-search; it does not reproduce proprietary ChatGPT internals.
+
+A provider-neutral controller plans up to two queries per round, performs at most six queries and four evidence evaluations, reads relevant public pages and checks dates and literal supporting quotations. The final answer is buffered, verified against those quotations and repaired once if needed. If verification still fails, only verified quotations or an honest source list are shown. Search failure, blocked pages and an absent event are different outcomes. A publication filter never substitutes for an event date. No search system guarantees coverage of every question.
+
+The server supplies one authoritative instant per turn, UTC plus the browser's validated timezone and calendar-relative dates. The same context reaches planning, evidence evaluation, answering and app-owned Codex instructions. Browser clocks are not trusted. An undated score asks for the latest completed relevant event; today and yesterday use the user's calendar date. Persisted public context carries bounded verified facts into follow-up planning.
+
+Only raw typed public questions and bounded public research context enter query planning. Expanded attachments, private files, prior assistant text and credentials do not. Retrieved documents remain untrusted data. Existing account, project, read-only and network restrictions continue to apply. Natural requests not to search remain respected.
+
+The shared MCP web_search tool returns snippets, available page passages, source and publication metadata and engine/read failures. Code agents are instructed to refine queries, read sources and distinguish retrieval, publication and event dates. App-managed project permissions remain unchanged.
+
+The October 26 investigation reproduced a stale result from a query that appended today's reference date to an undated score question. Latest-result and explicit event-date queries found the October 25 result. Search language=all also produced no results while English worked; Google and Bing were listed but disabled by upstream defaults. The runtime now defaults unspecified language to English, honors explicit question languages, explicitly enables those engines and uses Wikipedia list results. No public-instance dependency or CAPTCHA bypass is used.

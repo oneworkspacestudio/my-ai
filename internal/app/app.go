@@ -21,6 +21,9 @@ type App struct {
 	search                   *searchruntime.Runtime
 	searchTemp               string
 	searchConnectionOverride func(context.Context) (searchruntime.Connection, error)
+	webReadOverride          func(context.Context, string) ([]byte, string, string, error)
+	clock                    func() time.Time
+	researchTrace            func(string, string)
 	downloads                *downloadQueue
 	H                        *apphost.Host
 	mu                       sync.Mutex
@@ -31,13 +34,14 @@ type App struct {
 	agents                   map[string]*Agent
 }
 type Message struct {
-	ID       string `json:"id"`
-	Role     string `json:"role"`
-	Content  string `json:"content"`
-	Provider string `json:"provider,omitempty"`
-	Model    string `json:"model,omitempty"`
-	At       string `json:"at"`
-	Status   string `json:"status,omitempty"`
+	ID             string `json:"id"`
+	Role           string `json:"role"`
+	Content        string `json:"content"`
+	PublicQuestion string `json:"publicQuestion,omitempty"`
+	Provider       string `json:"provider,omitempty"`
+	Model          string `json:"model,omitempty"`
+	At             string `json:"at"`
+	Status         string `json:"status,omitempty"`
 }
 type Event struct {
 	At     string          `json:"at"`
@@ -45,27 +49,29 @@ type Event struct {
 	Data   json.RawMessage `json:"data"`
 }
 type Session struct {
-	ToolInput      string    `json:"-"`
-	SearchMode     string    `json:"-"`
-	SearchTimeZone string    `json:"-"`
-	SearchQuery    string    `json:"-"`
-	WebDisabled    bool      `json:"webDisabled,omitempty"`
-	Schema         int       `json:"schema"`
-	ID             string    `json:"id"`
-	Title          string    `json:"title"`
-	Mode           string    `json:"mode"`
-	Project        string    `json:"project,omitempty"`
-	Provider       string    `json:"provider"`
-	Model          string    `json:"model"`
-	Effort         string    `json:"effort"`
-	Policy         string    `json:"policy"`
-	Pinned         bool      `json:"pinned"`
-	Archived       bool      `json:"archived"`
-	Revision       int       `json:"revision"`
-	Updated        string    `json:"updated"`
-	Thread         string    `json:"thread,omitempty"`
-	Messages       []Message `json:"messages"`
-	Events         []Event   `json:"events"`
+	ToolInput       string                 `json:"-"`
+	SearchMode      string                 `json:"-"`
+	SearchTimeZone  string                 `json:"timeZone,omitempty"`
+	TurnTime        time.Time              `json:"-"`
+	SearchQuery     string                 `json:"-"`
+	WebDisabled     bool                   `json:"webDisabled,omitempty"`
+	ResearchContext *publicResearchContext `json:"researchContext,omitempty"`
+	Schema          int                    `json:"schema"`
+	ID              string                 `json:"id"`
+	Title           string                 `json:"title"`
+	Mode            string                 `json:"mode"`
+	Project         string                 `json:"project,omitempty"`
+	Provider        string                 `json:"provider"`
+	Model           string                 `json:"model"`
+	Effort          string                 `json:"effort"`
+	Policy          string                 `json:"policy"`
+	Pinned          bool                   `json:"pinned"`
+	Archived        bool                   `json:"archived"`
+	Revision        int                    `json:"revision"`
+	Updated         string                 `json:"updated"`
+	Thread          string                 `json:"thread,omitempty"`
+	Messages        []Message              `json:"messages"`
+	Events          []Event                `json:"events"`
 }
 
 var idRE = regexp.MustCompile(`^[a-f0-9]{48}$`)

@@ -1,0 +1,94 @@
+{
+  "version": "0.1.0-preview.10",
+  "candidateSHA256": "b0cad46690fcecc023ee7ef998f5833baf78a24bbd732525175bba2ba46a334b",
+  "runtimePayloadSHA256": "3d7f95db6657460516aa0cd48d748dc09b375b40d3096d99a0dfea2bee4d5f73",
+  "architecture": "bounded public-question planning, SearXNG queries, public page reads, refinement, quotation and citation checks, verified repair or honest sourced fallback",
+  "oneServerClockPerTurnWithUserTimezone": true,
+  "undatedQuestionsDoNotForceToday": true,
+  "publicationDatesNotTreatedAsEventDates": true,
+  "rawAttachmentsExcludedFromQueryPlanning": true,
+  "publicFollowupContextPersists": true,
+  "noSearchModeSelector": true,
+  "allGoTestsIncludingActualNativeRuntime": true,
+  "goVet": true,
+  "AUITypeScriptViteBuild": true,
+  "actualBonsaiResearchCases": [
+    {
+      "question": "what was the Liverpool score",
+      "successfulSearXNGQueries": 4,
+      "pagesRead": 12,
+      "elapsedSeconds": 89,
+      "supportedFactsVisible": true
+    },
+    {
+      "question": "What was the Liverpool result yesterday?",
+      "successfulSearXNGQueries": 2,
+      "pagesRead": 6,
+      "elapsedSeconds": 23,
+      "supportedFactsVisible": true
+    },
+    {
+      "question": "Who won the 2014 World Cup final?",
+      "successfulSearXNGQueries": 2,
+      "pagesRead": 5,
+      "elapsedSeconds": 16,
+      "supportedFactsVisible": true
+    },
+    {
+      "question": "What is the latest stable Go release? Please check official release notes.",
+      "successfulSearXNGQueries": 2,
+      "pagesRead": 5,
+      "elapsedSeconds": 27,
+      "supportedFactsVisible": true
+    },
+    {
+      "question": "What about yesterday?",
+      "successfulSearXNGQueries": 1,
+      "pagesRead": 3,
+      "elapsedSeconds": 18,
+      "supportedFactsVisible": true
+    }
+  ],
+  "actualFinalExecutableMCP": {
+    "version": "0.1.0-preview.10",
+    "tools": [
+      "get_time",
+      "calculate",
+      "web_search",
+      "read_webpage"
+    ],
+    "serverTimeTool": {
+      "date": "Monday, 26 October 2026",
+      "time": "2026-10-26T14:15:57Z",
+      "timezone": "Europe/London",
+      "unix": 1793024157,
+      "utc": "2026-10-26T14:15:57Z"
+    },
+    "actualSearXNGSources": 10,
+    "readPages": 3,
+    "richMetadata": true,
+    "sha256": "b0cad46690fcecc023ee7ef998f5833baf78a24bbd732525175bba2ba46a334b"
+  },
+  "officialCodexIsolatedMCPDiscovery": true,
+  "fullCodexModelOrShellTurnTested": false,
+  "liveCloudProviderTurnTested": false,
+  "syntheticBrowserQwen35FourBScoreDateCitations": true,
+  "desktopUIReviewed": true,
+  "sourceAndActivityPersistenceAfterReload": true,
+  "browserProof": "External QA artifact research-desktop.png",
+  "ownerAccountOrDriveUsedAsFunctionalFixture": false,
+  "globalModelLibraryChanged": false,
+  "cleanHostServiceOrRebootCertification": false,
+  "githubActionsUsed": false,
+  "publicRelease": "pending",
+  "twoPCInstallation": "pending; coordinated to follow the separate Workspace91 rollout",
+  "limitations": [
+    "Finite live matrix; no guarantee of coverage for every public question.",
+    "Small models can require literal sourced-quotation fallback rather than a fluent synthesis.",
+    "Python dependencies unchanged from the previously audited pinned lock; runtime configuration changed."
+  ],
+  "reachableGoVulnerabilities": 0,
+  "importedPackageGoAdvisories": 0,
+  "unusedRequiredModuleAdvisories": 1,
+  "productionNpmAdvisories": 0
+}

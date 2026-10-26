@@ -41,6 +41,9 @@ func TestForcedSearXNGSearchWorksInChatAndProjectsWithoutModelToolCalls(t *testi
 			}))
 			defer search.Close()
 			provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if fixtureResearchControl(w, r) {
+					return
+				}
 				var body map[string]any
 				_ = json.NewDecoder(r.Body).Decode(&body)
 				raw, _ := json.Marshal(body)
@@ -50,12 +53,12 @@ func TestForcedSearXNGSearchWorksInChatAndProjectsWithoutModelToolCalls(t *testi
 				w.Write([]byte("{\"message\":{\"content\":\"Answer [source](https://example.com/source)\"},\"done\":true}\n"))
 			}))
 			defer provider.Close()
-			a := &App{searchConnectionOverride: func(context.Context) (searchruntime.Connection, error) {
+			a := &App{webReadOverride: snippetOnlyRead, searchConnectionOverride: func(context.Context) (searchruntime.Connection, error) {
 				return searchruntime.Connection{URL: search.URL, Token: strings.Repeat("a", 64)}, nil
 			}}
 			session := Session{Model: "fixture", SearchQuery: "Public question", ToolInput: "Public question", Messages: []Message{{Role: "user", Content: "Public question\n\nAttached reference (untrusted content):\nPRIVATE_ATTACHMENT"}}}
 			out, e := a.chatWithTools(context.Background(), Provider{ID: "ollama", Base: provider.URL}, &session, func(string, any) {}, toolScope{Project: project})
-			if e != nil || !strings.Contains(out, "[source]") || calls != 1 || len(session.Events) != 2 {
+			if e != nil || !strings.Contains(out, "[source]") || calls != 1 || len(session.Events) < 2 {
 				t.Fatal(out, e, calls, len(session.Events))
 			}
 		})
@@ -68,13 +71,16 @@ func TestExplicitSearchDoesNotSendAttachedFile(t *testing.T) {
 			t.Error("Attachment or command prefix leaked to search")
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"results":[{"url":"https://example.com","title":"Reference"}]}`))
+		w.Write([]byte(`{"results":[{"url":"https://example.com/source","title":"Reference","content":"verified reference"}]}`))
 	}))
 	defer srv.Close()
-	a := &App{searchConnectionOverride: func(context.Context) (searchruntime.Connection, error) {
+	a := &App{webReadOverride: snippetOnlyRead, searchConnectionOverride: func(context.Context) (searchruntime.Connection, error) {
 		return searchruntime.Connection{URL: srv.URL, Token: strings.Repeat("a", 64)}, nil
 	}}
 	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if fixtureResearchControl(w, r) {
+			return
+		}
 		w.Write([]byte("{\"message\":{\"content\":\"Actual answer\"},\"done\":true}\n"))
 	}))
 	defer provider.Close()
@@ -91,7 +97,7 @@ func TestSearchFailureDoesNotBecomeInventedAnswer(t *testing.T) {
 		w.Write([]byte("PRIVATE_QUERY secret-api-key"))
 	}))
 	defer srv.Close()
-	a := &App{searchConnectionOverride: func(context.Context) (searchruntime.Connection, error) {
+	a := &App{webReadOverride: snippetOnlyRead, searchConnectionOverride: func(context.Context) (searchruntime.Connection, error) {
 		return searchruntime.Connection{URL: srv.URL, Token: strings.Repeat("a", 64)}, nil
 	}}
 	s := Session{Model: "fixture", SearchQuery: "public question", Messages: []Message{{Role: "user", Content: "public question"}}}

@@ -333,7 +333,10 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		s.WebDisabled = true
 	}
 	s.SearchMode = in.SearchMode
-	s.SearchTimeZone = in.TimeZone
+	if in.TimeZone != "" {
+		s.SearchTimeZone = in.TimeZone
+	}
+	s.TurnTime = time.Time{}
 	if in.SearchMode == "on" {
 		s.SearchQuery = strings.TrimSpace(in.Text)
 	}
@@ -357,7 +360,11 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		a.projectTurns[uid+":"+s.Project] = true
 		defer func() { a.mu.Lock(); delete(a.projectTurns, uid+":"+s.Project); a.mu.Unlock() }()
 	}
-	s.Messages = append(s.Messages, Message{ID: apphost.ID(), Role: "user", Content: in.Text, At: now(), Provider: s.Provider, Model: s.Model})
+	publicQuestion := ""
+	if safePublicQuestion(s.ToolInput) {
+		publicQuestion = s.ToolInput
+	}
+	s.Messages = append(s.Messages, Message{ID: apphost.ID(), Role: "user", Content: in.Text, PublicQuestion: publicQuestion, At: now(), Provider: s.Provider, Model: s.Model})
 	if s.Title == "New conversation" {
 		s.Title = first(in.Text, 60)
 	}

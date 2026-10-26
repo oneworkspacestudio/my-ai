@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"regexp"
 	"strings"
-	"time"
 )
 
 var freshQuestion = regexp.MustCompile(`(?i)\b(today|tonight|yesterday|tomorrow|latest|current|currently|recent|news|live|up.to.date|this (week|month|year|morning|evening)|last (night|week))\b`)
@@ -35,50 +34,6 @@ func conversationNoWeb(input string, history []Message) bool {
 		}
 	}
 	return false
-}
-
-// Automatic search uses only short public user text. Never summarize private
-// files/history into an outgoing query.
-func automaticSearchQuery(input string, history []Message, at time.Time) string {
-	input = strings.TrimSpace(input)
-	if len(input) > 420 || !validSearchQuery(input) || privateQuestion.MatchString(input) || localOrCreative.MatchString(input) || conversationNoWeb(input, history) {
-		return ""
-	}
-	answer := strings.ToLower(strings.Trim(input, " .!?"))
-	dateText := answer
-	if searchFollowup.MatchString(input) {
-		for i := len(history) - 1; i >= 0; i-- {
-			if history[i].Role == "user" {
-				previous := strings.TrimSpace(history[i].Content)
-				if automaticSearchQuery(previous, nil, at) != "" && len(input)+len(previous)+12 <= 420 {
-					input += " (context: " + previous + ")"
-					answer = strings.ToLower(input)
-				}
-				break
-			}
-		}
-	}
-	if answer == "yes" || answer == "yes please" || answer == "please do" || answer == "go ahead" {
-		for i := len(history) - 1; i >= 0; i-- {
-			if history[i].Role == "user" {
-				return automaticSearchQuery(history[i].Content, nil, at)
-			}
-		}
-		return ""
-	}
-	if !freshQuestion.MatchString(input) && !liveSubject.MatchString(input) && !allowWebRequest.MatchString(input) {
-		return ""
-	}
-	day := at
-	if !strings.Contains(dateText, "today") && !strings.Contains(dateText, "tonight") && !strings.Contains(dateText, "yesterday") && !strings.Contains(dateText, "tomorrow") && !strings.Contains(dateText, "last night") {
-		dateText = answer
-	}
-	if strings.Contains(dateText, "yesterday") || strings.Contains(dateText, "last night") {
-		day = day.AddDate(0, 0, -1)
-	} else if strings.Contains(dateText, "tomorrow") {
-		day = day.AddDate(0, 0, 1)
-	}
-	return input + " (reference date " + day.Format("2006-01-02") + ")"
 }
 
 func searchReferenceInstructions() string {

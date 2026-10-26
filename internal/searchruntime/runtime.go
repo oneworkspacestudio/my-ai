@@ -288,6 +288,10 @@ func (r *Runtime) RemoveTemporary() {
 }
 
 func (c Connection) Search(ctx context.Context, query string) ([]byte, error) {
+	return c.SearchWithOptions(ctx, query, "en", "")
+}
+
+func (c Connection) SearchWithOptions(ctx context.Context, query, language, timeRange string) ([]byte, error) {
 	u, e := url.Parse(c.URL)
 	if e != nil || u.Scheme != "http" || u.Hostname() != "127.0.0.1" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || len(c.Token) != 64 {
 		return nil, errors.New("Invalid private search connection")
@@ -297,7 +301,14 @@ func (c Connection) Search(ctx context.Context, query string) ([]byte, error) {
 		return nil, errors.New("Invalid private search port")
 	}
 	u.Path = "/search"
-	u.RawQuery = url.Values{"q": {query}, "format": {"json"}, "categories": {"general"}, "safesearch": {"1"}, "language": {"en"}}.Encode()
+	if language == "" || language == "all" || len(language) > 12 || strings.ContainsAny(language, " :!&?/") {
+		language = "en"
+	}
+	values := url.Values{"q": {query}, "format": {"json"}, "categories": {"general"}, "safesearch": {"1"}, "language": {language}}
+	if timeRange == "day" || timeRange == "month" || timeRange == "year" {
+		values.Set("time_range", timeRange)
+	}
+	u.RawQuery = values.Encode()
 	req, e := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if e != nil {
 		return nil, e
