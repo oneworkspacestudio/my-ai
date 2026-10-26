@@ -32,8 +32,25 @@
   "ownerAccountUsedAsFixture": false,
   "githubActionsUsed": false,
   "twoPCInstallation": {
-    "primary": "One normal protected MyAI-only update started; verification pending",
-    "secondary": "Waiting for existing separate Tube4 update; MyAI8 not started"
+    "primary": {
+      "allOtherExecutableBytesRetained": true,
+      "appCount": 28,
+      "exactTestedBinariesInstalled": true,
+      "identityAndCredentialsRetained": true,
+      "managerSHA256": "e28a322aaa0ecee43c634bfd278b5e5b2491373941a404fc023b9c493643dc06",
+      "myaiSHA256": "4bade35628956b0b1caf13cdc415759e5f25854245e1f93a826ead5e2abf565a",
+      "myaiVersion": "0.1.0-preview.8",
+      "normalBackedUpUpdate": true,
+      "otherAppContractsAndPackagesRetained": true,
+      "ownerConfigurationRetained": true,
+      "previousVersion": "0.3.0-preview.90",
+      "version": "0.3.0-preview.90",
+      "all27ServicesHealthy": true,
+      "servedFrontendMatchesTestedBuild": true,
+      "installedPrivateSearXNGVerified": true,
+      "latestVerifiedRecoveryRetained": true
+    },
+    "secondary": "User-authorized combined Tube5/MyAI8 update coordinated with existing Tube task; completion pending"
   },
   "publicReleaseAndAnonymousExecutableVerified": true,
   "publicChannelPromotion": "823aab1",
