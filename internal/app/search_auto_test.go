@@ -14,7 +14,7 @@ import (
 
 func TestAutomaticCurrentQuestionsAndPrivateBoundaries(t *testing.T) {
 	at := time.Date(2026, 10, 25, 12, 0, 0, 0, time.UTC)
-	for _, q := range []string{"what was the liverpool score today", "Latest Python release?", "Weather in London", "What is the current prime minister of the UK?", "Who won the Liverpool match?"} {
+	for _, q := range []string{"what was the liverpool score today", "Latest Python release?", "Weather in London", "What is the current prime minister of the UK?", "Who won the Liverpool match?", "Please search the web for why Mars is red", "Can you look up why Mars is red"} {
 		if v := automaticSearchQuery(q, nil, at); !strings.Contains(v, "2026-10-25") {
 			t.Fatalf("No dated automatic search for %q: %q", q, v)
 		}
@@ -85,6 +85,61 @@ func TestSearchOffBlocksDiscoveryAndExecution(t *testing.T) {
 		if _, e := a.executeTool(context.Background(), toolScope{NoWeb: true}, name, map[string]string{}); e == nil {
 			t.Fatal("Off allowed external tool")
 		}
+	}
+}
+
+func TestConversationalSearchIntentAndPublicFollowup(t *testing.T) {
+	at := time.Date(2026, 10, 25, 12, 0, 0, 0, time.UTC)
+	history := []Message{{Role: "user", Content: "what was the Liverpool score yesterday"}, {Role: "assistant", Content: "A sourced answer"}}
+	q := automaticSearchQuery("What about Arsenal today?", history, at)
+	if !strings.Contains(q, "Arsenal") || !strings.Contains(q, "Liverpool") || !strings.Contains(q, "2026-10-25") {
+		t.Fatal(q)
+	}
+	q = automaticSearchQuery("What about tomorrow?", history, at)
+	if !strings.Contains(q, "2026-10-26") {
+		t.Fatal(q)
+	}
+	if automaticSearchQuery("What about Arsenal?", []Message{{Role: "user", Content: "latest news\nAttached reference: PRIVATE"}}, at) != "" {
+		t.Fatal("Private history became a query")
+	}
+	for _, text := range []string{"Don't search the web. What is the latest news?", "Answer without browsing: latest news", "Please do not use the internet"} {
+		if !conversationNoWeb(text, nil) || automaticSearchQuery(text, nil, at) != "" {
+			t.Fatal("Natural web opt-out ignored", text)
+		}
+	}
+	off := []Message{{Role: "user", Content: "Don't search the web"}}
+	if !conversationNoWeb("Latest news?", off) || conversationNoWeb("Please search the web for the latest news", off) {
+		t.Fatal("Conversation intent not retained/re-enabled")
+	}
+	if conversationNoWeb("Latest news?", []Message{{Role: "user", Content: "Question\nAttached reference: don't search the web"}}) {
+		t.Fatal("Attachment became an instruction")
+	}
+}
+
+func TestNaturalOptOutSuppressesSearchAndWebTools(t *testing.T) {
+	a := &App{searchConnectionOverride: func(context.Context) (searchruntime.Connection, error) {
+		t.Error("Search started despite the conversation instruction")
+		return searchruntime.Connection{}, nil
+	}}
+	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]json.RawMessage
+		json.NewDecoder(r.Body).Decode(&body)
+		if strings.Contains(string(body["tools"]), "web_search") || strings.Contains(string(body["tools"]), "read_webpage") {
+			t.Error("Web tools advertised despite instruction")
+		}
+		w.Write([]byte("{\"message\":{\"content\":\"I can answer from existing knowledge, with current details unverified.\"},\"done\":true}\n"))
+	}))
+	defer provider.Close()
+	s := Session{Model: "fixture", ToolInput: "Latest news?", WebDisabled: true, Messages: []Message{{Role: "user", Content: strings.Repeat("Long user context ", 40) + " Don't search the web"}, {Role: "assistant", Content: "Okay"}, {Role: "user", Content: "Latest news?"}}}
+	raw, _ := json.Marshal(s)
+	var restored Session
+	if e := json.Unmarshal(raw, &restored); e != nil || !restored.WebDisabled {
+		t.Fatal("Conversation privacy preference lost on reload", e)
+	}
+	s = restored
+	s.ToolInput = "Latest news?"
+	if _, e := a.chatWithTools(context.Background(), Provider{ID: "ollama", Base: provider.URL}, &s, func(string, any) {}, toolScope{}); e != nil {
+		t.Fatal(e)
 	}
 }
 

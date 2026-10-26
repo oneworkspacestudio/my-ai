@@ -109,7 +109,6 @@ Page Workspace variant=$theme
         Input name=prompt type=textarea placeholder=$placeholder variant=prompt
         Row variant=composer-controls
           Button action=tools icon=Wrench label="Tools & skills" variant=icon disabled=$busy
-          Select name=searchMode label="Web search" options=$searchModeOptions variant=search-mode disabled=$busy
           Button action=attach icon=Plus label="Attach text or code" variant=icon disabled=$busy
           Button action=policy icon=ShieldCheck variant=permission disabled=$busy "$policyLabel"
           Spacer
@@ -207,7 +206,7 @@ Page Workspace variant=$theme
           Card variant=tool-card
             Text variant=author "$item.name"
             Text variant=muted "$item.description"
-        Text "Search: Auto checks current public questions before the model answers. On searches every question. Off blocks web tools for the turn. Private files and attachments are never included in an automatic search query."
+        Text "Ask normally. My AI searches the web when current information is needed and shows its sources. You can ask it to search, or say “don’t search the web” to keep the conversation offline. Attachment contents are never added to automatic search queries."
         Text "Codex uses the same private SearXNG search through My AI’s included tools. Project editing stays inside the selected project and saves to your private Git repository."
       If condition=$projectsView
         Text "Give your project a name. We'll create its folder in My Drive and a private repository in Git. My AI saves completed changes to both automatically."

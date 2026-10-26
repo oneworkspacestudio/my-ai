@@ -4,7 +4,7 @@
 |---|---|
 | Original Codex-inspired layout, rail, project/session sidebar, composer, effort popover, dark/light and mobile drawer | Implemented; native desktop/tablet/phone browser checks |
 | Provider discovery and real streamed chat | Ollama demonstrated; OpenAI Responses and DeepSeek adapters tested with protocol fixtures; live API keys required for provider acceptance |
-| Time, search and basic tools | Real clock/timezone, safe arithmetic, included SearXNG web search/page reading, default automatic current-question search and Auto/On/Off composer choices, private conversation/attachment lookup and own managed project reads; bounded provider function loops, explicit-command fallbacks, persisted activity and clickable sources |
+| Time, search and basic tools | Real clock/timezone, safe arithmetic, included SearXNG web search/page reading, automatic conversational search without a mode selector, natural-language web opt-out, private conversation/attachment lookup and own managed project reads; bounded provider function loops, explicit-command fallbacks, persisted activity and clickable sources |
 | Bundled MCP | Native stdio public read-only tool server, automatically configured in isolated Codex sessions; no account/filesystem/shell access through MCP |
 | Per-session provider/model, per-response attribution, explicit cloud indicator | Implemented; native Ollama persistence demonstrated |
 | MyAccounts PKCE and stable issuer+subject | Existing apphost contract reused; real fresh-install OIDC/PKCE acceptance passed |

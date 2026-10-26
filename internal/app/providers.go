@@ -325,6 +325,13 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.ToolInput = in.Text
+	if noWebRequest.MatchString(in.Text) {
+		s.WebDisabled = true
+	} else if allowWebRequest.MatchString(strings.TrimSpace(in.Text)) {
+		s.WebDisabled = false
+	} else if conversationNoWeb(in.Text, s.Messages) {
+		s.WebDisabled = true
+	}
 	s.SearchMode = in.SearchMode
 	s.SearchTimeZone = in.TimeZone
 	if in.SearchMode == "on" {

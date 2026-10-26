@@ -10,6 +10,6 @@ Choose a provider and model in each conversation. Models shows local models firs
 
 Chat includes real clock/timezone, arithmetic, public web search/page reading, private conversation/attachment lookup, and your own project reads. Use Tools & skills to see available tools and explicit commands for models without automatic function calling. Project conversations can also create and edit text files inside the selected project using a model with tool support. The public read-only tools are available through a bundled MCP server.
 
-Web search starts automatically for short questions about current public information. Choose Search: On to request a search, or Search: Off to disable it. Answers show the search activity and source links.
+Just ask your question. My AI searches the web when it needs current information and includes source links. You can follow up normally, ask it to search, or say “don’t search the web.”
 
 This is an evaluation preview. Read the [setup guide](docs/SETUP.md), [feature support and acceptance](docs/SUPPORT.md) and [architecture decision](docs/ADR-001-architecture.md). For help, [open an issue](https://github.com/oneworkspacestudio/my-ai/issues).

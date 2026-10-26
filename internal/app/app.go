@@ -49,6 +49,7 @@ type Session struct {
 	SearchMode     string    `json:"-"`
 	SearchTimeZone string    `json:"-"`
 	SearchQuery    string    `json:"-"`
+	WebDisabled    bool      `json:"webDisabled,omitempty"`
 	Schema         int       `json:"schema"`
 	ID             string    `json:"id"`
 	Title          string    `json:"title"`

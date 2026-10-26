@@ -74,19 +74,21 @@ reading, own conversation/attachment lookup and own project reads. Tool activity
 and web sources are saved. /time Europe/London, /calculate (12+3)*4, /search your
 query and /read https://example.com work even when a chat model lacks automatic
 tool calls. A project model without tools is refused rather than pretending it
-edited files. Search: Auto is the default: short public current-information
-questions (for example, today's match result or the latest news) are searched
-before the model answers, even when it cannot call tools. Relative dates use
-your browser timezone. Search: On searches the typed question; Search: Off
-disables web tools and automatic searches. This choice is remembered per user
-on this browser. /search remains available when search is not Off. A private
+edited files. Ask normally: current public questions are searched before the
+model answers, even when it cannot call tools. Short follow-ups can reuse the
+most recent qualifying public question; private files and attached text are
+excluded. Relative dates use your browser timezone. There is no search mode to
+choose. An old saved search preference is cleared when the new interface opens.
+Say “don't search the web” to disable web tools for this conversation, and ask
+it to search again when needed. /search also remains available. A private
 SearXNG service is included in MyAI.exe and starts automatically in the background;
 there is no URL, Python, Docker or account to configure. Chat and managed Code
-projects share this search service. Only the typed search question is sent;
-attached file text is never added to the automatic or explicit question.
+projects share this search service. Searches use the typed public question and,
+for short follow-ups, the most recent qualifying public question. Attached file
+text is never added to the automatic or explicit question.
 Automatic routing skips multiline, long, code, credential and obvious private
 file/project questions; it is a conservative question heuristic, not a privacy
-classifier. Use Off for conversations that must not use the web. Search engines can still
+classifier. Ask My AI not to search for conversations that must not use the web. Search engines can still
 be blocked, rate limited or temporarily unavailable. Public
 requests disclose their query/URL; private networks, custom ports, credentials
 and non-web protocols are rejected at connection and redirect time.
