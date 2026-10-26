@@ -144,3 +144,22 @@ both protected owner installs and fixture cleanup remain. Preserve current main
 b76ccf3 Maps5/Tasks4 promotion and unrelated pins. Authorized coordination peer
 reports no overlapping update or manager93 reservation; secondary needs a fresh
 transaction check before applying.
+
+
+## Final privacy correction / delivery versions
+
+Final review caught raw prior-user fallback in public research: a short follow-up
+could refer to a dynamically recognised app request not matched by fixed filters.
+When private Workspace context exists, the researcher now receives no raw message
+history; only its separately verified public ResearchContext may resolve a follow-up.
+A regression ensures a private app request followed by "tell me more" never starts
+public research. Full app tests including bundled runtime13.6s and both vets passed.
+
+App12 source e96a8fb and immutable public assets were already published, but never
+promoted or installed. Explicitly withhold12; do not alter/delete its tag or assets.
+Corrected app13 requires manager93. Manager93 remains unpublished/uncommitted.
+Core native acceptance is unchanged; final13 candidate health and persisted data
+verified after synthetic restart. Phone viewport override did not change the Chrome
+extension viewport (still1794px), so mobile-specific rendering is NOT certified.
+Desktop app cards render correctly. Continue app13 packaging/publication, suite93
+source/package, channel generation (exclude12), protected installs and cleanup.

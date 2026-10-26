@@ -421,6 +421,12 @@ func (a *App) prepareResearch(ctx context.Context, p Provider, s *Session, scope
 		input = s.Messages[len(s.Messages)-1].Content
 	}
 	history := s.Messages[:len(s.Messages)-1]
+	if s.WorkspaceContext {
+		// Private app/project turns must never become the fallback public
+		// question for a short follow-up. Only separately verified public
+		// ResearchContext may resolve follow-ups after private context exists.
+		history = nil
+	}
 	name, args := explicitTool(input)
 	if name != "" && name != "web_search" {
 		return b, false, nil

@@ -3,7 +3,7 @@
 Ask My AI about the apps in your Workspace, then ask it to do something with
 them. It receives the installed app list automatically in Chat and Code.
 References to installed app names load their supported actions automatically;
-other apps remain discoverable as the task develops. Requires My AI12 and Workspace93.
+other apps remain discoverable as the task develops. Requires My AI13 and Workspace93.
 
 For example:
 

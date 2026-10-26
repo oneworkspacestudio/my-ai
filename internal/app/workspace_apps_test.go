@@ -217,3 +217,11 @@ func TestWorkspaceAppReferencesUseInstalledCatalogue(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkspacePrivateFollowupNeverUsesRawRequestForResearch(t *testing.T) {
+	s := &Session{WorkspaceContext: true, ToolInput: "tell me more", Messages: []Message{{Role: "user", Content: "Use the connected Drive app to read a confidential business plan"}, {Role: "assistant", Content: "Private app result"}, {Role: "user", Content: "tell me more"}}}
+	_, researched, e := (&App{}).prepareResearch(context.Background(), Provider{}, s, toolScope{}, func(string, any) { t.Fatal("Private follow-up reached the public researcher") })
+	if researched || e != nil {
+		t.Fatal("Private request became public follow-up context", researched, e)
+	}
+}
