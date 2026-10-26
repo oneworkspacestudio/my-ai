@@ -50,10 +50,44 @@
       "installedPrivateSearXNGVerified": true,
       "latestVerifiedRecoveryRetained": true
     },
-    "secondary": "User-authorized combined Tube5/MyAI8 update coordinated with existing Tube task; completion pending"
+    "secondary": {
+      "version": "0.1.0-preview.8",
+      "normalCombinedBackedUpUpdate": true,
+      "combinedWith": "My Tube0.1.0-preview.5",
+      "completedHealthyInSeconds": 1431,
+      "freshUpdaterReportsBothCurrent": true,
+      "managerRetained": "0.3.0-preview.90",
+      "all24OtherDisplayedInstalledGroupsRetained": true,
+      "latestVerifiedRecoveryRetained": true,
+      "olderAutomaticCopiesRetired": 1,
+      "verificationSource": "Authorized My Tube coordination task verified normal transaction completion and before/after installed-version cells; independent My AI browser health/assets/control checks also passed",
+      "independentRemoteExecutableCredentialOrModelAudit": false,
+      "independentBrowserVerification": {
+        "healthyServices": 27,
+        "allServicesRunning": true,
+        "appHealth": {
+          "app": "myai",
+          "status": "ok",
+          "version": "0.1.0-preview.8"
+        },
+        "assetNames": [
+          "index-BPH-E0HI.js",
+          "index-BRVcV2ak.css"
+        ],
+        "transport": "Browser (direct HTTP client received403)",
+        "independentJavaScriptByteHash": false,
+        "servedFrontendAssetNamesMatchTestedBuild": true,
+        "servedCSSBytesMatchTestedBuild": true,
+        "searchAutoDefaultVisible": true,
+        "searchAutoOnOffOptionsVisible": true,
+        "ownerChatUsedAsFixture": false
+      }
+    }
   },
   "publicReleaseAndAnonymousExecutableVerified": true,
   "publicChannelPromotion": "823aab1",
   "allBaseline18ModelNamesAndSizesRetained": true,
-  "syntheticFixtureProcessesStoppedAndPrivateRootsRemoved": true
+  "syntheticFixtureProcessesStoppedAndPrivateRootsRemoved": true,
+  "deliveryComplete": true,
+  "allTaskCreatedBrowserTabsClosed": true
 }
