@@ -231,3 +231,9 @@ Mail reads only, no Vault/admin/physical printing authority. Every connector,
 cloud provider, separate full Codex transport and clean-host/service/reboot are
 NOT individually certified. Mixed private app/public research uses separate turns.
 The delivered native Chat/Code core workflow is complete; no feature work pending.
+
+Post-install UI check: opened the second PC MyAI through the normal Workspace
+SSO entry, then its Tools & skills dialog. The actual installed app catalogue
+and native action counts render. This was metadata/navigation verification only;
+no live owner record or file was used as a functional fixture. The fresh MyAI
+Tools tab and updater are left open for the user; no test or health tab remains.

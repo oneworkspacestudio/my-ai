@@ -69,7 +69,9 @@
       "allUpdatesComplete": true,
       "recovery": "update-20261027T000935-58884a42ac1f",
       "binaryHashesCheckedByNormalUpdater": true,
-      "separateRemoteFilesystemAudit": false
+      "separateRemoteFilesystemAudit": false,
+      "installedMyAIOpenedThroughNormalWorkspaceSSO": true,
+      "realInstalledAppCatalogueVisible": true
     },
     "syntheticFixtureStoppedAndRemoved": true,
     "superseded12And13WithheldNeverInstalled": true
