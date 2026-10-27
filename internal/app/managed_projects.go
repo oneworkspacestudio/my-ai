@@ -271,13 +271,23 @@ func (a *App) projectCode(ctx context.Context, uid, root string, s *Session, p P
 	if !scope.Writable {
 		return out, nil
 	}
+	_, e = a.saveProjectCheckpoint(ctx, scope, s, send)
+	return out, e
+}
+
+// The same account/project authorization used for the normal end-of-turn save
+// also allows an explicit checkpoint while building and deploying in one turn.
+func (a *App) saveProjectCheckpoint(ctx context.Context, scope toolScope, s *Session, send writer) (Project, error) {
 	var synced Project
+	if scope.Project == "" || !scope.Writable {
+		return synced, errors.New("Allow changes in the selected project before saving")
+	}
 	send("event", map[string]any{"method": "project/saving", "params": map[string]string{"message": "Saving your project to Git…"}})
-	if e = a.projectBroker(ctx, uid, "POST", "/"+project.ID+"/sync", map[string]string{}, &synced); e != nil {
-		return out, fmt.Errorf("Your project files are saved in My Drive, but Git has not confirmed the save. Open Projects and use Sync to retry. %s", e)
+	if e := a.projectBroker(ctx, scope.UID, "POST", "/"+scope.Project+"/sync", map[string]string{}, &synced); e != nil {
+		return synced, fmt.Errorf("Your project files are saved in My Drive, but Git has not confirmed the save. Open Projects and use Sync to retry. %s", e)
 	}
 	data, _ := json.Marshal(map[string]string{"repository": synced.URL, "commit": synced.Commit, "message": "Saved to Git"})
 	s.Events = append(s.Events, Event{At: now(), Method: "project/saved", Data: data})
 	send("event", map[string]any{"method": "project/saved", "params": map[string]string{"repository": synced.URL, "commit": synced.Commit, "message": "Saved to Git"}})
-	return out, nil
+	return synced, nil
 }

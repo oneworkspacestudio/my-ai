@@ -20,6 +20,7 @@ func TestProviderFailuresExplainLocalCausesWithoutLeakingResponse(t *testing.T) 
 		{"ollama", 404, "model 'PRIVATE_PROMPT' not found", "not installed"},
 		{"ollama", 500, "chat prompt error: no user query found in messages PRIVATE_PROMPT", "too long"},
 		{"ollama", 500, "runner exited PRIVATE_PROMPT secret-api-key", "could not load or run"},
+		{"ollama", 500, "XML syntax error on line195: unexpected EOF PRIVATE_PROMPT secret-api-key", "malformed tool call"},
 		{"openai", 401, "PRIVATE_PROMPT secret-api-key", "API key"},
 		{"deepseek", 500, "PRIVATE_PROMPT secret-api-key", "Try again shortly"},
 	} {
@@ -90,5 +91,21 @@ func TestOllamaVersionStatusRejectsUntrustedText(t *testing.T) {
 		if validOllamaVersion(v) {
 			t.Fatal("Unsafe version accepted")
 		}
+	}
+}
+
+func TestUnsupportedChatModelDoesNotSilentlyDropNativeAppTools(t *testing.T) {
+	t.Setenv("MYAI_WORKSPACE_URL", "")
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		w.WriteHeader(400)
+		w.Write([]byte(`{"error":"model does not support tools"}`))
+	}))
+	defer server.Close()
+	s := Session{Model: "fixture", ToolInput: "Deploy this project", WebDisabled: true, Messages: []Message{{Role: "user", Content: "Deploy this project"}}}
+	_, err := (&App{}).chatWithTools(context.Background(), Provider{ID: "ollama", Base: server.URL}, &s, func(string, any) {}, toolScope{WorkspaceSession: "fixture"})
+	if err == nil || requests != 1 || !strings.Contains(err.Error(), "Workspace apps") {
+		t.Fatal("Native request became a tool-free capability disclaimer", err, requests)
 	}
 }

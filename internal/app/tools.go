@@ -42,6 +42,7 @@ type toolScope struct {
 	WorkspaceKnown           map[string]bool
 	WorkspaceNative          map[string]workspaceNativeTool
 	WorkspaceDeclined        *bool
+	CallID, InvokedTool      string
 }
 
 func spec(name, description string, fields map[string]string) toolSpec {
@@ -70,6 +71,7 @@ func toolSpecs(scope toolScope) []toolSpec {
 		out = append(out, spec("list_projects", "List the signed-in person's own My Drive projects and private Git links.", map[string]string{}), spec("list_project_files", "List up to200 files in the signed-in person's own project folder. Linked paths are blocked.", map[string]string{"project": "Approved project ID", "path": "Relative folder, or ."}), spec("read_project_file", "Read one UTF-8 text file from a project belonging to the signed-in person. Never writes or executes code.", map[string]string{"project": "Approved project ID", "path": "Relative file path"}))
 	}
 	if scope.Project != "" && scope.Writable {
+		out = append(out, spec("save_project", "Save the selected project's current files to private Git now and return its exact pushed commit. Use before deployment in the same turn. No shell or other project's files can be changed.", map[string]string{}))
 		out = append(out, spec("write_project_file", "Create or replace one UTF-8 text file in the selected project only. No shell commands. Git save happens automatically after the completed turn.", map[string]string{"path": "Relative file path in the selected project", "content": "Complete UTF-8 file content"}), spec("edit_project_file", "Replace text that occurs exactly once in a file in the selected project. Read the file first. No shell execution.", map[string]string{"path": "Relative project path", "find": "Exact existing text occurring once", "replace": "Replacement text"}))
 	}
 	if scope.WorkspaceSession != "" {
@@ -341,7 +343,7 @@ func (a *App) executeTool(ctx context.Context, scope toolScope, name string, arg
 			if e != nil {
 				continue
 			}
-			b, _ := json.Marshal(s)
+			b, _ := json.Marshal(sessionView(s))
 			if strings.Contains(strings.ToLower(string(b)), strings.ToLower(args["query"])) {
 				out = append(out, map[string]string{"id": s.ID, "title": s.Title, "updated": s.Updated})
 				if len(out) == 20 {
@@ -358,7 +360,7 @@ func (a *App) executeTool(ctx context.Context, scope toolScope, name string, arg
 		if e != nil {
 			return nil, errors.New("conversation not found in your private scope")
 		}
-		b, _ := json.Marshal(map[string]any{"title": s.Title, "messages": s.Messages})
+		b, _ := json.Marshal(map[string]any{"title": s.Title, "messages": sessionView(s).Messages})
 		return map[string]any{"id": s.ID, "content": first(string(b), 24000), "untrusted_reference": true}, nil
 	case "read_attachment":
 		if scope.Root == "" || !idRE.MatchString(args["id"]) {
@@ -456,7 +458,11 @@ func (a *App) runTool(ctx context.Context, scope toolScope, s *Session, send wri
 	s.Events = append(s.Events, Event{At: now(), Method: "tool/start", Data: b})
 	var value any
 	var e error
-	if name == "use_workspace_app" {
+	if name == "save_project" && scope.Project != "" && scope.Writable {
+		var saved Project
+		saved, e = a.saveProjectCheckpoint(ctx, scope, s, send)
+		value = publicProjects([]Project{saved})[0]
+	} else if name == "use_workspace_app" {
 		value, e = a.useWorkspaceApp(ctx, scope, s, send, args)
 	} else {
 		value, e = a.executeTool(ctx, scope, name, args)

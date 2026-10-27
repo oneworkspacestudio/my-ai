@@ -90,7 +90,9 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                 <Text variant="muted">{item.model}</Text>
               </Row>
               <Text variant="markdown">{item.content}</Text>
-              <Text variant="muted">{item.status}</Text>
+              {item.status && (
+                <Text variant="muted">{item.status}</Text>
+              )}
             </Card>
           ))}
           {data.streaming && (
@@ -111,6 +113,19 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               ))}
             </Card>
           )}
+          {data.deployments.map((item, i) => (
+            <Card key={i} variant="sources">
+              <Heading level={3}>{item.title}</Heading>
+              <Text variant="muted">{item.statusLabel}</Text>
+              <Text>{item.detail}</Text>
+              {item.canOpen && (
+                <Link href={item.url}>{item.linkLabel}</Link>
+              )}
+              {item.hasHosting && (
+                <Link href={item.hostingURL}>Open My Hosting</Link>
+              )}
+            </Card>
+          ))}
           {data.hasEvents && (
             <Card variant="activity">
               <Heading level={3}>Activity</Heading>
@@ -126,12 +141,15 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
             <Card key={i} variant="approval">
               <Row>
                 <Icon name="ShieldQuestionMark" size={22} />
-                <Heading level={3}>Approval required</Heading>
+                <Heading level={3}>{item.title}</Heading>
               </Row>
               <Text variant="pre">{item.content}</Text>
+              {item.isConnection && (
+                <Link href={item.connectURL}>{item.connectLabel}</Link>
+              )}
               <Row>
-                <Button onClick={() => onAction("approve")} item={item.id} variant="primary" disabled={item.submitting}>Approve once</Button>
-                <Button onClick={() => onAction("deny")} item={item.id} disabled={item.submitting}>Deny</Button>
+                <Button onClick={() => onAction("approve")} item={item.id} variant="primary" disabled={item.submitting} label={item.approveLabel} />
+                <Button onClick={() => onAction("deny")} item={item.id} disabled={item.submitting} label={item.denyLabel} />
               </Row>
             </Card>
           ))}

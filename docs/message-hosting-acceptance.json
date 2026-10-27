@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "version": "0.1.0-preview.15",
+  "testedAt": "2026-10-27T15:38:13.018510+00:00",
+  "exeSHA256": "fe39921b7a3c877eb0341be9263305371350069f2d7a489b3f4b3de37e1c8905",
+  "frontend": "index-AGH8N2hR.js",
+  "fixture": "Fresh synthetic NTFS seven-app installation; manager94 binary; seed catalogue92",
+  "model": {
+    "name": "eriktonon/bonsai-2-uncensored:4b",
+    "digest": "8edd345b1a48765625e925b8591dde047fe27503a952b1ff86b743020fb921d5",
+    "ollama": "0.40.11"
+  },
+  "checks": {
+    "fullGoSuite": true,
+    "bundledSearXNG": true,
+    "goVet": true,
+    "auiTypescriptViteBuild": true,
+    "nativeDeploymentCardTests": true,
+    "mockedOpenAIReplay": true,
+    "deepSeekPrivateReplayTest": true,
+    "realCloudProviderCalls": false
+  },
+  "native": {
+    "welcome": {
+      "project": "d7299b6c70ab8a1fba490fae897923ea3dfb377f691d1e1c",
+      "session": "9770f14915322efe652fab5534df622bac58e90499051c2e",
+      "assistantBlocks": 7,
+      "jobs": [
+        {
+          "operation": "deploy_project",
+          "job": "33ba9a0c47ea80a1fd81e72381617de1",
+          "site": "676eb32da4eb05abaf8eac2c5dba711e",
+          "state": "published",
+          "url": "http://deploy-33ba9a0c47--welcome-acceptance.localhost:39680",
+          "sourceCommit": "a3fba7ff9bb62b2d37c1d1811887bad5dee853f5",
+          "at": "2026-10-27T15:37:17.0717333Z"
+        },
+        {
+          "operation": "deployment",
+          "job": "33ba9a0c47ea80a1fd81e72381617de1",
+          "site": "676eb32da4eb05abaf8eac2c5dba711e",
+          "state": "published",
+          "url": "http://deploy-33ba9a0c47--welcome-acceptance.localhost:39680",
+          "sourceCommit": null,
+          "at": "2026-10-27T15:37:19.4134781Z"
+        }
+      ],
+      "browserHeadingVerified": true
+    },
+    "snake": {
+      "session": "0c0c9933b9cac921aaf7b24cd5251e0a9a9fb1a094403eb2",
+      "jobs": [
+        {
+          "operation": "deploy_project",
+          "job": "84b40f24dbc5b026977f5504ec3be990",
+          "site": "e6d74c558d6a75650e49d87935b2eb84",
+          "state": "published",
+          "url": "http://deploy-84b40f24db--snake-final-acceptance.localhost:39680",
+          "sourceCommit": "4c5e880d90132f0e49fc6a7be6f5c6cd7583b14b",
+          "at": "2026-10-27T15:00:17.2458052Z"
+        },
+        {
+          "operation": "deployment",
+          "job": "84b40f24dbc5b026977f5504ec3be990",
+          "site": "e6d74c558d6a75650e49d87935b2eb84",
+          "state": "published",
+          "url": "http://deploy-84b40f24db--snake-final-acceptance.localhost:39680",
+          "sourceCommit": null,
+          "at": "2026-10-27T15:00:23.4244977Z"
+        },
+        {
+          "operation": "deploy_project",
+          "job": "e9cfc7f20c826933b52a1fb25793bbd0",
+          "site": "e6d74c558d6a75650e49d87935b2eb84",
+          "state": "published",
+          "url": "http://deploy-e9cfc7f20c--snake-final-acceptance.localhost:39680",
+          "sourceCommit": "4c5e880d90132f0e49fc6a7be6f5c6cd7583b14b",
+          "at": "2026-10-27T15:30:59.6365813Z"
+        },
+        {
+          "operation": "deployment",
+          "job": "e9cfc7f20c826933b52a1fb25793bbd0",
+          "site": "e6d74c558d6a75650e49d87935b2eb84",
+          "state": "published",
+          "url": "http://deploy-e9cfc7f20c--snake-final-acceptance.localhost:39680",
+          "sourceCommit": null,
+          "at": "2026-10-27T15:31:20.4310088Z"
+        },
+        {
+          "operation": "deployment",
+          "job": "e9cfc7f20c826933b52a1fb25793bbd0",
+          "site": "e6d74c558d6a75650e49d87935b2eb84",
+          "state": "published",
+          "url": "http://deploy-e9cfc7f20c--snake-final-acceptance.localhost:39680",
+          "sourceCommit": null,
+          "at": "2026-10-27T15:31:26.664203Z"
+        },
+        {
+          "operation": "deployment",
+          "job": "e9cfc7f20c826933b52a1fb25793bbd0",
+          "site": "e6d74c558d6a75650e49d87935b2eb84",
+          "state": "published",
+          "url": "http://deploy-e9cfc7f20c--snake-final-acceptance.localhost:39680",
+          "sourceCommit": null,
+          "at": "2026-10-27T15:34:58.9927653Z"
+        }
+      ],
+      "followupAfterFinalBinaryRestart": true,
+      "generatedGamePlayable": false
+    }
+  },
+  "limitations": [
+    "Preview URLs are host-only unless a public address is configured in My Hosting.",
+    "Bonsai deployed Snake source and read its real published job, but generated JavaScript still had a duplicate gameLoop declaration after its repair attempt. Hosting publication is not a gameplay certificate.",
+    "No live cloud, clean-host, Windows service, reboot or phone viewport acceptance claimed."
+  ],
+  "githubActionsUsed": false
+}

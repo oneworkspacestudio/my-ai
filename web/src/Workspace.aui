@@ -69,7 +69,8 @@ Page Workspace variant=$theme
             Spacer
             Text variant=muted "$item.model"
           Text variant=markdown "$item.content"
-          Text variant=muted "$item.status"
+          If condition=$item.status
+            Text variant=muted "$item.status"
       If condition=$streaming
         Card variant=assistant
           Row variant=message-heading
@@ -82,6 +83,15 @@ Page Workspace variant=$theme
           Heading level=3 "Sources"
           For each=$sources
             Link href=$item.url "$item.title"
+      For each=$deployments
+        Card variant=sources
+          Heading level=3 "$item.title"
+          Text variant=muted "$item.statusLabel"
+          Text "$item.detail"
+          If condition=$item.canOpen
+            Link href=$item.url "$item.linkLabel"
+          If condition=$item.hasHosting
+            Link href=$item.hostingURL "Open My Hosting"
       If condition=$hasEvents
         Card variant=activity
           Heading level=3 "Activity"
@@ -93,11 +103,13 @@ Page Workspace variant=$theme
         Card variant=approval
           Row
             Icon name=ShieldQuestionMark size=22
-            Heading level=3 "Approval required"
+            Heading level=3 "$item.title"
           Text variant=pre "$item.content"
+          If condition=$item.isConnection
+            Link href=$item.connectURL "$item.connectLabel"
           Row
-            Button action=approve item=$item.id variant=primary disabled=$item.submitting "Approve once"
-            Button action=deny item=$item.id disabled=$item.submitting "Deny"
+            Button action=approve item=$item.id variant=primary disabled=$item.submitting label=$item.approveLabel
+            Button action=deny item=$item.id disabled=$item.submitting label=$item.denyLabel
     Stack variant=composer-wrap
       If condition=$message
         Alert "$message"

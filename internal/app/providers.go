@@ -393,7 +393,8 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cancel()
 	send := streamWriter(w)
-	send("session", s)
+	send("session", sessionView(s))
+	responseStart := len(s.Messages)
 	var output string
 	if s.Mode == "code" {
 		output, e = a.projectCode(ctx, uid, root, &s, p, send)
@@ -405,7 +406,16 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		status = "interrupted"
 		send("error", e.Error())
 	}
-	s.Messages = append(s.Messages, Message{ID: apphost.ID(), Role: "assistant", Content: output, Provider: s.Provider, Model: s.Model, At: now(), Status: status})
+	if len(s.Messages) == responseStart {
+		s.Messages = append(s.Messages, Message{ID: apphost.ID(), Role: "assistant", Content: output, Provider: s.Provider, Model: s.Model, At: now(), Status: status, TurnID: currentTurn(&s)})
+	} else if e != nil {
+		for i := len(s.Messages) - 1; i >= responseStart; i-- {
+			if s.Messages[i].Role == "assistant" {
+				s.Messages[i].Status = status
+				break
+			}
+		}
+	}
 	a.mu.Lock()
 	delete(a.running, key)
 	saveErr := a.write(root, &s)
@@ -413,7 +423,7 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	if saveErr != nil {
 		send("error", "The response could not be saved to My Drive. Export or copy it before leaving.")
 	}
-	send("done", s)
+	send("done", sessionView(s))
 }
 func first(s string, n int) string {
 	v := []rune(s)

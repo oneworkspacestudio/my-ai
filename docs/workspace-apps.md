@@ -77,3 +77,47 @@ Current development verification is recorded in
 `agents/history/2026-10-26-workspace-apps-compacted.md`. Publication and installed
 availability must be confirmed there; this document alone is not a release or
 acceptance claim.
+
+
+## Replies and deployment continuity
+
+Each model reply is a separate streamed and saved assistant block, including replies
+before and after tool calls. Actual tool calls and results stay in the private
+conversation so a later question can inspect real IDs and outcomes. Older Activity
+results remain available as explicitly historical evidence; imported conversations
+never become server-issued tool evidence. A stopped call has an unconfirmed outcome.
+
+Code can save its selected project to Git during a turn using `save_project`.
+Deployment also checkpoints the selected writable project before review. If that
+changes the commit, the tool returns the exact pushed revision and submits nothing;
+the model must request deployment of that revision. Hosting still reviews the exact
+immutable Git source, enforces native permissions and returns a real job which must
+be polled. Queued means queued, not published. Preview-only conversations cannot
+change projects or apps.
+
+An app that needs native sign-in offers its Workspace link and Continue in the
+conversation, then resumes the original request. Connecting never grants action
+approval or bypasses account checks. Malformed local model tool responses receive
+at most two retries; no incomplete call is executed and provider errors never expose
+raw prompts or credentials. Model instruction-following remains a practical limit.
+
+
+My AI records a confirmed Hosting submission before waiting for it, then follows the
+registered read-only status operation for up to90 seconds. Site and job IDs come
+from the native receipt. Status reads never resubmit a deployment. Stop, connection
+loss or a longer build preserves the last real receipt and an explicit unconfirmed
+status notice. Direct Hosting tools name their identifiers `site` and `deployment`;
+the adapter maps these to the native API while retaining its authorization checks.
+
+
+OpenAI replay retains its original response items, encrypted reasoning context and
+assistant phases, following [OpenAI conversation-state guidance](https://developers.openai.com/api/docs/guides/conversation-state).
+That opaque context remains in the private server store and is replayed only to
+OpenAI. Browser responses, exports and conversation-reader tools omit it; switching
+to another provider uses the canonical text and tool results. Imported conversations
+never acquire server-issued calls or opaque replay state. Protocol coverage uses
+mocked provider responses; it does not certify a live cloud account.
+
+DeepSeek's private reasoning context is likewise retained only for its own native
+tool follow-ups, as required by [DeepSeek's thinking-mode contract](https://api-docs.deepseek.com/guides/thinking_mode/).
+It is excluded from browser views, exports, conversation search and other providers.

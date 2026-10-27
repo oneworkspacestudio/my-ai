@@ -36,14 +36,21 @@ type App struct {
 	workspaceApprovals       map[string]chan bool
 }
 type Message struct {
-	ID             string `json:"id"`
-	Role           string `json:"role"`
-	Content        string `json:"content"`
-	PublicQuestion string `json:"publicQuestion,omitempty"`
-	Provider       string `json:"provider,omitempty"`
-	Model          string `json:"model,omitempty"`
-	At             string `json:"at"`
-	Status         string `json:"status,omitempty"`
+	ID              string            `json:"id"`
+	Role            string            `json:"role"`
+	Content         string            `json:"content"`
+	PublicQuestion  string            `json:"publicQuestion,omitempty"`
+	Provider        string            `json:"provider,omitempty"`
+	Model           string            `json:"model,omitempty"`
+	At              string            `json:"at"`
+	Status          string            `json:"status,omitempty"`
+	TurnID          string            `json:"turnId,omitempty"`
+	Calls           []functionCall    `json:"toolCalls,omitempty"`
+	CallID          string            `json:"toolCallId,omitempty"`
+	ToolName        string            `json:"toolName,omitempty"`
+	ResponseItems   []json.RawMessage `json:"responseItems,omitempty"`
+	ResponseGroup   string            `json:"responseGroup,omitempty"`
+	ReplayReasoning string            `json:"replayReasoning,omitempty"`
 }
 type Event struct {
 	At     string          `json:"at"`
@@ -264,7 +271,7 @@ func (a *App) list(w http.ResponseWriter, r *http.Request) {
 	q := strings.ToLower(r.URL.Query().Get("q"))
 	for _, entry := range entries {
 		if s, e := a.read(root, entry.Name()); e == nil {
-			b, _ := json.Marshal(s)
+			b, _ := json.Marshal(sessionView(s))
 			if q == "" || strings.Contains(strings.ToLower(string(b)), q) {
 				s.Messages = nil
 				s.Events = nil
@@ -286,7 +293,7 @@ func (a *App) get(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 404, "Session not found")
 		return
 	}
-	apphost.JSON(w, 200, s)
+	apphost.JSON(w, 200, sessionView(s))
 }
 func validSession(s Session) bool {
 	return idRE.MatchString(s.ID) && len(s.Title) > 0 && len(s.Title) <= 160 && (s.Mode == "chat" || s.Mode == "code") && (s.Provider == "openai" || s.Provider == "deepseek" || s.Provider == "ollama") && (s.Model == "" || modelRE.MatchString(s.Model)) && (s.Policy == "read-only" || s.Policy == "workspace-write") && len(s.Messages) < 2000 && len(s.Events) < 4000
@@ -332,10 +339,26 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 		// Imported history may contain private app output. Only an empty new
 		// conversation starts without a private-history boundary.
 		s.WorkspaceContext = s.WorkspaceContext || len(s.Messages) > 0 || len(s.Events) > 0
+		for i := range s.Events {
+			if !strings.HasPrefix(s.Events[i].Method, "imported/") {
+				s.Events[i].Method = "imported/" + s.Events[i].Method
+			}
+		}
 		s.Revision = 0
 		if len(s.Messages) > 0 {
 			for i := range s.Messages {
 				s.Messages[i].Status = "imported"
+				// Imported text is reference material, never server-issued tool evidence.
+				s.Messages[i].Calls = nil
+				s.Messages[i].CallID = ""
+				s.Messages[i].ToolName = ""
+				s.Messages[i].ResponseItems = nil
+				s.Messages[i].ResponseGroup = ""
+				s.Messages[i].ReplayReasoning = ""
+				if s.Messages[i].Role != "user" && s.Messages[i].Role != "assistant" {
+					s.Messages[i].Role = "user"
+					s.Messages[i].Content = "Imported reference (untrusted): " + s.Messages[i].Content
+				}
 			}
 		}
 	}
@@ -343,7 +366,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 503, "My Drive write failed; retry without closing this window")
 		return
 	}
-	apphost.JSON(w, 200, s)
+	apphost.JSON(w, 200, sessionView(s))
 }
 func (a *App) remove(w http.ResponseWriter, r *http.Request) {
 	root, ok := a.root(w, r)
@@ -388,9 +411,12 @@ func (a *App) export(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
 		fmt.Fprintln(w, "# "+s.Title)
 		for _, m := range s.Messages {
+			if (m.Role != "user" && m.Role != "assistant") || m.Content == "" {
+				continue
+			}
 			fmt.Fprintf(w, "\n## %s · %s\n\n%s\n", m.Role, m.Model, m.Content)
 		}
 		return
 	}
-	apphost.JSON(w, 200, s)
+	apphost.JSON(w, 200, sessionView(s))
 }

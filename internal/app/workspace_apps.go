@@ -68,6 +68,36 @@ type workspaceNativeTool struct {
 	Spec      toolSpec
 }
 
+func workspaceParameter(app string, op workspaceOperation, key string) (string, string) {
+	if app == "hosting" {
+		switch key {
+		case "id", "site":
+			return "site", "My Hosting site ID from sites or create_site, also returned as deployment.projectId"
+		case "deployment":
+			return key, "Deployment job ID from deploy_project or deployments for this site"
+		case "project":
+			return key, "Managed Git project ID from selected_project or Git projects"
+		}
+	}
+	return key, "Exact " + key + " returned by this app for " + op.Title
+}
+
+func workspaceBodyProperty(app string, op workspaceOperation, key string, value any) any {
+	if app != "hosting" || key != "output" {
+		return value
+	}
+	property, ok := value.(map[string]any)
+	if !ok {
+		return value
+	}
+	copy := map[string]any{}
+	for k, v := range property {
+		copy[k] = v
+	}
+	copy["description"] = "Relative folder containing the site's files. Use . for an index.html in the project root, or a folder such as dist."
+	return copy
+}
+
 func registerWorkspaceNative(scope toolScope, app workspaceApp) {
 	if scope.WorkspaceNative == nil {
 		return
@@ -79,8 +109,9 @@ func registerWorkspaceNative(scope toolScope, app workspaceApp) {
 		properties := map[string]any{}
 		required := []string{}
 		for _, key := range op.Parameters {
-			properties[key] = map[string]string{"type": "string", "description": "Exact " + key + " returned by the app"}
-			required = append(required, key)
+			field, description := workspaceParameter(app.ID, op, key)
+			properties[field] = map[string]string{"type": "string", "description": description}
+			required = append(required, field)
 		}
 		for _, key := range op.Query {
 			properties[key] = map[string]string{"type": "string"}
@@ -91,7 +122,7 @@ func registerWorkspaceNative(scope toolScope, app workspaceApp) {
 				if _, exists := properties[key]; exists {
 					collision = true
 				}
-				properties[key] = value
+				properties[key] = workspaceBodyProperty(app.ID, op, key, value)
 			}
 		}
 		switch values := op.BodySchema["required"].(type) {
@@ -145,8 +176,13 @@ func workspaceNativeArguments(tool workspaceNativeTool, raw string) (map[string]
 			return nil, fmt.Errorf("Unknown field %q; follow this app action's schema", key)
 		}
 		path, query := false, false
+		nativeKey := key
 		for _, k := range tool.Operation.Parameters {
-			path = path || k == key
+			field, _ := workspaceParameter(tool.App, tool.Operation, k)
+			if field == key {
+				path = true
+				nativeKey = k
+			}
 		}
 		for _, k := range tool.Operation.Query {
 			query = query || k == key
@@ -157,7 +193,7 @@ func workspaceNativeArguments(tool workspaceNativeTool, raw string) (map[string]
 				return nil, fmt.Errorf("%s must be a string", key)
 			}
 			if path {
-				args.Parameters[key] = text
+				args.Parameters[nativeKey] = text
 			} else {
 				args.Query[key] = text
 			}
@@ -391,6 +427,24 @@ func (a *App) useWorkspaceApp(ctx context.Context, scope toolScope, s *Session, 
 	if len(args["arguments"]) > 290<<10 || decoder.Decode(&input) != nil || decoder.Decode(new(any)) != io.EOF {
 		return nil, errors.New("Use a JSON object containing only parameters, query and body")
 	}
+	if app.ID == "hosting" && op.ID == "create_site" && scope.Project != "" {
+		var body struct {
+			Output string `json:"output"`
+		}
+		if json.Unmarshal(input.Body, &body) == nil && body.Output != "" {
+			project, err := a.managedProject(ctx, scope.UID, scope.Project)
+			if err != nil {
+				return nil, err
+			}
+			output, err := projectRelative(project.Path, body.Output)
+			if err != nil {
+				return nil, err
+			}
+			if info, err := os.Stat(output); err == nil && !info.IsDir() {
+				return nil, errors.New("A static site's output must be a folder. The supplied output is a file. Use . for files in the project root, or the actual site folder")
+			}
+		}
+	}
 	call := workspaceCall{App: app.ID, Operation: op.ID, Parameters: input.Parameters, Query: input.Query, Body: input.Body}
 	if op.Review {
 		// A repeated call in this turn has one logical action; a later explicit
@@ -413,11 +467,26 @@ func (a *App) useWorkspaceApp(ctx context.Context, scope toolScope, s *Session, 
 			return nil, errors.New("Another conversation is changing that project. Finish it before saving")
 		}
 	}
+	if app.ID == "hosting" && op.ID == "deploy_project" && scope.Project != "" && input.Parameters["project"] == scope.Project && scope.Writable {
+		// A turn normally pushes at its end. Deployment is an earlier boundary:
+		// checkpoint now, and require the model to use the returned pushed commit.
+		// Never silently substitute a different revision in an existing request.
+		saved, err := a.saveProjectCheckpoint(ctx, scope, s, send)
+		if err != nil {
+			return nil, err
+		}
+		var body struct {
+			Commit string `json:"commit"`
+		}
+		if json.Unmarshal(input.Body, &body) != nil || body.Commit != saved.Commit {
+			return map[string]any{"project": saved.ID, "commit": saved.Commit, "repository": saved.URL, "savedToGit": true, "deploymentSubmitted": false, "next": "Retry deploy_project using this exact saved commit. Deployment still requires review."}, nil
+		}
+	}
 	if op.Review {
 		prepared := call
 		prepared.Prepare = true
 		var review map[string]any
-		if e = a.workspaceBridge(ctx, scope, "POST", prepared, &review); e != nil {
+		if e = a.workspaceConnectedCall(ctx, scope, s, send, app, prepared, &review); e != nil {
 			return nil, e
 		}
 		if needed, _ := review["connectionRequired"].(bool); needed {
@@ -436,13 +505,49 @@ func (a *App) useWorkspaceApp(ctx context.Context, scope toolScope, s *Session, 
 	}
 	s.WorkspaceContext = true
 	var result map[string]any
-	if e = a.workspaceBridge(ctx, scope, "POST", call, &result); e != nil {
+	if e = a.workspaceConnectedCall(ctx, scope, s, send, app, call, &result); e != nil {
 		return nil, e
+	}
+	if app.ID == "hosting" && op.ID == "deploy_project" {
+		return a.trackWorkspaceDeployment(ctx, scope, s, send, app, call, result), nil
 	}
 	return result, nil
 }
 
 func (a *App) reviewWorkspaceAction(ctx context.Context, uid, sid string, send writer, app, title string, details any) error {
+	return a.waitWorkspaceReview(ctx, uid, sid, send, "workspace/action-review", map[string]any{"title": title, "app": app, "details": details})
+}
+
+// Resume the exact request after native sign-in rather than losing the user's
+// task or letting a model describe a missing connection as missing capability.
+func (a *App) workspaceConnectedCall(ctx context.Context, scope toolScope, s *Session, send writer, app workspaceApp, call workspaceCall, result *map[string]any) error {
+	if err := a.workspaceBridge(ctx, scope, "POST", call, result); err != nil {
+		return err
+	}
+	if needed, _ := (*result)["connectionRequired"].(bool); !needed {
+		return nil
+	}
+	u, err := url.Parse(app.URL)
+	if err != nil || u.User != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || u.Path != "/_workspace/open/"+app.ID || u.RawQuery != "" || u.Fragment != "" {
+		return errors.New("Open this app from Workspace to connect your account")
+	}
+	if err = a.waitWorkspaceReview(ctx, scope.UID, s.ID, send, "workspace/connect", map[string]any{"title": "Connect " + app.Name, "app": app.Name, "url": u.String()}); err != nil {
+		if scope.WorkspaceDeclined != nil {
+			*scope.WorkspaceDeclined = true
+		}
+		return err
+	}
+	*result = nil
+	if err = a.workspaceBridge(ctx, scope, "POST", call, result); err != nil {
+		return err
+	}
+	if needed, _ := (*result)["connectionRequired"].(bool); needed {
+		return errors.New("The app is not connected yet. Open it from Workspace and sign in, then continue your request")
+	}
+	return nil
+}
+
+func (a *App) waitWorkspaceReview(ctx context.Context, uid, sid string, send writer, method string, params map[string]any) error {
 	approval := apphost.ID()
 	key := uid + ":" + sid + ":" + approval
 	decision := make(chan bool, 1)
@@ -453,7 +558,7 @@ func (a *App) reviewWorkspaceAction(ctx context.Context, uid, sid string, send w
 	a.workspaceApprovals[key] = decision
 	a.mu.Unlock()
 	defer func() { a.mu.Lock(); delete(a.workspaceApprovals, key); a.mu.Unlock() }()
-	send("approval", map[string]any{"id": approval, "method": "workspace/action-review", "params": map[string]any{"title": title, "app": app, "details": details}})
+	send("approval", map[string]any{"id": approval, "method": method, "params": params})
 	select {
 	case <-ctx.Done():
 		return errors.New("App action review expired or the turn stopped; nothing was submitted")

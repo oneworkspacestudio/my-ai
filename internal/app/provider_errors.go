@@ -27,6 +27,8 @@ func (e *providerHTTPError) Error() string {
 			return "This model is not installed on this server. Open Models to download it or choose an installed model"
 		case "context":
 			return "This conversation is too long for the selected local model. Start a new conversation or choose a model with a larger context window"
+		case "tool-format":
+			return "The local model produced a malformed tool call. No action from that failed response was executed. Try again or choose another model"
 		}
 		if e.ToolsUnsupported {
 			return "This local model does not support automatic tools. Choose a model with tool support for project editing"
@@ -80,6 +82,8 @@ func providerFailure(provider string, status int, raw []byte) *providerHTTPError
 	e.ToolsUnsupported = has("does not support tools", "not support tool", "tools is not supported", "tool use is not supported")
 	if provider == "ollama" {
 		switch {
+		case has("tool call parsing failed", "error parsing tool call", "failed to parse tool call", "xml syntax error"):
+			e.Reason = "tool-format"
 		case has("unknown tensor type", "unsupported tensor type", "unknown model architecture", "unsupported model architecture", "unsupported model format", "requires a newer version", "invalid ggml type", "unknown ggml type", "unsupported ggml type", "unsupported model type"):
 			e.Reason = "format"
 		case has("out of memory", "out-of-memory", "insufficient memory", "requires more system memory", "unable to allocate", "failed to allocate", "memory layout cannot be allocated"):

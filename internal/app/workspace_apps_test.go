@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	atomicstate "sync/atomic"
 	"testing"
@@ -13,6 +15,155 @@ import (
 
 	"github.com/oneworkspacestudio/one-workspace/pkg/apphost"
 )
+
+func TestNativeConnectionResumesExactCallWithoutGrantingAuthority(t *testing.T) {
+	db, e := sql.Open("sqlite", ":memory:")
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+	issuer, subject := "https://accounts.example.test", "connection-fixture"
+	uid := apphost.Identity(issuer, subject)
+	if _, e = db.Exec(`CREATE TABLE host_users(id TEXT,subject TEXT,issuer TEXT,name TEXT,role TEXT); INSERT INTO host_users VALUES(?,?,?,?,?)`, uid, subject, issuer, "Fixture", "member"); e != nil {
+		t.Fatal(e)
+	}
+	connected := false
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		var call workspaceCall
+		_ = json.NewDecoder(r.Body).Decode(&call)
+		if call.App != "hosting" || call.Operation != "sites" || call.Reviewed {
+			t.Error("Connection changed the request or granted action authority")
+		}
+		if !connected {
+			w.WriteHeader(409)
+			_ = json.NewEncoder(w).Encode(map[string]any{"connectionRequired": true, "connectUrl": "https://untrusted.example/", "error": "Open the app"})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"result": []any{map[string]string{"id": "native-site"}}})
+	}))
+	defer server.Close()
+	t.Setenv("MYAI_WORKSPACE_URL", server.URL+"/_integration/myai/workspace")
+	t.Setenv("MYAI_STORAGE_GUARD_TOKEN", "fixture")
+	a := &App{H: &apphost.Host{DB: db, Config: apphost.Config{Issuer: issuer}}}
+	s := &Session{ID: strings.Repeat("a", 48)}
+	declined := false
+	scope := toolScope{UID: uid, WorkspaceSession: "fixture", WorkspaceDeclined: &declined}
+	app := workspaceApp{ID: "hosting", Name: "My Hosting", URL: server.URL + "/_workspace/open/hosting"}
+	call := workspaceCall{App: "hosting", Operation: "sites"}
+	var result map[string]any
+	e = a.workspaceConnectedCall(context.Background(), scope, s, func(kind string, v any) {
+		if kind != "approval" {
+			return
+		}
+		review := v.(map[string]any)
+		params := review["params"].(map[string]any)
+		if review["method"] != "workspace/connect" || params["url"] != app.URL {
+			t.Error("Unsafe connection target")
+		}
+		connected = true
+		a.answerWorkspaceReview(uid, s.ID, review["id"].(string), true)
+	}, app, call, &result)
+	if e != nil || requests != 2 || declined {
+		t.Fatal(e, requests, declined)
+	}
+	connected = false
+	requests = 0
+	e = a.workspaceConnectedCall(context.Background(), scope, s, func(kind string, v any) {
+		if kind == "approval" {
+			a.answerWorkspaceReview(uid, s.ID, v.(map[string]any)["id"].(string), false)
+		}
+	}, app, call, &result)
+	if e != errWorkspaceDeclined || requests != 1 || !declined {
+		t.Fatal("Declined sign-in retried", e, requests, declined)
+	}
+}
+
+func TestBuildDeployCheckpointsBeforeExactRevisionReview(t *testing.T) {
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	db.SetMaxOpenConns(1)
+	issuer, subject := "https://accounts.example.test", "builder"
+	uid := apphost.Identity(issuer, subject)
+	if _, err = db.Exec(`CREATE TABLE host_users(id TEXT,subject TEXT,issuer TEXT,name TEXT,role TEXT); INSERT INTO host_users VALUES(?,?,?,?,?)`, uid, subject, issuer, "Fixture", "member"); err != nil {
+		t.Fatal(err)
+	}
+	project := strings.Repeat("a", 48)
+	storageRoot := t.TempDir()
+	projectRoot := filepath.Join(storageRoot, "users", uid, "fixture")
+	if err = os.MkdirAll(projectRoot, 0700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("MYAI_PROJECTS_ROOT", storageRoot)
+	if err = os.WriteFile(filepath.Join(projectRoot, "index.html"), []byte("fixture"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	commit := strings.Repeat("b", 40)
+	saves, reviews, deploys := 0, 0, 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" && r.URL.Path == "/_integration/myai/projects/"+project {
+			_ = json.NewEncoder(w).Encode(Project{ID: project, Path: projectRoot, Folder: "fixture", GitDir: filepath.Join(storageRoot, "protected-git"), Managed: true, Commit: commit})
+			return
+		}
+		if r.URL.Path == "/_integration/myai/projects/"+project+"/sync" {
+			saves++
+			_ = json.NewEncoder(w).Encode(Project{ID: project, Managed: true, Commit: commit, URL: "/git/fixture/project", State: "synced"})
+			return
+		}
+		if r.Method == "GET" {
+			_ = json.NewEncoder(w).Encode(workspaceCatalog{Contract: "workspace-apps-v1", Apps: []workspaceApp{{ID: "hosting", Name: "My Hosting", Operations: []workspaceOperation{{ID: "deploy_project", Review: true}, {ID: "create_site", Review: true}}}}})
+			return
+		}
+		var call workspaceCall
+		_ = json.NewDecoder(r.Body).Decode(&call)
+		var body map[string]string
+		_ = json.Unmarshal(call.Body, &body)
+		if body["commit"] != commit || saves == 0 {
+			t.Error("Deployment prepared before saving current revision")
+		}
+		if call.Prepare {
+			reviews++
+			_ = json.NewEncoder(w).Encode(map[string]any{"result": map[string]string{"commit": commit}})
+			return
+		}
+		if !call.Reviewed {
+			t.Error("Deployment review bypassed")
+		}
+		deploys++
+		_ = json.NewEncoder(w).Encode(map[string]any{"result": map[string]string{"id": "job-1", "status": "queued"}})
+	}))
+	defer server.Close()
+	t.Setenv("MYAI_PROJECTS_URL", server.URL+"/_integration/myai/projects")
+	t.Setenv("MYAI_WORKSPACE_URL", server.URL+"/_integration/myai/workspace")
+	t.Setenv("MYAI_STORAGE_GUARD_TOKEN", "fixture")
+	a := &App{H: &apphost.Host{DB: db, Config: apphost.Config{Issuer: issuer}}}
+	s := &Session{ID: strings.Repeat("c", 48), Mode: "code", Policy: "workspace-write", Messages: []Message{{ID: strings.Repeat("d", 48), Role: "user", Content: "Build and deploy"}}}
+	scope := toolScope{UID: uid, Project: project, Writable: true, WorkspaceSession: "fixture", WorkspaceKnown: map[string]bool{"hosting": true}}
+	args := map[string]string{"app": "hosting", "operation": "deploy_project", "arguments": `{"parameters":{"project":"` + project + `","site":"fixture-site"},"body":{"commit":"` + strings.Repeat("e", 40) + `"}}`}
+	_, badOutput := a.useWorkspaceApp(context.Background(), scope, s, func(string, any) { t.Error("Invalid output reached review") }, map[string]string{"app": "hosting", "operation": "create_site", "arguments": `{"body":{"output":"index.html"}}`})
+	if badOutput == nil || !strings.Contains(badOutput.Error(), "folder") || reviews != 0 || deploys != 0 {
+		t.Fatal("A file was accepted as a Hosting output folder", badOutput)
+	}
+	result, err := a.useWorkspaceApp(context.Background(), scope, s, func(string, any) {}, args)
+	b, _ := json.Marshal(result)
+	if err != nil || saves != 1 || reviews != 0 || deploys != 0 || !strings.Contains(string(b), commit) {
+		t.Fatal("Stale commit submitted or save lost", string(b), err, saves, reviews, deploys)
+	}
+	args["arguments"] = strings.ReplaceAll(args["arguments"], strings.Repeat("e", 40), commit)
+	_, err = a.useWorkspaceApp(context.Background(), scope, s, func(kind string, value any) {
+		if kind == "approval" {
+			a.answerWorkspaceReview(uid, s.ID, value.(map[string]any)["id"].(string), true)
+		}
+	}, args)
+	if err != nil || reviews != 1 || deploys != 1 {
+		t.Fatal(err, reviews, deploys)
+	}
+}
 
 func TestWorkspaceActionsRequireSameConversationHumanReview(t *testing.T) {
 	db, e := sql.Open("sqlite", ":memory:")

@@ -11,9 +11,15 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/oneworkspacestudio/one-workspace/pkg/apphost"
 )
 
-type functionCall struct{ ID, Name, Arguments string }
+type functionCall struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"`
+}
 type generation struct {
 	Text      string
 	Calls     []functionCall
@@ -68,12 +74,38 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 	scope.WorkspaceKnown = map[string]bool{}
 	scope.WorkspaceNative = map[string]workspaceNativeTool{}
 	var namedApps []workspaceApp
+	workspaceIntent := workspaceRequest.MatchString(s.ToolInput)
+	var workspaceError error
 	if scope.WorkspaceSession != "" {
-		if catalog, err := a.workspaceApps(ctx, scope); err == nil {
+		catalog, err := a.workspaceApps(ctx, scope)
+		workspaceError = err
+		if err == nil {
 			namedApps = referencedWorkspaceApps(s.ToolInput, catalog)
+			workspaceIntent = workspaceIntent || len(namedApps) > 0
+			known := conversationApps(s.Messages)
+			if scope.Project != "" {
+				known["gitea"] = true
+				known["hosting"] = true
+			}
+			for _, app := range namedApps {
+				delete(known, app.ID)
+			}
+			for _, app := range catalog.Apps {
+				if known[app.ID] {
+					namedApps = append(namedApps, app)
+				}
+			}
 		}
 	}
-	workspaceIntent := workspaceRequest.MatchString(s.ToolInput) || len(namedApps) > 0
+	if workspaceIntent && os.Getenv("MYAI_WORKSPACE_URL") != "" {
+		if scope.WorkspaceSession == "" {
+			return "", errors.New("Reconnect My AI from Workspace to use your apps")
+		}
+		if workspaceError != nil {
+			return "", workspaceError
+		}
+	}
+
 	workspaceDeclined := false
 	scope.WorkspaceDeclined = &workspaceDeclined
 	privateAppRead := s.WorkspaceContext || workspaceIntent
@@ -109,7 +141,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 	}
 	if scope.Project != "" {
 		data, _ := json.Marshal(map[string]string{"selected_project": scope.Project})
-		system += " You are in a managed My Drive project linked to the user's private Git app. Selected project context (data): " + string(data) + ". Use list_project_files and read_project_file to inspect it. When changes are allowed, use write_project_file or edit_project_file to actually make requested changes; do not only describe code or tell the user to choose folders or run Git commands. My AI commits and pushes completed changes automatically. No general shell is available. Only report builds or checks actually returned by My Hosting; never invent command or test results. Do not access credentials or Git configuration."
+		system += " You are in a managed My Drive project linked to the user's private Git app. Selected project context (data): " + string(data) + ". Use list_project_files and read_project_file to inspect it. When changes are allowed, use write_project_file or edit_project_file to actually make requested changes; do not only describe code or tell the user to choose folders or run Git commands. My AI commits and pushes completed changes automatically. For a build-and-deploy request in this turn, call save_project after editing, then deploy that exact returned commit through My Hosting and read its job until terminal. You have real registered app tools; act through them and use their results rather than disclaiming access. No general shell is available. Only report builds or checks actually returned by My Hosting; never invent command or test results. Do not access credentials or Git configuration."
 		if scope.Writable {
 			system += " File writes are authorized only in this selected project."
 		} else {
@@ -117,11 +149,10 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 		}
 	}
 	messages := []any{map[string]string{"role": "system", "content": system}}
-	for _, m := range s.Messages {
-		if m.Role == "user" || m.Role == "assistant" {
-			messages = append(messages, map[string]string{"role": m.Role, "content": m.Content})
-		}
+	if legacy := legacyToolEvidence(s); legacy != "" {
+		messages = append(messages, map[string]string{"role": "user", "content": legacy})
 	}
+	messages = append(messages, conversationInput(p.ID, s.Messages)...)
 
 	// The researcher receives only filtered public questions. The answering model
 	// retains private app history and must never send that history back to the web.
@@ -151,6 +182,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 			}
 			if finalAnswer != "" {
 				originalSend("delta", finalAnswer)
+				a.recordAssistant(scope, s, originalSend, finalAnswer, nil, "completed")
 			}
 		}()
 	} else if len(s.Messages) > 0 {
@@ -181,6 +213,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 					}
 					if finalAnswer != "" {
 						originalSend("delta", finalAnswer)
+						a.recordAssistant(scope, s, originalSend, finalAnswer, nil, "completed")
 					}
 				}()
 			}
@@ -197,6 +230,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 	useTools := !researched || scope.Project != "" || scope.WorkspaceSession != ""
 	calls := 0
 	appFailures := map[string]int{}
+	toolFormatRetries := 0
 	var answer strings.Builder
 	roundLimit := 8
 	if scope.WorkspaceSession != "" {
@@ -206,7 +240,24 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 		g, e := a.generate(ctx, p, s.Model, messages, scope, useTools, send)
 		if e != nil {
 			var pe *providerHTTPError
+			if ctx.Err() == nil && errors.As(e, &pe) && pe.Reason == "tool-format" && toolFormatRetries < 2 {
+				toolFormatRetries++
+				a.recordAssistant(scope, s, send, g.Text, nil, "retrying")
+				if g.Text != "" {
+					if answer.Len() > 0 {
+						answer.WriteString("\n\n")
+					}
+					answer.WriteString(g.Text)
+					messages = append(messages, map[string]string{"role": "assistant", "content": g.Text})
+				}
+				send("event", map[string]any{"method": "tools/retrying", "params": map[string]string{"notice": "The local model's tool call was incomplete. Retrying this response; no action from it was executed."}})
+				messages = append(messages, map[string]string{"role": "user", "content": "The provider rejected the last response because its tool call was malformed. None of that response's tool calls were executed. Continue the requested task with properly formed registered function calls and complete arguments. Use compact complete UTF-8 files and proper escaping. Do not repeat successful earlier changes; inspect their actual results."})
+				continue
+			}
 			if round == 0 && errors.As(e, &pe) && pe.ToolsUnsupported {
+				if workspaceIntent && scope.WorkspaceSession != "" {
+					return answer.String(), errors.New("Choose a model with tool support to use Workspace apps. This model response did not execute an app action")
+				}
 				if scope.Project != "" {
 					return answer.String(), errors.New("This model does not support project file tools. Choose a model with tool support. No AI file edits were performed")
 				}
@@ -216,11 +267,18 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 				g, e = a.generate(ctx, p, s.Model, messages, scope, false, send)
 			}
 			if e != nil {
-				return answer.String() + g.Text, e
+				a.recordAssistant(scope, s, send, g.Text, nil, "interrupted")
+				return joinedAnswer(answer.String(), g.Text), e
 			}
+		}
+		if answer.Len() > 0 && g.Text != "" {
+			answer.WriteString("\n\n")
 		}
 		answer.WriteString(g.Text)
 		if len(g.Calls) == 0 {
+			if !researched {
+				a.recordAssistant(scope, s, send, g.Text, nil, "completed", g)
+			}
 			if answer.Len() == 0 {
 				return "", errors.New("The provider returned no text; choose a supported chat model")
 			}
@@ -228,8 +286,19 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 		}
 		calls += len(g.Calls)
 		if calls > 48 {
+			a.recordAssistant(scope, s, send, g.Text, nil, "interrupted")
 			return answer.String(), errors.New("Tool-call limit reached; continue with a narrower request")
 		}
+		if p.ID == "ollama" {
+			for i := range g.Calls {
+				g.Calls[i].ID = "call_" + apphost.ID()
+			}
+		}
+		recordedText := g.Text
+		if researched {
+			recordedText = ""
+		}
+		a.recordAssistant(scope, s, send, recordedText, g.Calls, "completed", g)
 		if p.ID == "openai" {
 			messages = append(messages, g.Output...)
 		} else {
@@ -252,6 +321,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 		}
 		for _, c := range g.Calls {
 			invokedName := c.Name
+			scope.CallID, scope.InvokedTool = c.ID, invokedName
 			args := map[string]string{}
 			result := ""
 			var argumentErr error
@@ -280,9 +350,13 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 				result = a.runTool(toolCtx, scope, s, send, c.Name, args)
 				cancel()
 			}
+			a.recordToolResult(scope, s, send, result)
 			if c.Name == "use_workspace_app" {
 				if workspaceDeclined {
-					return strings.TrimSpace(answer.String() + "\n\nThe proposed app change was declined and was not submitted."), nil
+					notice := "The pending app request was cancelled. Earlier confirmed app actions remain recorded in this conversation."
+					send("delta", notice)
+					a.recordAssistant(scope, s, send, notice, nil, "completed")
+					return joinedAnswer(answer.String(), notice), nil
 				}
 				var problem struct {
 					Error string `json:"error"`
@@ -317,10 +391,10 @@ func (a *App) generate(ctx context.Context, p Provider, model string, messages [
 	if p.ID == "ollama" {
 		path = "/api/chat"
 		body["think"] = false
-		if scope.WorkspaceSession != "" {
+		if scope.WorkspaceSession != "" || scope.Project != "" {
 			// Bound native app workflows independently of a host's very large
 			// global Ollama context default, retaining room for discovered schemas.
-			body["options"] = map[string]any{"num_ctx": 16384}
+			body["options"] = map[string]any{"num_ctx": 16384, "num_predict": 8192, "temperature": 0.2}
 		}
 	}
 	if ctx.Value(researchGenerationKey{}) == true {
@@ -360,7 +434,15 @@ func (a *App) generate(ctx context.Context, p Provider, model string, messages [
 	complete := false
 	callMap := map[int]*functionCall{}
 	var text, reason strings.Builder
-	defer func() { g.Text = text.String(); g.Reasoning = reason.String() }()
+	defer func() {
+		g.Text = text.String()
+		g.Reasoning = reason.String()
+		if p.ID == "openai" && complete {
+			if parts := openAIOutputTexts(g.Output); len(parts) > 0 {
+				g.Text = strings.Join(parts, "\n\n")
+			}
+		}
+	}()
 	for scan.Scan() {
 		line := scan.Text()
 		if strings.HasPrefix(line, "data:") {
@@ -403,10 +485,11 @@ func (a *App) generate(ctx context.Context, p Provider, model string, messages [
 					} `json:"tool_calls"`
 				} `json:"delta"`
 			} `json:"choices"`
-			Usage  json.RawMessage `json:"usage"`
-			Done   bool            `json:"done"`
-			Prompt int             `json:"prompt_eval_count"`
-			Eval   int             `json:"eval_count"`
+			Usage      json.RawMessage `json:"usage"`
+			Done       bool            `json:"done"`
+			DoneReason string          `json:"done_reason"`
+			Prompt     int             `json:"prompt_eval_count"`
+			Eval       int             `json:"eval_count"`
 		}
 		if json.Unmarshal([]byte(line), &v) != nil {
 			continue
@@ -459,6 +542,9 @@ func (a *App) generate(ctx context.Context, p Provider, model string, messages [
 			g.Output = append(g.Output, v.Item)
 		}
 		if v.Done {
+			if v.DoneReason == "length" {
+				return g, errors.New("The model reached its response limit before finishing. No incomplete tool call was executed; continue with a smaller change")
+			}
 			complete = true
 			send("usage", map[string]int{"inputTokens": v.Prompt, "outputTokens": v.Eval})
 		}
