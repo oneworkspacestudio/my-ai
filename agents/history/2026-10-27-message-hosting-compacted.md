@@ -70,3 +70,29 @@ Sanitized acceptance/provenance is docs/message-hosting-acceptance.json;
 UI screenshots remain local tooling artifacts, never repository history.
 Source is ready for preview15 commit/tag/package/publication; no live update
 has started at this checkpoint. Secondary still needs owner MyAccounts sign-in.
+
+## Published and installed outcome
+
+Source b095efb pushed to main; immutable v0.1.0-preview.15 published with all
+asset lengths/digests verified. Clean release rebuild matched accepted SHA
+fe39921b7a3c877eb0341be9263305371350069f2d7a489b3f4b3de37e1c8905.
+Public executable downloaded anonymously and matched. Suite channel6d13aee
+promoted/pushed and anonymously verified; only MyAI15 added, all existing rows
+including Android4 and withheld builds retained. No manager release or Actions.
+
+Primary normal backed-up app-only update completed: manager94 retained,
+MyAI15 exact accepted binary running, all28 services healthy, other app
+contracts/packages/executable bytes unchanged. Owner config and decrypted
+identity settings (in-memory only), protected provider files and all19 existing
+models preserved. Schema3 recovery verified, transaction complete. Sanitized
+primary15-delivery.json in tooling; normal private updater retains recovery.
+Primary maintenance reservation released to authorized coordination thread.
+
+Exact synthetic p15 process tree stopped; its owned NTFS data removed after
+acceptance with path/reparse/process checks. Inactive t15 build temp removed
+after packaging. Source/release/evidence/recovery and model library retained.
+Own synthetic browser tabs closed. Secondary updater tab remains a sign-in
+handoff; owner has not answered the pending question. No secondary update was
+submitted. Resume after normal owner sign-in, fresh-read installed versions and
+transaction state, select only MyAI15 through normal backed-up update, audit
+health/pins and report actual completion. Never weaken auth or claim both PCs.
