@@ -30,5 +30,48 @@
   "finalDirectReviewedHostingDeployment": "published",
   "final14PublishedPageOpened": true,
   "localModelRecoveredFromInvalidArguments": true,
-  "mobileViewportNotCertified": true
+  "mobileViewportNotCertified": true,
+  "delivery": {
+    "myAIRelease": "https://github.com/oneworkspacestudio/my-ai/releases/tag/v0.1.0-preview.14",
+    "myAISource": "5b9ec7f14a3c55c2d9186afdb70f407ced039921",
+    "myAIExeSHA256": "817e3c373901b7485ae69f7e10ed42cb9be4ca4ba52a4b0556d54bc2d03400ba",
+    "workspaceRelease": "https://github.com/oneworkspacestudio/one-workspace/releases/tag/v0.3.0-preview.93",
+    "workspaceSource": "fb07cdd06d96cb5474c76e117b2209a5ac1d8ba4",
+    "managerSHA256": "7456db79f1cf330b36d5d324a44845adf0dadbbde3875e427d95fe3ac0921409",
+    "promotionCommit": "a974397",
+    "anonymousPublicDownloadsAndChannelVerified": true,
+    "primary": {
+      "manager": "0.3.0-preview.93",
+      "myAI": "0.1.0-preview.14",
+      "normalProtectedUpdates": true,
+      "ownerConfigurationRetainedByPreliminaryAudit": true,
+      "identityCredentialsEqualPreUpdateRecoveryAndOlderFullRecovery": true,
+      "ciphertextChangedByNormalDPAPIReencryption": true,
+      "allOtherAppContractsRetained": true,
+      "allInstalledExecutableHashesMatchCatalog": true,
+      "existingModelsRetained": 18,
+      "allServicesRunning": 27,
+      "exactNativeTestedBinariesInstalled": true,
+      "activeUpdate": false,
+      "backupSchema": 3,
+      "metadataRecovery": true,
+      "backup": "update-20261026T235839-f2e2d9a024f3",
+      "protectedProviderFilesUnchanged": 0,
+      "privateSearchRuntimeVerified": true
+    },
+    "secondary": {
+      "manager": "0.3.0-preview.93",
+      "myAI": "0.1.0-preview.14",
+      "normalProtectedUpdates": true,
+      "allOtherAppVersionsRetained": true,
+      "allServicesRunning": 27,
+      "actualMyAIHealthVersionVerified": true,
+      "allUpdatesComplete": true,
+      "recovery": "update-20261027T000935-58884a42ac1f",
+      "binaryHashesCheckedByNormalUpdater": true,
+      "separateRemoteFilesystemAudit": false
+    },
+    "syntheticFixtureStoppedAndRemoved": true,
+    "superseded12And13WithheldNeverInstalled": true
+  }
 }
