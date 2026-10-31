@@ -1,0 +1,29 @@
+{
+  "ollamaInstallerInvokedByAgent": false,
+  "unrelatedAppContractsRetained": 34,
+  "schema": 1,
+  "verifiedPayloadFiles": 4,
+  "myAIHealthy": true,
+  "baselineFailedApps": [
+    "cinema"
+  ],
+  "manager": "0.3.0-preview.109",
+  "providerCredentialContentsRetained": true,
+  "currentFailedApps": [],
+  "existingLocationsIdentityAndCredentialsRetained": true,
+  "normalProtectedAppUpdate": true,
+  "transactionComplete": true,
+  "myAI": "0.1.0-preview.17",
+  "servedBootstrapVersion": "0.1.0-preview.17",
+  "servedAssetsMatchBuild": [
+    "index-uH2pmBiB.js",
+    "index-DRvJiLUA.css"
+  ],
+  "anonymousHistoryRemovalDenied": true,
+  "ownerDataUsedAsFunctionalFixture": false,
+  "secondPCInstalled": false,
+  "publicChannelCommit": "3af2084",
+  "releaseSourceCommit": "384c28b1f54f2a43f184938dca519cf27c481aae",
+  "releaseAssetsVerified": 9,
+  "anonymousPublicChannelVerified": true
+}
