@@ -20,7 +20,7 @@ func (e *providerHTTPError) Error() string {
 	if e.Provider == "ollama" {
 		switch e.Reason {
 		case "format":
-			return "The server's Ollama version cannot load this model format. Update Ollama on the server, then try again. Your downloaded model is kept"
+			return "The server's Ollama version cannot load this model format. Update Ollama from Models (server owner), then try again. Your downloaded model is kept"
 		case "memory":
 			return "Ollama could not fit this model in the server's available memory. Try a smaller model or a shorter conversation. Your downloaded model is kept"
 		case "missing":
@@ -84,7 +84,7 @@ func providerFailure(provider string, status int, raw []byte) *providerHTTPError
 		switch {
 		case has("tool call parsing failed", "error parsing tool call", "failed to parse tool call", "xml syntax error"):
 			e.Reason = "tool-format"
-		case has("unknown tensor type", "unsupported tensor type", "unknown model architecture", "unsupported model architecture", "unsupported model format", "requires a newer version", "invalid ggml type", "unknown ggml type", "unsupported ggml type", "unsupported model type"):
+		case has("unknown tensor type", "unsupported tensor type", "unknown model architecture", "unsupported model architecture", "unsupported model format", "requires a newer version", "model requires ollama version", "invalid ggml type", "unknown ggml type", "unsupported ggml type", "unsupported model type"):
 			e.Reason = "format"
 		case has("out of memory", "out-of-memory", "insufficient memory", "requires more system memory", "unable to allocate", "failed to allocate", "memory layout cannot be allocated"):
 			e.Reason = "memory"

@@ -309,6 +309,11 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 400, e.Error())
 		return
 	}
+	if p.ID == "ollama" && a.ollamaMaintenanceBusy() {
+		a.mu.Unlock()
+		apphost.Problem(w, 409, "Ollama is upgrading; retry when the upgrade finishes")
+		return
+	}
 	if !modelRE.MatchString(s.Model) {
 		a.mu.Unlock()
 		apphost.Problem(w, 400, "Choose a model first")
@@ -442,6 +447,13 @@ func (a *App) stop(w http.ResponseWriter, r *http.Request) {
 	apphost.JSON(w, 200, map[string]bool{"stopped": true})
 }
 func (a *App) pull(w http.ResponseWriter, r *http.Request) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.ollamaMaintenanceBusy() {
+		apphost.Problem(w, 409, "Ollama is upgrading; wait before downloading models")
+		return
+	}
+
 	if apphost.Current(r).User.Role != "owner" {
 		apphost.Problem(w, 403, "Only the owner can install shared models")
 		return

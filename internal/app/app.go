@@ -17,6 +17,12 @@ import (
 )
 
 type App struct {
+	upgradeClient            *http.Client
+	upgradeInstall           func(context.Context, string) error
+	upgradeSpace             func(string, int64) error
+	upgradeVersion           func(context.Context) string
+	ollamaUpdate             *ollamaUpgrade
+	upgradeContext           context.Context
 	searchMu                 sync.Mutex
 	search                   *searchruntime.Runtime
 	searchTemp               string
@@ -93,7 +99,9 @@ func New(h *apphost.Host) (*App, error) {
 	if e != nil {
 		return nil, e
 	}
-	a := &App{downloads: q, H: h, client: &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, projectTurns: map[string]bool{}, running: map[string]context.CancelFunc{}, agents: map[string]*Agent{}}
+	a := &App{ollamaUpdate: &ollamaUpgrade{Phase: "Ready to check for an Ollama upgrade"}, upgradeContext: context.Background(), downloads: q, H: h, client: &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, projectTurns: map[string]bool{}, running: map[string]context.CancelFunc{}, agents: map[string]*Agent{}}
+	h.Mux.HandleFunc("GET /api/ollama/upgrade", h.Owner(a.ollamaUpgradeStatus))
+	h.Mux.HandleFunc("POST /api/ollama/upgrade", h.Owner(a.ollamaUpgradeStart))
 	h.Mux.HandleFunc("GET /api/workspace", h.Require(a.workspaceInfo))
 	for _, v := range []struct {
 		p string
@@ -104,6 +112,9 @@ func New(h *apphost.Host) (*App, error) {
 	return a, nil
 }
 func (a *App) Run(ctx context.Context) error {
+	a.mu.Lock()
+	a.upgradeContext = ctx
+	a.mu.Unlock()
 	defer a.closeSearch()
 	go func() { _, _ = a.searchConnection(ctx) }()
 	done := make(chan struct{})
@@ -414,7 +425,7 @@ func (a *App) export(w http.ResponseWriter, r *http.Request) {
 			if (m.Role != "user" && m.Role != "assistant") || m.Content == "" {
 				continue
 			}
-			fmt.Fprintf(w, "\n## %s · %s\n\n%s\n", m.Role, m.Model, m.Content)
+			fmt.Fprintf(w, "\n## %s Â· %s\n\n%s\n", m.Role, m.Model, m.Content)
 		}
 		return
 	}

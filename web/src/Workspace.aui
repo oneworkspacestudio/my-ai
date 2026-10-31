@@ -193,6 +193,13 @@ Page Workspace variant=$theme
         Heading level=3 "Download an Ollama model"
         Text "Check a model’s licence and hardware needs in the official library. Ollama chooses storage using its existing service configuration. My AI does not change or move that library."
         Link href="https://ollama.com/library" "Browse the official model library ↗"
+        If condition=$isOwner
+          Heading level=3 "Ollama server upgrade"
+          Text variant=status "$ollamaUpgradeStatus"
+          Text "Uses the official Windows installer on this server. Local AI may pause. Models stay in their existing library."
+          Button action=upgrade-ollama disabled=$ollamaUpgradeBusy "Upgrade Ollama"
+        Else
+          Text "If a model requires newer Ollama, ask the server owner to upgrade it from this panel."
         Link href="https://ollama.com/download/windows" "Get Ollama for Windows ↗"
         Text "Downloads continue on this server when you close the page. Progress and installed local models are shared by all users of this server."
         If condition=$isOwner

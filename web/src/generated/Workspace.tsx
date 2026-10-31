@@ -272,6 +272,16 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               <Heading level={3}>Download an Ollama model</Heading>
               <Text>Check a model’s licence and hardware needs in the official library. Ollama chooses storage using its existing service configuration. My AI does not change or move that library.</Text>
               <Link href="https://ollama.com/library">Browse the official model library ↗</Link>
+              {data.isOwner ? (
+                <>
+                  <Heading level={3}>Ollama server upgrade</Heading>
+                  <Text variant="status">{data.ollamaUpgradeStatus}</Text>
+                  <Text>Uses the official Windows installer on this server. Local AI may pause. Models stay in their existing library.</Text>
+                  <Button onClick={() => onAction("upgrade-ollama")} disabled={data.ollamaUpgradeBusy}>Upgrade Ollama</Button>
+                </>
+              ) : (
+                <Text>If a model requires newer Ollama, ask the server owner to upgrade it from this panel.</Text>
+              )}
               <Link href="https://ollama.com/download/windows">Get Ollama for Windows ↗</Link>
               <Text>Downloads continue on this server when you close the page. Progress and installed local models are shared by all users of this server.</Text>
               {data.isOwner && (
