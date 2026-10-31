@@ -231,14 +231,14 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
           )}
           {data.modelsView && (
             <>
+              {data.message && (
+                <Alert>{data.message}</Alert>
+              )}
               <Row>
                 <Text>Models run on the machine hosting My AI.</Text>
                 <Spacer />
-                <Button onClick={() => onAction("refresh")} icon="RefreshCw" label="Refresh models" variant="subtle" />
+                <Button onClick={() => onAction("refresh")} icon="RefreshCw" label="Refresh models" variant="icon" />
               </Row>
-              {data.providerStatuses.map((item, i) => (
-                <Text key={i} variant="status">{item.label}</Text>
-              ))}
               <Input name="modelSearch" placeholder="Filter model names" />
               {data.modelGroups.map((item, i) => (
                 <Card key={i} variant="provider-group">
@@ -268,43 +268,101 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                   )}
                 </Card>
               ))}
-              <Divider />
-              <Heading level={3}>Download an Ollama model</Heading>
-              <Text>Check a model’s licence and hardware needs in the official library. Ollama chooses storage using its existing service configuration. My AI does not change or move that library.</Text>
-              <Link href="https://ollama.com/library">Browse the official model library ↗</Link>
-              {data.isOwner ? (
+              <Card variant="disclosure">
+                <Heading level={3}>Add a local model</Heading>
+                <Text variant="muted">Choose a model from the Ollama library, then enter its tag.</Text>
+                <Link href="https://ollama.com/library">Browse model library ↗</Link>
+                {data.isOwner ? (
+                  <>
+                    <Input name="pullModel" placeholder="Model tag, e.g. qwen3:0.6b" />
+                    <Button onClick={() => onAction("pull")} variant="primary">Download model</Button>
+                  </>
+                ) : (
+                  <Text variant="muted">Ask the server owner to download a model.</Text>
+                )}
+                <Text variant="muted">Check the model’s licence and hardware requirements first. Downloads continue when you leave this page.</Text>
+              </Card>
+              {data.hasActiveDownloads && (
                 <>
-                  <Heading level={3}>Ollama server upgrade</Heading>
-                  <Text variant="status">{data.ollamaUpgradeStatus}</Text>
-                  <Text>Uses the official Windows installer on this server. Local AI may pause. Models stay in their existing library.</Text>
-                  <Button onClick={() => onAction("upgrade-ollama")} disabled={data.ollamaUpgradeBusy}>Upgrade Ollama</Button>
+                  <Heading level={3}>Active downloads</Heading>
+                  {data.activeDownloads.map((item, i) => (
+                    <Card key={i} variant="download-row">
+                      <Row variant="download-heading">
+                        <Text variant="author">{item.model}</Text>
+                        <Text variant="download-state">{item.state}</Text>
+                      </Row>
+                      {item.isActive && (
+                        <>
+                          <Metric value={item.completed} max={item.total} label={item.label} />
+                          <Text variant="muted">{item.bytes}</Text>
+                        </>
+                      )}
+                      <Text variant="status">{item.detail}</Text>
+                      <Row variant="download-actions">
+                        {item.canCancel && (
+                          <Button onClick={() => onAction("cancel-pull")} item={item.id}>Cancel download</Button>
+                        )}
+                        {item.canRetry && (
+                          <Button onClick={() => onAction("retry-pull")} item={item.model}>Retry download</Button>
+                        )}
+                        {item.canRemove && (
+                          <Button onClick={() => onAction("remove-download")} item={item.id}>Remove entry</Button>
+                        )}
+                      </Row>
+                    </Card>
+                  ))}
                 </>
-              ) : (
-                <Text>If a model requires newer Ollama, ask the server owner to upgrade it from this panel.</Text>
               )}
-              <Link href="https://ollama.com/download/windows">Get Ollama for Windows ↗</Link>
-              <Text>Downloads continue on this server when you close the page. Progress and installed local models are shared by all users of this server.</Text>
-              {data.isOwner && (
-                <>
-                  <Input name="pullModel" placeholder="Exact model tag, for example qwen3:0.6b" />
-                  <Button onClick={() => onAction("pull")} variant="primary">Download model</Button>
-                </>
+              <Card variant="disclosure">
+                <Heading level={3}>{data.downloadHistoryLabel}</Heading>
+                <Text variant="muted">Shared server history. Removing an entry keeps model files intact.</Text>
+                {data.historyDownloads.map((item, i) => (
+                  <Card key={i} variant="download-row">
+                    <Row variant="download-heading">
+                      <Text variant="author">{item.model}</Text>
+                      <Text variant="download-state">{item.state}</Text>
+                    </Row>
+                    {item.isActive && (
+                      <>
+                        <Metric value={item.completed} max={item.total} label={item.label} />
+                        <Text variant="muted">{item.bytes}</Text>
+                      </>
+                    )}
+                    <Text variant="status">{item.detail}</Text>
+                    <Row variant="download-actions">
+                      {item.canCancel && (
+                        <Button onClick={() => onAction("cancel-pull")} item={item.id}>Cancel download</Button>
+                      )}
+                      {item.canRetry && (
+                        <Button onClick={() => onAction("retry-pull")} item={item.model}>Retry download</Button>
+                      )}
+                      {item.canRemove && (
+                        <Button onClick={() => onAction("remove-download")} item={item.id}>Remove entry</Button>
+                      )}
+                    </Row>
+                  </Card>
+                ))}
+              </Card>
+              {data.ollamaUpgradeBusy && (
+                <Alert>{data.ollamaUpgradeStatus}</Alert>
               )}
-              <Heading level={3}>Server downloads</Heading>
-              {data.downloads.map((item, i) => (
-                <Card key={i} variant="download-row">
-                  <Text variant="author">{item.label}</Text>
-                  <Metric value={item.completed} max={item.total} label={item.label} />
-                  <Text variant="muted">{item.bytes}</Text>
-                  <Text variant="status">{item.detail}</Text>
-                  {item.canCancel && (
-                    <Button onClick={() => onAction("cancel-pull")} item={item.id}>Cancel download</Button>
-                  )}
-                  {item.canRetry && (
-                    <Button onClick={() => onAction("retry-pull")} item={item.model}>Retry download</Button>
-                  )}
-                </Card>
-              ))}
+              <Card variant="disclosure">
+                <Heading level={3}>Server & maintenance</Heading>
+                {data.providerStatuses.map((item, i) => (
+                  <Text key={i} variant="status">{item.label}</Text>
+                ))}
+                <Text variant="status">{data.ollamaUpgradeStatus}</Text>
+                {data.isOwner ? (
+                  <>
+                    <Text variant="muted">Upgrade using the official Windows installer. Local AI may pause; your model library stays in place.</Text>
+                    <Button onClick={() => onAction("upgrade-ollama")} disabled={data.ollamaUpgradeBusy}>Upgrade Ollama</Button>
+                  </>
+                ) : (
+                  <Text variant="muted">If a model requires newer Ollama, ask the server owner to upgrade it from this panel.</Text>
+                )}
+                <Link href="https://ollama.com/download/windows">Ollama for Windows ↗</Link>
+                <Text variant="muted">Models and downloads are shared on this server. Ollama manages their storage location.</Text>
+              </Card>
             </>
           )}
           {data.toolsView && (

@@ -241,3 +241,88 @@ func TestModelTagNormalization(t *testing.T) {
 		}
 	}
 }
+
+func TestRemoveDownloadHistory(t *testing.T) {
+	root := t.TempDir()
+	q, _ := newDownloadQueue(root)
+	sentinel := filepath.Join(root, "model-sentinel")
+	if err := os.WriteFile(sentinel, []byte("keep model"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	for _, state := range []string{"completed", "failed", "cancelled"} {
+		q.jobs = append(q.jobs, Download{ID: state, State: state, Model: "fixture:tiny"})
+	}
+	for _, state := range []string{"completed", "failed", "cancelled"} {
+		if err := q.remove(state); err != nil {
+			t.Fatal(err)
+		}
+		restored, err := newDownloadQueue(root)
+		if err != nil || len(restored.list()) != len(q.list()) {
+			t.Fatal("removal did not persist", err)
+		}
+	}
+	if b, err := os.ReadFile(sentinel); err != nil || string(b) != "keep model" {
+		t.Fatal("model changed", err)
+	}
+	if err := q.remove("missing"); err != errDownloadMissing {
+		t.Fatal(err)
+	}
+	for _, state := range []string{"queued", "downloading", "unknown"} {
+		q.jobs = []Download{{ID: "busy", State: state}}
+		if err := q.remove("busy"); err != errDownloadRunning || len(q.jobs) != 1 {
+			t.Fatal("unfinished entry removed", state, err)
+		}
+	}
+	q.jobs = []Download{{ID: "busy", State: "cancelled"}}
+	q.active = "busy"
+	if err := q.remove("busy"); err != errDownloadRunning {
+		t.Fatal("worker still owns record", err)
+	}
+}
+
+func TestDownloadMutationStorageFailure(t *testing.T) {
+	root := t.TempDir()
+	blocker := filepath.Join(root, "not-a-directory")
+	if err := os.WriteFile(blocker, []byte("fixture"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	q, _ := newDownloadQueue(root)
+	q.path = filepath.Join(blocker, "jobs.json")
+	q.jobs = []Download{{ID: "one", State: "failed"}, {ID: "two", State: "completed"}}
+	if err := q.remove("one"); err == nil || len(q.jobs) != 2 || q.jobs[0].ID != "one" {
+		t.Fatal("removal did not roll back", err)
+	}
+	q.jobs = []Download{{ID: "active", State: "downloading"}}
+	cancelled := false
+	q.active = "active"
+	q.cancel = func() { cancelled = true }
+	if err := q.stop("active"); err == nil || cancelled || q.jobs[0].State != "downloading" {
+		t.Fatal("failed save cancelled live download", err)
+	}
+	q.path = filepath.Join(root, "jobs.json")
+	if err := q.stop("active"); err != nil || !cancelled {
+		t.Fatal(err)
+	}
+	if err := q.update("active", func(j *Download) { j.State = "completed" }, true); err != nil {
+		t.Fatal(err)
+	}
+	if q.jobs[0].State != "cancelled" {
+		t.Fatal("late worker overwrote cancellation")
+	}
+}
+
+func TestDownloadMutationsRejectAnonymousRequests(t *testing.T) {
+	h := &apphost.Host{Mux: http.NewServeMux()}
+	a := &App{H: h}
+	for _, test := range []struct {
+		method string
+		fn     http.HandlerFunc
+	}{{"DELETE", a.downloadRemove}, {"POST", a.downloadCancel}} {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest(test.method, "http://localhost/api/models/downloads/fixture", nil)
+		h.Require(test.fn)(w, r)
+		if w.Code != 401 && w.Code != 403 {
+			t.Fatal(w.Code)
+		}
+	}
+}

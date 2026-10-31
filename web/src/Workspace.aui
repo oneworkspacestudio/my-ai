@@ -165,12 +165,12 @@ Page Workspace variant=$theme
         Text "$storageDetail"
         Text "Custom endpoints, cloud budgets and voice/image attachments are unavailable in this preview."
       If condition=$modelsView
+        If condition=$message
+          Alert "$message"
         Row
           Text "Models run on the machine hosting My AI."
           Spacer
-          Button action=refresh icon=RefreshCw label="Refresh models" variant=subtle
-        For each=$providerStatuses
-          Text variant=status "$item.label"
+          Button action=refresh icon=RefreshCw label="Refresh models" variant=icon
         Input name=modelSearch placeholder="Filter model names"
         For each=$modelGroups
           Card variant=provider-group
@@ -189,33 +189,67 @@ Page Workspace variant=$theme
                       Button action=use-model item=$item.key "Use"
                       If condition=$item.canRemove
                         Button action=delete-model item=$item.id icon=Trash2 label="Remove model" variant=icon
-        Divider
-        Heading level=3 "Download an Ollama model"
-        Text "Check a model’s licence and hardware needs in the official library. Ollama chooses storage using its existing service configuration. My AI does not change or move that library."
-        Link href="https://ollama.com/library" "Browse the official model library ↗"
-        If condition=$isOwner
-          Heading level=3 "Ollama server upgrade"
+        Card variant=disclosure
+          Heading level=3 "Add a local model"
+          Text variant=muted "Choose a model from the Ollama library, then enter its tag."
+          Link href="https://ollama.com/library" "Browse model library ↗"
+          If condition=$isOwner
+            Input name=pullModel placeholder="Model tag, e.g. qwen3:0.6b"
+            Button action=pull variant=primary "Download model"
+          Else
+            Text variant=muted "Ask the server owner to download a model."
+          Text variant=muted "Check the model’s licence and hardware requirements first. Downloads continue when you leave this page."
+        If condition=$hasActiveDownloads
+          Heading level=3 "Active downloads"
+          For each=$activeDownloads
+            Card variant=download-row
+              Row variant=download-heading
+                Text variant=author "$item.model"
+                Text variant=download-state "$item.state"
+              If condition=$item.isActive
+                Metric value=$item.completed max=$item.total label=$item.label
+                Text variant=muted "$item.bytes"
+              Text variant=status "$item.detail"
+              Row variant=download-actions
+                If condition=$item.canCancel
+                  Button action=cancel-pull item=$item.id "Cancel download"
+                If condition=$item.canRetry
+                  Button action=retry-pull item=$item.model "Retry download"
+                If condition=$item.canRemove
+                  Button action=remove-download item=$item.id "Remove entry"
+        Card variant=disclosure
+          Heading level=3 "$downloadHistoryLabel"
+          Text variant=muted "Shared server history. Removing an entry keeps model files intact."
+          For each=$historyDownloads
+            Card variant=download-row
+              Row variant=download-heading
+                Text variant=author "$item.model"
+                Text variant=download-state "$item.state"
+              If condition=$item.isActive
+                Metric value=$item.completed max=$item.total label=$item.label
+                Text variant=muted "$item.bytes"
+              Text variant=status "$item.detail"
+              Row variant=download-actions
+                If condition=$item.canCancel
+                  Button action=cancel-pull item=$item.id "Cancel download"
+                If condition=$item.canRetry
+                  Button action=retry-pull item=$item.model "Retry download"
+                If condition=$item.canRemove
+                  Button action=remove-download item=$item.id "Remove entry"
+        If condition=$ollamaUpgradeBusy
+          Alert "$ollamaUpgradeStatus"
+        Card variant=disclosure
+          Heading level=3 "Server & maintenance"
+          For each=$providerStatuses
+            Text variant=status "$item.label"
           Text variant=status "$ollamaUpgradeStatus"
-          Text "Uses the official Windows installer on this server. Local AI may pause. Models stay in their existing library."
-          Button action=upgrade-ollama disabled=$ollamaUpgradeBusy "Upgrade Ollama"
-        Else
-          Text "If a model requires newer Ollama, ask the server owner to upgrade it from this panel."
-        Link href="https://ollama.com/download/windows" "Get Ollama for Windows ↗"
-        Text "Downloads continue on this server when you close the page. Progress and installed local models are shared by all users of this server."
-        If condition=$isOwner
-          Input name=pullModel placeholder="Exact model tag, for example qwen3:0.6b"
-          Button action=pull variant=primary "Download model"
-        Heading level=3 "Server downloads"
-        For each=$downloads
-          Card variant=download-row
-            Text variant=author "$item.label"
-            Metric value=$item.completed max=$item.total label=$item.label
-            Text variant=muted "$item.bytes"
-            Text variant=status "$item.detail"
-            If condition=$item.canCancel
-              Button action=cancel-pull item=$item.id "Cancel download"
-            If condition=$item.canRetry
-              Button action=retry-pull item=$item.model "Retry download"
+          If condition=$isOwner
+            Text variant=muted "Upgrade using the official Windows installer. Local AI may pause; your model library stays in place."
+            Button action=upgrade-ollama disabled=$ollamaUpgradeBusy "Upgrade Ollama"
+          Else
+            Text variant=muted "If a model requires newer Ollama, ask the server owner to upgrade it from this panel."
+          Link href="https://ollama.com/download/windows" "Ollama for Windows ↗"
+          Text variant=muted "Models and downloads are shared on this server. Ollama manages their storage location."
       If condition=$toolsView
         Heading level=3 "Your Workspace apps"
         Text "$workspaceNotice"

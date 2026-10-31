@@ -126,16 +126,47 @@ func (q *downloadQueue) stop(id string) error {
 		if j.State != "queued" && j.State != "downloading" {
 			return nil
 		}
+		previous := *j
 		j.State = "cancelled"
 		j.Status = "Cancelled by the owner"
 		j.Updated = now()
+		if err := q.saveLocked(); err != nil {
+			*j = previous
+			return err
+		}
 		if q.active == id && q.cancel != nil {
 			q.cancel()
 		}
-		return q.saveLocked()
+		return nil
 	}
-	return errors.New("download not found")
+	return errDownloadMissing
 }
+
+var errDownloadMissing = errors.New("download not found")
+var errDownloadRunning = errors.New("Cancel the download first, or wait for it to finish stopping")
+
+// remove forgets a terminal record only; Ollama owns all model and partial files.
+func (q *downloadQueue) remove(id string) error {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	for i, j := range q.jobs {
+		if j.ID != id {
+			continue
+		}
+		if q.active == id || (j.State != "completed" && j.State != "failed" && j.State != "cancelled") {
+			return errDownloadRunning
+		}
+		previous := q.jobs
+		q.jobs = append(append([]Download{}, previous[:i]...), previous[i+1:]...)
+		if err := q.saveLocked(); err != nil {
+			q.jobs = previous
+			return err
+		}
+		return nil
+	}
+	return errDownloadMissing
+}
+
 func (q *downloadQueue) busy() bool {
 	q.mu.Lock()
 	defer q.mu.Unlock()
@@ -312,9 +343,33 @@ func (a *App) downloadCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if e := a.downloads.stop(r.PathValue("id")); e != nil {
-		apphost.Problem(w, 404, e.Error())
+		if errors.Is(e, errDownloadMissing) {
+			apphost.Problem(w, 404, e.Error())
+		} else {
+			apphost.Problem(w, 500, "Could not save cancellation. Check server storage and try again.")
+		}
 		return
 	}
 	a.H.Audit(apphost.Current(r).User.ID, "model-download-cancel", r.PathValue("id"))
 	apphost.JSON(w, 200, map[string]bool{"cancelled": true})
+}
+
+func (a *App) downloadRemove(w http.ResponseWriter, r *http.Request) {
+	if apphost.Current(r).User.Role != "owner" {
+		apphost.Problem(w, 403, "Only the owner can remove shared download entries")
+		return
+	}
+	if err := a.downloads.remove(r.PathValue("id")); err != nil {
+		switch {
+		case errors.Is(err, errDownloadMissing):
+			apphost.Problem(w, 404, err.Error())
+		case errors.Is(err, errDownloadRunning):
+			apphost.Problem(w, 409, err.Error())
+		default:
+			apphost.Problem(w, 500, "Could not save download history. Try again after checking server storage.")
+		}
+		return
+	}
+	a.H.Audit(apphost.Current(r).User.ID, "model-download-remove", r.PathValue("id"))
+	apphost.JSON(w, 200, map[string]bool{"removed": true})
 }

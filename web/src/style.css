@@ -12,3 +12,21 @@
 .button--search-active:hover{background:var(--mint);color:#101823}
 
 .row--composer-project{border-bottom:1px solid var(--border);padding:0 0 8px;margin-bottom:8px;gap:6px}.button--project-picker{background:transparent;border:0;color:var(--link);justify-content:flex-start;flex:1;min-width:0;padding:6px;font-size:12px}.button--project-picker span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row--composer-project>.button--subtle{flex:none;font-size:11px}.row--composer-project svg{flex:none}.card--project-card{border:1px solid var(--border);border-radius:12px;padding:13px;display:flex;flex-direction:column;gap:9px}
+
+/* Model management: focused tasks, with supporting details disclosed on demand. */
+.disclosure{border:1px solid var(--border);border-radius:12px;padding:0 16px;min-width:0}
+.disclosure>summary{cursor:pointer;padding:16px 0;font-weight:600;min-height:52px}
+.disclosure>summary h3{display:inline;font-size:14px;margin:0 0 0 6px}
+.disclosure[open]{padding-bottom:16px}
+.disclosure[open]>:not(summary){display:flex;margin-top:12px}
+.disclosure[open]>.text{display:block}
+.disclosure[open]>.input,.disclosure[open]>.button{width:100%}
+.row--download-heading{justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.row--download-heading .text--author{overflow-wrap:anywhere;flex:1;min-width:100px}
+.text--download-state{font-size:12px;color:var(--muted);text-transform:capitalize;background:var(--hover);border-radius:6px;padding:3px 8px}
+.row--download-actions{flex-wrap:wrap;margin-top:6px}
+.card--download-row .text--status{overflow-wrap:anywhere}
+.card--modal>h3{font-size:14px;margin:8px 0 0}
+.disclosure .card--download-row{flex-direction:column;width:100%}
+
+.card--provider-group{padding:8px}
