@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "version": "0.1.0-preview.16",
+  "manager": "0.3.0-preview.109",
+  "protectedAppOnlyUpdateComplete": true,
+  "existingOtherAppContractsRetained": 34,
+  "locationsAndIdentityRetained": true,
+  "workspaceAndProviderCredentialComparisonPassedBeforeOptionalDocCheck": true,
+  "registeredPayloadHashesVerified": [
+    "myai",
+    "myai-LICENSE",
+    "myai-NOTICE",
+    "myai-THIRD-PARTY-LICENSES.txt"
+  ],
+  "untrackedOptionalDocsOmittedByNormalUpdater": [
+    "myai-contract",
+    "myai-doc-SETUP.md",
+    "myai-doc-SUPPORT.md",
+    "myai-doc-ADR-001-architecture.md",
+    "myai-doc-SECURITY-CHECKS.md"
+  ],
+  "servedAssetsMatchBuild": [
+    "index-CNbdjyGy.js",
+    "index-C0x_bnkt.css"
+  ],
+  "anonymousUpgradeStatusDenied": true,
+  "ollamaInstallerInvokedByAgent": false,
+  "realOllamaUpgradeTested": false,
+  "ownerDataUsedAsFunctionalFixture": false
+}
