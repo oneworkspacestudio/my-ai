@@ -6,6 +6,8 @@
 | Provider discovery and real streamed chat | Ollama demonstrated; OpenAI Responses and DeepSeek adapters tested with protocol fixtures; live API keys required for provider acceptance |
 | Time, search and basic tools | Real clock/timezone, safe arithmetic, included SearXNG web search/page reading, automatic conversational search without a mode selector, natural-language web opt-out, private conversation/attachment lookup and own managed project reads; bounded provider function loops, explicit-command fallbacks, persisted activity and clickable sources |
 | Bundled MCP | Native stdio public read-only tool server, automatically configured in isolated Codex sessions; no account/filesystem/shell access through MCP |
+| Local model settings | Per-account/model context, output, sampling, batch and memory controls; low-memory preset, Plain chat and defaults reset. Synthetic persistence/wire/isolation and phone/desktop production UI tests pass. |
+| Automatic Workspace app sign-in | Cold native sessions use normal MyAccounts SSO and exact request resume; read-only identity verification, separate app-change review, cancellation and mismatch denial tested with synthetic fixtures. |
 | Per-session provider/model, per-response attribution, explicit cloud indicator | Implemented; native Ollama persistence demonstrated |
 | MyAccounts PKCE and stable issuer+subject | Existing apphost contract reused; real fresh-install OIDC/PKCE acceptance passed |
 | My Drive authoritative storage | Default-deny Quantum source, isolated physical user scopes, guard before access; real same-user Quantum download, second-browser reopen and cross-user denial passed |

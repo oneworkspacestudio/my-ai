@@ -30,3 +30,14 @@
 .disclosure .card--download-row{flex-direction:column;width:100%}
 
 .card--provider-group{padding:8px}
+
+.grid--model-settings-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px;min-width:0}
+.stack--model-setting-field{gap:7px}
+.stack--model-setting-field .text--field-label{margin:0}
+.stack--model-setting-field .text--muted{font-size:12px;line-height:1.5}
+.stack--model-setting-field .input,.stack--model-setting-field .select{width:100%}
+.row--model-settings-actions{flex-wrap:wrap}
+.disclosure[open]>.grid--model-settings-fields{display:grid}
+.row--model-settings-footer{position:sticky;bottom:-25px;z-index:2;flex-wrap:wrap;background:var(--surface);border-top:1px solid var(--border);padding:14px 0 20px;margin-top:4px}
+@media(max-width:760px){.row--model-settings-footer{bottom:-19px;padding-bottom:14px}.row--model-settings-footer>.button{flex:1 1 auto}}
+@media(max-width:560px){.grid--model-settings-fields{grid-template-columns:1fr}.row--model-settings-actions>.button{flex:1 1 auto}}

@@ -103,6 +103,9 @@ func New(h *apphost.Host) (*App, error) {
 	h.Mux.HandleFunc("GET /api/ollama/upgrade", h.Owner(a.ollamaUpgradeStatus))
 	h.Mux.HandleFunc("POST /api/ollama/upgrade", h.Owner(a.ollamaUpgradeStart))
 	h.Mux.HandleFunc("GET /api/workspace", h.Require(a.workspaceInfo))
+	h.Mux.HandleFunc("GET /api/model-settings", h.Require(a.localModelSettings))
+	h.Mux.HandleFunc("POST /api/model-settings", h.Require(a.localModelSettings))
+	h.Mux.HandleFunc("POST /api/workspace/connection", h.Require(a.workspaceConnection))
 	for _, v := range []struct {
 		p string
 		f http.HandlerFunc

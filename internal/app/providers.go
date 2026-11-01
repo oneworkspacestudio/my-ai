@@ -16,9 +16,10 @@ import (
 )
 
 type Provider struct {
-	ID   string `json:"id"`
-	Base string `json:"base"`
-	Key  string `json:"key,omitempty"`
+	Generation *LocalModelSettings `json:"-"`
+	ID         string              `json:"id"`
+	Base       string              `json:"base"`
+	Key        string              `json:"key,omitempty"`
 }
 type Model struct {
 	ID           string   `json:"id"`
@@ -318,6 +319,16 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		a.mu.Unlock()
 		apphost.Problem(w, 400, "Choose a model first")
 		return
+	}
+	if p.ID == "ollama" {
+		saved, err := a.readLocalSettings(uid)
+		if err != nil {
+			a.mu.Unlock()
+			apphost.Problem(w, 503, "Could not read your model settings. Check private storage before trying again.")
+			return
+		}
+		profile := saved.Models[s.Model]
+		p.Generation = &profile
 	}
 	if s.Mode == "code" && s.Project == "" {
 		a.mu.Unlock()

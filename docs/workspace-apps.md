@@ -12,10 +12,7 @@ For example:
 - “Show my project's Git status.”
 - “Deploy this saved project with My Hosting and give me its working link.”
 
-Open **Tools & skills** to see your apps and their available connections. If an
-app needs connecting, follow its **Open app** link and sign in normally. My AI
-uses your account and the app's existing permissions. It cannot grant itself
-access to another person's files or bypass an app's locked account.
+Open **Tools & skills** to see your apps. Native sign-in is established automatically through MyAccounts when needed, then the exact request resumes. No separate app connection is needed for a normal signed-in Workspace session. Native account checks and permissions remain mandatory. If MyAccounts requires a real sign-in refresh, My AI shows authentication recovery. See [automatic SSO](WORKSPACE-SSO.md).
 
 My AI shows the proposed app change for review before submitting it. Declining
 or stopping that review submits nothing. A Code conversation set to Preview
@@ -95,11 +92,7 @@ immutable Git source, enforces native permissions and returns a real job which m
 be polled. Queued means queued, not published. Preview-only conversations cannot
 change projects or apps.
 
-An app that needs native sign-in offers its Workspace link and Continue in the
-conversation, then resumes the original request. Connecting never grants action
-approval or bypasses account checks. Malformed local model tool responses receive
-at most two retries; no incomplete call is executed and provider errors never expose
-raw prompts or credentials. Model instruction-following remains a practical limit.
+An app needing a native session starts automatic MyAccounts SSO and resumes the original request. Sign-in never grants app-change approval or bypasses account checks. Provider errors and malformed tool responses do not establish successful actions.
 
 
 My AI records a confirmed Hosting submission before waiting for it, then follows the

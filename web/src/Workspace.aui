@@ -99,6 +99,8 @@ Page Workspace variant=$theme
             Card variant=event
               Text variant=event-title "$item.method"
               Text variant=pre "$item.content"
+      If condition=$connectionStatus
+        Text variant=status "$connectionStatus"
       For each=$approvals
         Card variant=approval
           Row
@@ -130,6 +132,8 @@ Page Workspace variant=$theme
           Spacer
           Select name=provider options=$providerOptions disabled=$busy
           Select name=model options=$modelOptions disabled=$busy
+          If condition=$localModelSelected
+            Button action=model-settings item=$selectedLocalModel icon=SlidersHorizontal label="Model settings" variant=icon disabled=$busy
           If condition=$codeMode
             Button action=effort icon=Gauge variant=effort "$effortLabel"
           If condition=$busy
@@ -153,6 +157,8 @@ Page Workspace variant=$theme
         Heading level=2 "$modalTitle"
         Spacer
         Button action=close icon=X label="Close dialog" variant=icon
+      If condition=$message
+        Alert "$message"
       If condition=$settingsView
         Text "API keys are protected by Windows on this host. They are never saved in conversations or returned by the server."
         Text variant=field-label "OpenAI API key"
@@ -164,9 +170,45 @@ Page Workspace variant=$theme
         Divider
         Text "$storageDetail"
         Text "Custom endpoints, cloud budgets and voice/image attachments are unavailable in this preview."
+      If condition=$modelSettingsView
+        Text variant=author "$tuneModel"
+        Text variant=muted "Saved for this model and your account. Changes apply to new requests in Chat and Code."
+        If condition=$tuneLoading
+          Text variant=status "Loading your model settings..."
+        If condition=$tuneLoadFailed
+          Button action=model-settings item=$tuneModel "Retry loading settings"
+        If condition=$tuneLoaded
+          Row variant=model-settings-actions
+            Button action=llm-low-memory disabled=$tuneBusy "Low-memory preset"
+            Button action=llm-defaults disabled=$tuneBusy "Use defaults"
+          Text variant=muted "Leave fields blank to use automatic values."
+          Grid variant=model-settings-fields
+            For each=$tuneBasicFields
+              Stack variant=model-setting-field
+                Text variant=field-label "$item.label"
+                Input name=$item.name label=$item.label type=number min=$item.min max=$item.max step=$item.step placeholder="Automatic" disabled=$tuneBusy
+                Text variant=muted "$item.help"
+          Stack variant=model-setting-field
+            Text variant=field-label "Chat behaviour"
+            Select name=llm_chatMode options=$tuneChatModes disabled=$tuneBusy label="Chat behaviour"
+            Text variant=muted "Plain chat skips web research and app tools for a simpler prompt. Code still uses its required project tools."
+          Card variant=disclosure
+            Heading level=3 "Advanced settings"
+            Grid variant=model-settings-fields
+              For each=$tuneAdvancedFields
+                Stack variant=model-setting-field
+                  Text variant=field-label "$item.label"
+                  Input name=$item.name label=$item.label type=number min=$item.min max=$item.max step=$item.step placeholder="Automatic" disabled=$tuneBusy
+                  Text variant=muted "$item.help"
+            Stack variant=model-setting-field
+              Text variant=field-label "Keep model in memory"
+              Select name=llm_keepAlive options=$tuneMemoryOptions label="Keep model in memory" disabled=$tuneBusy
+              Text variant=muted "Unloading frees memory after the reply but makes the next request slower."
+          Text variant=muted "Context must fit the model and your hardware. Long attachments and app workflows may need more room. Internal research keeps deterministic sampling and a stricter reply limit."
+          Row variant=model-settings-footer
+            Button action=llm-save variant=primary disabled=$tuneBusy "Save model settings"
+            Button action=models disabled=$tuneBusy "Back to models"
       If condition=$modelsView
-        If condition=$message
-          Alert "$message"
         Row
           Text "Models run on the machine hosting My AI."
           Spacer
@@ -187,6 +229,8 @@ Page Workspace variant=$theme
                         Text variant=muted "$item.detail"
                       Spacer
                       Button action=use-model item=$item.key "Use"
+                      If condition=$item.local
+                        Button action=model-settings item=$item.id icon=SlidersHorizontal label="Model settings" variant=icon
                       If condition=$item.canRemove
                         Button action=delete-model item=$item.id icon=Trash2 label="Remove model" variant=icon
         Card variant=disclosure
@@ -314,5 +358,3 @@ Page Workspace variant=$theme
         Text "$accountDetail"
         Text "Your projects and conversations stay connected to your account."
         Button action=logout "Sign out"
-      If condition=$message
-        Alert "$message"

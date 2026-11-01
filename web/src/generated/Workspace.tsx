@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Divider, Heading, Icon, Image, Input, Link, Metric, Page, Row, Select, Spacer, Stack, Text } from "@/components/ui"
+import { Alert, Button, Card, Divider, Grid, Heading, Icon, Image, Input, Link, Metric, Page, Row, Select, Spacer, Stack, Text } from "@/components/ui"
 
 export function Workspace({ data, onAction }: { data: any; onAction: (name: string) => void }) {
   return (
@@ -137,6 +137,9 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               ))}
             </Card>
           )}
+          {data.connectionStatus && (
+            <Text variant="status">{data.connectionStatus}</Text>
+          )}
           {data.approvals.map((item, i) => (
             <Card key={i} variant="approval">
               <Row>
@@ -180,6 +183,9 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               <Spacer />
               <Select name="provider" options={data.providerOptions} disabled={data.busy} />
               <Select name="model" options={data.modelOptions} disabled={data.busy} />
+              {data.localModelSelected && (
+                <Button onClick={() => onAction("model-settings")} item={data.selectedLocalModel} icon="SlidersHorizontal" label="Model settings" variant="icon" disabled={data.busy} />
+              )}
               {data.codeMode && (
                 <Button onClick={() => onAction("effort")} icon="Gauge" variant="effort">{data.effortLabel}</Button>
               )}
@@ -215,6 +221,9 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
             <Spacer />
             <Button onClick={() => onAction("close")} icon="X" label="Close dialog" variant="icon" />
           </Row>
+          {data.message && (
+            <Alert>{data.message}</Alert>
+          )}
           {data.settingsView && (
             <>
               <Text>API keys are protected by Windows on this host. They are never saved in conversations or returned by the server.</Text>
@@ -229,11 +238,65 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               <Text>Custom endpoints, cloud budgets and voice/image attachments are unavailable in this preview.</Text>
             </>
           )}
+          {data.modelSettingsView && (
+            <>
+              <Text variant="author">{data.tuneModel}</Text>
+              <Text variant="muted">Saved for this model and your account. Changes apply to new requests in Chat and Code.</Text>
+              {data.tuneLoading && (
+                <Text variant="status">Loading your model settings...</Text>
+              )}
+              {data.tuneLoadFailed && (
+                <Button onClick={() => onAction("model-settings")} item={data.tuneModel}>Retry loading settings</Button>
+              )}
+              {data.tuneLoaded && (
+                <>
+                  <Row variant="model-settings-actions">
+                    <Button onClick={() => onAction("llm-low-memory")} disabled={data.tuneBusy}>Low-memory preset</Button>
+                    <Button onClick={() => onAction("llm-defaults")} disabled={data.tuneBusy}>Use defaults</Button>
+                  </Row>
+                  <Text variant="muted">Leave fields blank to use automatic values.</Text>
+                  <Grid variant="model-settings-fields">
+                    {data.tuneBasicFields.map((item, i) => (
+                      <Stack key={i} variant="model-setting-field">
+                        <Text variant="field-label">{item.label}</Text>
+                        <Input name={item.name} label={item.label} type="number" min={item.min} max={item.max} step={item.step} placeholder="Automatic" disabled={data.tuneBusy} />
+                        <Text variant="muted">{item.help}</Text>
+                      </Stack>
+                    ))}
+                  </Grid>
+                  <Stack variant="model-setting-field">
+                    <Text variant="field-label">Chat behaviour</Text>
+                    <Select name="llm_chatMode" options={data.tuneChatModes} disabled={data.tuneBusy} label="Chat behaviour" />
+                    <Text variant="muted">Plain chat skips web research and app tools for a simpler prompt. Code still uses its required project tools.</Text>
+                  </Stack>
+                  <Card variant="disclosure">
+                    <Heading level={3}>Advanced settings</Heading>
+                    <Grid variant="model-settings-fields">
+                      {data.tuneAdvancedFields.map((item, i) => (
+                        <Stack key={i} variant="model-setting-field">
+                          <Text variant="field-label">{item.label}</Text>
+                          <Input name={item.name} label={item.label} type="number" min={item.min} max={item.max} step={item.step} placeholder="Automatic" disabled={data.tuneBusy} />
+                          <Text variant="muted">{item.help}</Text>
+                        </Stack>
+                      ))}
+                    </Grid>
+                    <Stack variant="model-setting-field">
+                      <Text variant="field-label">Keep model in memory</Text>
+                      <Select name="llm_keepAlive" options={data.tuneMemoryOptions} label="Keep model in memory" disabled={data.tuneBusy} />
+                      <Text variant="muted">Unloading frees memory after the reply but makes the next request slower.</Text>
+                    </Stack>
+                  </Card>
+                  <Text variant="muted">Context must fit the model and your hardware. Long attachments and app workflows may need more room. Internal research keeps deterministic sampling and a stricter reply limit.</Text>
+                  <Row variant="model-settings-footer">
+                    <Button onClick={() => onAction("llm-save")} variant="primary" disabled={data.tuneBusy}>Save model settings</Button>
+                    <Button onClick={() => onAction("models")} disabled={data.tuneBusy}>Back to models</Button>
+                  </Row>
+                </>
+              )}
+            </>
+          )}
           {data.modelsView && (
             <>
-              {data.message && (
-                <Alert>{data.message}</Alert>
-              )}
               <Row>
                 <Text>Models run on the machine hosting My AI.</Text>
                 <Spacer />
@@ -257,6 +320,9 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                               </Stack>
                               <Spacer />
                               <Button onClick={() => onAction("use-model")} item={item.key}>Use</Button>
+                              {item.local && (
+                                <Button onClick={() => onAction("model-settings")} item={item.id} icon="SlidersHorizontal" label="Model settings" variant="icon" />
+                              )}
                               {item.canRemove && (
                                 <Button onClick={() => onAction("delete-model")} item={item.id} icon="Trash2" label="Remove model" variant="icon" />
                               )}
@@ -455,9 +521,6 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               <Text>Your projects and conversations stay connected to your account.</Text>
               <Button onClick={() => onAction("logout")}>Sign out</Button>
             </>
-          )}
-          {data.message && (
-            <Alert>{data.message}</Alert>
           )}
         </Card>
       )}

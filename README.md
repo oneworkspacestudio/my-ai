@@ -8,6 +8,8 @@ Download the [Windows portable app](https://github.com/oneworkspacestudio/my-ai/
 
 Choose a provider and model in each conversation. Models shows local models first, with expandable OpenAI and DeepSeek lists. Owner-queued downloads continue on the server after you leave the site, resume after My AI restarts, and share progress and installed models with every user on that server. Create a project by giving it a name. My AI creates its private folder in My Drive and a matching private repository in Git. Ask it to work on the project; completed changes are committed and pushed automatically. No folder paths or Git commands are needed.
 
+Tune local models with the sliders button beside a model. Adjust context size, reply length and sampling, or start with the low-memory preset. See [model settings](docs/MODEL-SETTINGS.md). Workspace app actions use [automatic MyAccounts sign-in](docs/WORKSPACE-SSO.md), with separate review before app changes.
+
 In Code, choose your project above the message box or select New project. You can also start typing and send: My AI uses your private General project automatically. Your draft stays with you while choosing or creating a project.
 
 Ask My AI to use your Workspace apps: save a document in Drive, organise tasks and notes, inspect Git, or deploy a saved project with My Hosting. It discovers installed apps automatically and shows app changes for review. See [supported app actions](docs/workspace-apps.md) for the available connections.
