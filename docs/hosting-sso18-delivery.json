@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "myAI": "0.1.0-preview.18",
+  "manager": "0.3.0-preview.109",
+  "transactionComplete": true,
+  "registeredPayloadsVerified": [
+    "myai",
+    "myai-LICENSE",
+    "myai-NOTICE",
+    "myai-THIRD-PARTY-LICENSES.txt"
+  ],
+  "healthyAppCount": 34,
+  "myAIHealthy": true,
+  "postSuccessCleanupPending": true,
+  "fullInstallerPreservationReceiptPending": true,
+  "secondPCInstalled": false,
+  "ownerUsedAsFunctionalFixture": false,
+  "liveOwnerSiteDeployedByAgent": false,
+  "servedBootstrapVersion": "0.1.0-preview.18",
+  "servedAssetsMatchBuild": [
+    "index-DB7Ks8gI.js",
+    "index-gfmkwG4Q.css"
+  ],
+  "anonymousModelSettingsAndAppConnectionDenied": true,
+  "publicSourceCommit": "34c809bc7df94d5f311c9924a1e15c153596a666",
+  "publicChannelCommit": "185c975",
+  "verifiedReleaseAssets": 9,
+  "anonymousChannelAndChecksumVerified": true
+}

@@ -44,3 +44,8 @@ zero values, validation/storage errors, role access and mobile/desktop visible S
 Download and Ollama-upgrade UI regressions pass. No owner account/model used as a
 functional fixture; no real low-memory hardware, live owner deployment or arbitrary
 IdP frame-policy acceptance is claimed. Pending publication/install outcome follows.
+
+## Published and installed outcome
+Published immutable My AI v0.1.0-preview.18 from34c809bc7df94d5f311c9924a1e15c153596a666; all9 public asset sizes/digests and anonymous checksum verified. Public Workspace channel promotion185c975 offers18. Normal protected app-only updater applied18 on this PC, with transaction phase complete and34 registered apps healthy. Four registered payloads match public metadata; served bootstrap18 and JS/CSS match the release build; anonymous model-settings and connection endpoints deny access. See docs/hosting-sso18-delivery.json in My AI source for sanitized evidence. Second PC remains pending.
+
+Post-success cleanup remains busy at retained recovery verification,13/13 files, without a final cleanup receipt. Do not reapply, delete recovery copies, stop the active updater or claim its final preservation receipt exists. The wrapper retains pre-install credential/profile digests only in RAM and will perform final comparisons when native updater returns; independent installed-runtime verification is complete. All recorded backup paths are C:, so no evidence yet links this cleanup stall to the unavailable I: source volume. An initial independent anonymous request reset once; rerun passed all checks. No current owner site or LLM was used as a functional fixture. Offline I: reconciliation and updater cleanup are explicit follow-ups, separate from the completed app installation.
