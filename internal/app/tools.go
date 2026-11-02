@@ -34,15 +34,17 @@ type toolSpec struct {
 	Schema      map[string]any `json:"inputSchema"`
 }
 type toolScope struct {
-	UID, Root, Role, Project string
-	Writable                 bool
-	NoWeb                    bool
-	WorkspaceSession         string
-	PrivateAppRead           *bool
-	WorkspaceKnown           map[string]bool
-	WorkspaceNative          map[string]workspaceNativeTool
-	WorkspaceDeclined        *bool
-	CallID, InvokedTool      string
+	RequireProjectAction, OwnPublication bool
+	BeforeWorkspaceMutation              func(string, string) error
+	UID, Root, Role, Project             string
+	Writable                             bool
+	NoWeb                                bool
+	WorkspaceSession                     string
+	PrivateAppRead                       *bool
+	WorkspaceKnown                       map[string]bool
+	WorkspaceNative                      map[string]workspaceNativeTool
+	WorkspaceDeclined                    *bool
+	CallID, InvokedTool                  string
 }
 
 func spec(name, description string, fields map[string]string) toolSpec {

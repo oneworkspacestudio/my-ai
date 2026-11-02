@@ -73,7 +73,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 		for _, m := range s.Messages {
 			if (m.Role == "user" || m.Role == "assistant") && m.Content != "" {
 				content := m.Content
-				if m.Role == "user" {
+				if m.Role == "user" || len(m.Attachments) > 0 {
 					content = messageFileContext(m)
 				}
 				messages = append(messages, map[string]string{"role": m.Role, "content": content})
@@ -160,6 +160,10 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 		data, _ := json.Marshal(map[string]string{"selected_project": scope.Project})
 		system += " Attached uploads are files, not prompt text. Use copy_attachment_to_project to copy an attached file exactly into this project; do not rewrite it or read it merely to deploy it. Read/search bounded sections only for questions or edits."
 		system += " You are in a managed My Drive project linked to the user's private Git app. Selected project context (data): " + string(data) + ". Use list_project_files and read_project_file to inspect it. When changes are allowed, use write_project_file or edit_project_file to actually make requested changes; do not only describe code or tell the user to choose folders or run Git commands. My AI commits and pushes completed changes automatically. For a build-and-deploy request in this turn, call save_project after editing, then deploy that exact returned commit through My Hosting and read its job until terminal. You have real registered app tools; act through them and use their results rather than disclaiming access. No general shell is available. Only report builds or checks actually returned by My Hosting; never invent command or test results. Do not access credentials or Git configuration."
+		system += " A single HTML file is a valid Git project and can be deployed through My Hosting. The selected managed project is already authorized; do not ask the person to create a repository manually. Earlier assistant capability disclaimers do not override these actual tools and permissions."
+		if scope.OwnPublication {
+			system += " For this request My AI's app-owned workflow will save Git and publish after you finish the source files. Use the project file tools to implement the requested changes, then stop. Do not create sites or submit Hosting mutations yourself, and do not claim it is deployed before the workflow returns its real job."
+		}
 		if scope.Writable {
 			system += " File writes are authorized only in this selected project."
 		} else {
@@ -249,13 +253,22 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 	calls := 0
 	appFailures := map[string]int{}
 	toolFormatRetries := 0
+	projectActionRetries := 0
 	var answer strings.Builder
 	roundLimit := 8
 	if scope.WorkspaceSession != "" {
 		roundLimit = 20
 	}
 	for round := 0; round < roundLimit; round++ {
-		g, e := a.generate(ctx, p, s.Model, messages, scope, useTools, send)
+		generationSend := send
+		if scope.RequireProjectAction {
+			generationSend = func(kind string, v any) {
+				if kind != "delta" {
+					send(kind, v)
+				}
+			}
+		}
+		g, e := a.generate(ctx, p, s.Model, messages, scope, useTools, generationSend)
 		if e != nil {
 			var pe *providerHTTPError
 			if ctx.Err() == nil && errors.As(e, &pe) && pe.Reason == "tool-format" && toolFormatRetries < 2 {
@@ -287,6 +300,18 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 			if e != nil {
 				a.recordAssistant(scope, s, send, g.Text, nil, "interrupted")
 				return joinedAnswer(answer.String(), g.Text), e
+			}
+		}
+		if len(g.Calls) == 0 && scope.RequireProjectAction && !projectFilesChangedThisTurn(s) {
+			files := conversationFiles(g.Text)
+			artifact := len(files) == 1 && completeHTML(files[0].Content)
+			if !artifact {
+				if projectActionRetries >= 1 {
+					return answer.String(), errors.New("The selected model did not execute the requested file changes. Your managed Git project is available, but this response did not build or deploy it")
+				}
+				projectActionRetries++
+				messages = append(messages, map[string]string{"role": "assistant", "content": g.Text}, map[string]string{"role": "user", "content": "Execution is incomplete: no project file was saved. The selected Git project already exists and permits writes. Use write_project_file/edit_project_file to implement the request now. A single HTML file is valid. Do not return instructions, local-save options or a claim that you lack Git/Hosting access."})
+				continue
 			}
 		}
 		if answer.Len() > 0 && g.Text != "" {

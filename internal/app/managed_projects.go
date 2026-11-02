@@ -224,7 +224,7 @@ func (a *App) editProjectFile(ctx context.Context, scope toolScope, name string,
 		content = strings.Replace(string(b), args["find"], args["replace"], 1)
 	}
 	maxBytes := 256 * 1024
-	if name == "copy_attachment_to_project" || name == "edit_project_file" {
+	if name == "copy_attachment_to_project" || name == "copy_conversation_file_to_project" || name == "edit_project_file" {
 		maxBytes = 1 << 20
 	}
 	if len(content) > maxBytes || !utf8.ValidString(content) || strings.ContainsRune(content, 0) {
@@ -268,12 +268,54 @@ func (a *App) projectCode(ctx context.Context, uid, root string, s *Session, p P
 		return "", e
 	}
 	scope := toolScope{UID: uid, Root: root, Project: project.ID, Writable: s.Policy == "workspace-write"}
+	task := requestedProjectTask(s.ToolInput, true)
+	if e = a.captureConversationDocuments(scope, s); e != nil {
+		return "", e
+	}
+	if task.Write && scope.Writable {
+		if _, e = a.materializeHTML(ctx, scope, s, send, false); e != nil {
+			return "", e
+		}
+	}
+	if task.PublishOnly {
+		if !scope.Writable {
+			return "", errors.New("This project is in Preview. Allow changes before deploying")
+		}
+		if _, e = a.materializeHTML(ctx, scope, s, send, false); e != nil {
+			return "", e
+		}
+		out, err := a.publishManagedProject(ctx, scope, s, send)
+		if err == nil {
+			send("delta", out)
+			a.recordAssistant(scope, s, send, out, nil, "completed")
+		}
+		return out, err
+	}
+	scope.RequireProjectAction = scope.Writable && task.Write
+	scope.OwnPublication = scope.Writable && task.Publish
 	out, e := a.chatWithTools(ctx, p, s, send, scope)
 	if e != nil {
 		return out, e
 	}
 	if !scope.Writable {
 		return out, nil
+	}
+	if task.Write && !projectFilesChangedThisTurn(s) {
+		created, err := a.materializeHTML(ctx, scope, s, send, true)
+		if err != nil {
+			return out, err
+		}
+		if !created {
+			return out, errors.New("The model did not save the requested project files. No build or deployment was completed")
+		}
+	}
+	if task.Publish {
+		published, err := a.publishManagedProject(ctx, scope, s, send)
+		if err == nil {
+			send("delta", published)
+			a.recordAssistant(scope, s, send, published, nil, "completed")
+		}
+		return joinedAnswer(out, published), err
 	}
 	_, e = a.saveProjectCheckpoint(ctx, scope, s, send)
 	return out, e

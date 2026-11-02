@@ -158,6 +158,9 @@ func workspaceNativeSpecs(scope toolScope) []toolSpec {
 	sort.Strings(names)
 	out := []toolSpec{}
 	for _, name := range names {
+		if scope.OwnPublication && scope.WorkspaceNative[name].App == "hosting" && scope.WorkspaceNative[name].Operation.Review {
+			continue
+		}
 		out = append(out, scope.WorkspaceNative[name].Spec)
 	}
 	return out
@@ -416,6 +419,9 @@ func (a *App) useWorkspaceApp(ctx context.Context, scope toolScope, s *Session, 
 		}
 		return nil, errors.New("Unknown installed app ID. Read get_workspace_apps and use its exact id")
 	}
+	if scope.OwnPublication && app.ID == "hosting" && op.Review {
+		return nil, errors.New("My AI's project workflow handles this turn's Hosting changes after the project files are saved. Finish the file changes first")
+	}
 	if op.Review && scope.WorkspaceDeclined != nil && *scope.WorkspaceDeclined {
 		return nil, errWorkspaceDeclined
 	}
@@ -500,6 +506,11 @@ func (a *App) useWorkspaceApp(ctx context.Context, scope toolScope, s *Session, 
 			return nil, e
 		}
 		call.Reviewed = true
+		if scope.BeforeWorkspaceMutation != nil {
+			if e = scope.BeforeWorkspaceMutation(app.ID, op.ID); e != nil {
+				return nil, e
+			}
+		}
 	}
 	if scope.PrivateAppRead != nil {
 		*scope.PrivateAppRead = true

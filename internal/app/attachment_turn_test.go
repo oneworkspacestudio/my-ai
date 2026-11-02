@@ -85,7 +85,7 @@ func TestAttachedChatTurnUsesGeneralAndCopiesWithoutPromptStuffing(t *testing.T)
 			t.Error("Bad generation body")
 		}
 		raw, _ := json.Marshal(body)
-		if len(raw) > 32000 || strings.Contains(string(raw), "EXACT_TAIL_MARKER") || !strings.Contains(string(raw), "Host the attached file") || !strings.Contains(string(raw), ref.ID) {
+		if len(raw) > 32000 || strings.Contains(string(raw), "EXACT_TAIL_MARKER") || !strings.Contains(string(raw), "Create the attached file") || !strings.Contains(string(raw), ref.ID) {
 			t.Error("Attachment flooded request or lost instruction", len(raw))
 		}
 		if body["options"].(map[string]any)["num_ctx"] != float64(65536) {
@@ -111,7 +111,7 @@ func TestAttachedChatTurnUsesGeneralAndCopiesWithoutPromptStuffing(t *testing.T)
 	if err = a.write(userRoot, &s); err != nil {
 		t.Fatal(err)
 	}
-	input, _ := json.Marshal(map[string]any{"text": "Host the attached file", "attachments": []string{ref.ID}})
+	input, _ := json.Marshal(map[string]any{"text": "Create the attached file", "attachments": []string{ref.ID}})
 	r := httptest.NewRequest("POST", "http://fixture/api/sessions/"+s.ID+"/turn", strings.NewReader(string(input)))
 	r.SetPathValue("id", s.ID)
 	r.Header.Set("Origin", "http://fixture")

@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -254,8 +253,6 @@ func streamWriter(w http.ResponseWriter) writer {
 	}
 }
 
-var attachedProjectRequest = regexp.MustCompile(`(?i)^(?:(?:please|can you|could you)\s+)?(?:host|deploy|publish|build|create|edit|fix|update|change)\b`)
-
 func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	root, ok := a.root(w, r)
 	if !ok {
@@ -309,18 +306,22 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 409, "A turn is already running")
 		return
 	}
-	p, e := a.provider(uid, s.Provider)
+	task := requestedProjectTask(in.Text, s.Project != "" || len(in.Attachments) > 0 || hasConversationFiles(&s))
+	p := Provider{ID: s.Provider}
+	if !task.PublishOnly {
+		p, e = a.provider(uid, s.Provider)
+	}
 	if e != nil {
 		a.mu.Unlock()
 		apphost.Problem(w, 400, e.Error())
 		return
 	}
-	if p.ID == "ollama" && a.ollamaMaintenanceBusy() {
+	if !task.PublishOnly && p.ID == "ollama" && a.ollamaMaintenanceBusy() {
 		a.mu.Unlock()
 		apphost.Problem(w, 409, "Ollama is upgrading; retry when the upgrade finishes")
 		return
 	}
-	if !modelRE.MatchString(s.Model) {
+	if !task.PublishOnly && !modelRE.MatchString(s.Model) {
 		a.mu.Unlock()
 		apphost.Problem(w, 400, "Choose a model first")
 		return
@@ -350,10 +351,10 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		}
 		attachmentRefs = append(attachmentRefs, ref)
 	}
-	if s.Mode == "chat" && len(in.Attachments) > 0 && attachedProjectRequest.MatchString(strings.TrimSpace(in.Text)) {
+	if s.Mode == "chat" && (task.Write || task.Publish) {
 		if p.Generation != nil && p.Generation.ChatMode == "plain" {
 			a.mu.Unlock()
-			apphost.Problem(w, 400, "Plain chat disables app actions. Choose Automatic tools in Model settings to build or host an attached file.")
+			apphost.Problem(w, 400, "Plain chat disables app actions. Choose Automatic tools in Model settings to build or deploy a project.")
 			return
 		}
 		s.Mode = "code"
@@ -423,7 +424,7 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cancel()
-	if p.ID == "ollama" {
+	if p.ID == "ollama" && !task.PublishOnly {
 		budget := a.resolveContext(ctx, p, s.Model, s.Mode)
 		p.Context = &budget
 	}

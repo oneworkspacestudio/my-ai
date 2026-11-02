@@ -128,7 +128,7 @@ func conversationInput(provider string, history []Message) []any {
 		if m.Role != "user" && m.Role != "assistant" {
 			continue
 		}
-		if m.Role == "user" {
+		if m.Role == "user" || len(m.Attachments) > 0 {
 			m.Content = messageFileContext(m)
 		}
 		original := provider == "openai" && m.Provider == "openai" && m.Status != "imported" && (len(m.ResponseItems) > 0 || m.ResponseGroup != "" && groups[m.ResponseGroup])
