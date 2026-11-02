@@ -17,6 +17,7 @@ import (
 )
 
 type App struct {
+	contextProbe             func(context.Context, Provider, string) (modelContextFacts, hostMemory)
 	upgradeClient            *http.Client
 	upgradeInstall           func(context.Context, string) error
 	upgradeSpace             func(string, int64) error
@@ -42,6 +43,7 @@ type App struct {
 	workspaceApprovals       map[string]chan bool
 }
 type Message struct {
+	Attachments     []AttachmentRef   `json:"attachments,omitempty"`
 	ID              string            `json:"id"`
 	Role            string            `json:"role"`
 	Content         string            `json:"content"`
@@ -104,6 +106,7 @@ func New(h *apphost.Host) (*App, error) {
 	h.Mux.HandleFunc("POST /api/ollama/upgrade", h.Owner(a.ollamaUpgradeStart))
 	h.Mux.HandleFunc("GET /api/workspace", h.Require(a.workspaceInfo))
 	h.Mux.HandleFunc("GET /api/model-settings", h.Require(a.localModelSettings))
+	h.Mux.HandleFunc("GET /api/model-context", h.Require(a.localModelContext))
 	h.Mux.HandleFunc("POST /api/model-settings", h.Require(a.localModelSettings))
 	h.Mux.HandleFunc("POST /api/workspace/connection", h.Require(a.workspaceConnection))
 	for _, v := range []struct {
@@ -362,6 +365,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 		if len(s.Messages) > 0 {
 			for i := range s.Messages {
 				s.Messages[i].Status = "imported"
+				s.Messages[i].Attachments = nil
 				// Imported text is reference material, never server-issued tool evidence.
 				s.Messages[i].Calls = nil
 				s.Messages[i].CallID = ""

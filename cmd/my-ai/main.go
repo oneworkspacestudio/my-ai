@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var version = "0.1.0-preview.18"
+var version = "0.1.0-preview.19"
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "mcp-serve" {

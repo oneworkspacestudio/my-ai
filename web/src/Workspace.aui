@@ -69,6 +69,11 @@ Page Workspace variant=$theme
             Spacer
             Text variant=muted "$item.model"
           Text variant=markdown "$item.content"
+          For each=$item.attachments
+            Row variant=attachment
+              Icon name=Paperclip size=16
+              Link href=$item.url "$item.name"
+              Text variant=muted "$item.detail"
           If condition=$item.status
             Text variant=muted "$item.status"
       If condition=$streaming
@@ -178,10 +183,15 @@ Page Workspace variant=$theme
         If condition=$tuneLoadFailed
           Button action=model-settings item=$tuneModel "Retry loading settings"
         If condition=$tuneLoaded
+          Card variant=sources
+            Text variant=author "Context on this server"
+            Text "$tuneContextSummary"
+            Text variant=muted "$tuneContextBasis"
+            Text variant=muted "$tuneContextNotice"
           Row variant=model-settings-actions
             Button action=llm-low-memory disabled=$tuneBusy "Low-memory preset"
             Button action=llm-defaults disabled=$tuneBusy "Use defaults"
-          Text variant=muted "Leave fields blank to use automatic values."
+          Text variant=muted "Leave context fields blank for automatic model and hardware sizing. Uploaded files stay private; My AI reads relevant sections when needed."
           Grid variant=model-settings-fields
             For each=$tuneBasicFields
               Stack variant=model-setting-field
@@ -204,7 +214,7 @@ Page Workspace variant=$theme
               Text variant=field-label "Keep model in memory"
               Select name=llm_keepAlive options=$tuneMemoryOptions label="Keep model in memory" disabled=$tuneBusy
               Text variant=muted "Unloading frees memory after the reply but makes the next request slower."
-          Text variant=muted "Context must fit the model and your hardware. Long attachments and app workflows may need more room. Internal research keeps deterministic sampling and a stricter reply limit."
+          Text variant=muted "Context must fit the model and your hardware. Long conversations and app workflows may need more room. Internal research keeps deterministic sampling and a stricter reply limit."
           Row variant=model-settings-footer
             Button action=llm-save variant=primary disabled=$tuneBusy "Save model settings"
             Button action=models disabled=$tuneBusy "Back to models"

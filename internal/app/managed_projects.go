@@ -218,13 +218,17 @@ func (a *App) editProjectFile(ctx context.Context, scope toolScope, name string,
 		if e != nil {
 			return nil, errors.New("The project file could not be opened")
 		}
-		if len(b) > 256*1024 || !utf8.Valid(b) || args["find"] == "" || strings.Count(string(b), args["find"]) != 1 {
-			return nil, errors.New("The text to replace must match exactly once in a UTF-8 file up to256 KB")
+		if len(b) > 1<<20 || !utf8.Valid(b) || args["find"] == "" || strings.Count(string(b), args["find"]) != 1 {
+			return nil, errors.New("The text to replace must match exactly once in a UTF-8 file up to1MB")
 		}
 		content = strings.Replace(string(b), args["find"], args["replace"], 1)
 	}
-	if len(content) > 256*1024 || !utf8.ValidString(content) || strings.ContainsRune(content, 0) {
-		return nil, errors.New("Write one UTF-8 project file up to256 KB")
+	maxBytes := 256 * 1024
+	if name == "copy_attachment_to_project" || name == "edit_project_file" {
+		maxBytes = 1 << 20
+	}
+	if len(content) > maxBytes || !utf8.ValidString(content) || strings.ContainsRune(content, 0) {
+		return nil, fmt.Errorf("Write one UTF-8 project file up to%d bytes", maxBytes)
 	}
 	if e = os.MkdirAll(filepath.Dir(path), 0700); e != nil {
 		return nil, e

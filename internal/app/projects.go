@@ -176,7 +176,12 @@ func (a *App) upload(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 503, "My Drive could not save the attachment")
 		return
 	}
-	apphost.JSON(w, 200, map[string]any{"id": id, "name": filepath.Base(h.Filename), "size": len(b)})
+	ref := attachmentRef(id, h.Filename, b)
+	if e = atomic(filepath.Join(root, "Attachments", id+".json"), ref); e != nil {
+		apphost.Problem(w, 503, "My Drive could not save the attachment details")
+		return
+	}
+	apphost.JSON(w, 200, ref)
 }
 func (a *App) attachment(w http.ResponseWriter, r *http.Request) {
 	root, ok := a.root(w, r)
@@ -188,12 +193,12 @@ func (a *App) attachment(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	b, e := os.ReadFile(filepath.Join(root, "Attachments", id+".txt"))
+	ref, b, e := loadAttachment(root, id)
 	if e != nil {
 		http.NotFound(w, r)
 		return
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": "attachment.txt"}))
+	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": ref.Name}))
 	w.Write(b)
 }

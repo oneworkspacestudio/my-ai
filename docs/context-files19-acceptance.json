@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "syntheticOnly": true,
+  "fullBackendAndBundledSearXNGPassed": true,
+  "goVetPassed": true,
+  "productionAuditNoAdvisories": true,
+  "goVulnerabilityReachableResults": 0,
+  "xNetUpdatedTo": "v0.62.0",
+  "productionAUITypeScriptVitePassed": true,
+  "profileUISeparateSaveReloadAndReset": true,
+  "desktopAnd390pxRenderingChecked": true,
+  "authenticatedAttachmentTurnAndExactCopyPassed": true,
+  "largeFileTailReadAndEditPassed": true,
+  "native": {
+    "syntheticOnly": true,
+    "noOwnerServicesOrModelUsed": true,
+    "standaloneFreshAnd18To19RestartUpgrade": {
+      "old18": {
+        "version": "0.1.0-preview.18",
+        "normalLogin": true,
+        "profileRoundtrip": true,
+        "attachmentRoundtrip": true
+      },
+      "upgrade19": {
+        "version": "0.1.0-preview.19",
+        "normalLogin": true,
+        "profileRoundtrip": true,
+        "attachmentRoundtrip": true
+      },
+      "fresh19": {
+        "version": "0.1.0-preview.19",
+        "normalLogin": true,
+        "profileRoundtrip": true,
+        "attachmentRoundtrip": true
+      }
+    },
+    "managedSuiteFreshSetupRetested": false,
+    "nativeSHA256": "cfa599fe9acdaf068144cc7fc169feb5de3655f1df3ce8d15c46043180923669"
+  },
+  "physicalPhoneOrLiveInferenceOrDeploymentTested": false
+}

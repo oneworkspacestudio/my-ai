@@ -51,6 +51,7 @@ export function workspaceWorkingLabel(events:any[],apps:any[]):string {
 }
 
 export function workspaceActivity(event:any,apps:any[]):{method:string;content:string}|null {
+ if(event.method==='context/selected')return {method:'Context selected',content:Number(event.data?.selectedTokens||0).toLocaleString()+' tokens · '+(event.data?.mode==='code'?'Code':'Chat')+' · '+(event.data?.basis||'')};
  if(event.method==='deployment/progress')return {method:'My Hosting · '+String(event.data?.state||'checking'),content:event.data?.url||'Following the submitted deployment in My Hosting.'};
  if(event.method==='tools/retrying')return {method:'Retrying tool response',content:event.data?.notice||'No incomplete tool call was executed.'};
  const name=event.data?.name;

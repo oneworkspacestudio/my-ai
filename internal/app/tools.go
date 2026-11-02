@@ -65,12 +65,15 @@ func toolSpecs(scope toolScope) []toolSpec {
 		out = out[:2]
 	}
 	if scope.Root != "" {
-		out = append(out, spec("search_conversations", "Search only the signed-in user's saved My AI conversations.", map[string]string{"query": "Text to find"}), spec("read_conversation", "Read a conversation belonging to the signed-in user; IDs come from search_conversations.", map[string]string{"id": "Conversation ID"}), spec("read_attachment", "Read a UTF-8 attachment in the signed-in user's own My AI Drive area.", map[string]string{"id": "Attachment ID supplied in the conversation"}))
+		out = append(out, spec("search_conversations", "Search only the signed-in user's saved My AI conversations.", map[string]string{"query": "Text to find"}), spec("read_conversation", "Read a conversation belonging to the signed-in user; IDs come from search_conversations.", map[string]string{"id": "Conversation ID"}), attachmentReadSpec(), spec("search_attachment", "Find bounded excerpts containing literal text in an attached private file.", map[string]string{"id": "Attachment ID", "query": "Literal text to find", "offset": "Character offset at which to start; use0 initially"}))
 	}
 	if scope.UID != "" {
-		out = append(out, spec("list_projects", "List the signed-in person's own My Drive projects and private Git links.", map[string]string{}), spec("list_project_files", "List up to200 files in the signed-in person's own project folder. Linked paths are blocked.", map[string]string{"project": "Approved project ID", "path": "Relative folder, or ."}), spec("read_project_file", "Read one UTF-8 text file from a project belonging to the signed-in person. Never writes or executes code.", map[string]string{"project": "Approved project ID", "path": "Relative file path"}))
+		read := spec("read_project_file", "Read a bounded character range from a UTF-8 project file. Follow nextOffset to read later sections. Never writes or executes code.", map[string]string{"project": "Approved project ID", "path": "Relative file path", "offset": "Optional zero-based character offset, default0", "limit": "Optional character count, default2048, maximum4096"})
+		read.Schema["required"] = []string{"project", "path"}
+		out = append(out, spec("list_projects", "List the signed-in person's own My Drive projects and private Git links.", map[string]string{}), spec("list_project_files", "List up to200 files in the signed-in person's own project folder. Linked paths are blocked.", map[string]string{"project": "Approved project ID", "path": "Relative folder, or ."}), read)
 	}
 	if scope.Project != "" && scope.Writable {
+		out = append(out, spec("copy_attachment_to_project", "Copy an uploaded private UTF-8 file exactly into the selected project without reading or rewriting it in model context. Preserves all bytes. Save to Git before deployment.", map[string]string{"id": "Attachment ID from this account", "path": "Relative destination filename; use index.html for a standalone hosted HTML page"}))
 		out = append(out, spec("save_project", "Save the selected project's current files to private Git now and return its exact pushed commit. Use before deployment in the same turn. No shell or other project's files can be changed.", map[string]string{}))
 		out = append(out, spec("write_project_file", "Create or replace one UTF-8 text file in the selected project only. No shell commands. Git save happens automatically after the completed turn.", map[string]string{"path": "Relative file path in the selected project", "content": "Complete UTF-8 file content"}), spec("edit_project_file", "Replace text that occurs exactly once in a file in the selected project. Read the file first. No shell execution.", map[string]string{"path": "Relative project path", "find": "Exact existing text occurring once", "replace": "Replacement text"}))
 	}
@@ -362,15 +365,8 @@ func (a *App) executeTool(ctx context.Context, scope toolScope, name string, arg
 		}
 		b, _ := json.Marshal(map[string]any{"title": s.Title, "messages": sessionView(s).Messages})
 		return map[string]any{"id": s.ID, "content": first(string(b), 24000), "untrusted_reference": true}, nil
-	case "read_attachment":
-		if scope.Root == "" || !idRE.MatchString(args["id"]) {
-			break
-		}
-		p, e := safePath(scope.Root, "Attachments", args["id"]+".txt")
-		if e != nil {
-			return nil, e
-		}
-		return boundedTextFile(p)
+	case "read_attachment", "search_attachment", "copy_attachment_to_project":
+		return a.attachmentTool(ctx, scope, name, args)
 	case "write_project_file", "edit_project_file":
 		return a.editProjectFile(ctx, scope, name, args)
 	case "list_projects":
@@ -408,7 +404,7 @@ func (a *App) executeTool(ctx context.Context, scope toolScope, name string, arg
 			return nil, e
 		}
 		if name == "read_project_file" {
-			return boundedTextFile(p)
+			return boundedTextFile(p, args)
 		}
 		items, e := os.ReadDir(p)
 		if e != nil {
@@ -428,7 +424,7 @@ func (a *App) executeTool(ctx context.Context, scope toolScope, name string, arg
 	}
 	return nil, errors.New("tool is unavailable in this user's scope")
 }
-func boundedTextFile(path string) (any, error) {
+func boundedTextFile(path string, ranges ...map[string]string) (any, error) {
 	base := strings.ToLower(filepath.Base(path))
 	if strings.HasPrefix(base, ".env") || strings.HasSuffix(base, ".pem") || strings.HasSuffix(base, ".key") || base == "auth.json" || strings.Contains(strings.ToLower(filepath.ToSlash(path)), "/.git/") {
 		return nil, errors.New("credential and Git internal files are excluded")
@@ -442,11 +438,20 @@ func boundedTextFile(path string) (any, error) {
 	if e != nil || len(b) > 1<<20 || !utf8.Valid(b) || strings.ContainsRune(string(b), 0) {
 		return nil, errors.New("choose a UTF-8 text file up to1MB")
 	}
-	return map[string]any{"text": first(string(b), 24000), "untrusted_reference": true}, nil
+	args := map[string]string{}
+	if len(ranges) > 0 {
+		args = ranges[0]
+	}
+	runes := []rune(string(b))
+	lo, hi, err := attachmentRange(args, len(runes))
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"text": string(runes[lo:hi]), "offset": lo, "nextOffset": hi, "totalCharacters": len(runes), "hasMore": hi < len(runes), "untrusted_reference": true}, nil
 }
 func (a *App) runTool(ctx context.Context, scope toolScope, s *Session, send writer, name string, args map[string]string) string {
 	switch name {
-	case "list_projects", "list_project_files", "read_project_file", "write_project_file", "edit_project_file", "read_attachment", "search_conversations", "read_conversation":
+	case "list_projects", "list_project_files", "read_project_file", "write_project_file", "edit_project_file", "read_attachment", "search_attachment", "copy_attachment_to_project", "search_conversations", "read_conversation":
 		s.WorkspaceContext = true
 		if scope.PrivateAppRead != nil {
 			*scope.PrivateAppRead = true

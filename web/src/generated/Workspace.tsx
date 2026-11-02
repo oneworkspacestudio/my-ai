@@ -90,6 +90,13 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                 <Text variant="muted">{item.model}</Text>
               </Row>
               <Text variant="markdown">{item.content}</Text>
+              {item.attachments.map((item, i) => (
+                <Row key={i} variant="attachment">
+                  <Icon name="Paperclip" size={16} />
+                  <Link href={item.url}>{item.name}</Link>
+                  <Text variant="muted">{item.detail}</Text>
+                </Row>
+              ))}
               {item.status && (
                 <Text variant="muted">{item.status}</Text>
               )}
@@ -250,11 +257,17 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               )}
               {data.tuneLoaded && (
                 <>
+                  <Card variant="sources">
+                    <Text variant="author">Context on this server</Text>
+                    <Text>{data.tuneContextSummary}</Text>
+                    <Text variant="muted">{data.tuneContextBasis}</Text>
+                    <Text variant="muted">{data.tuneContextNotice}</Text>
+                  </Card>
                   <Row variant="model-settings-actions">
                     <Button onClick={() => onAction("llm-low-memory")} disabled={data.tuneBusy}>Low-memory preset</Button>
                     <Button onClick={() => onAction("llm-defaults")} disabled={data.tuneBusy}>Use defaults</Button>
                   </Row>
-                  <Text variant="muted">Leave fields blank to use automatic values.</Text>
+                  <Text variant="muted">Leave context fields blank for automatic model and hardware sizing. Uploaded files stay private; My AI reads relevant sections when needed.</Text>
                   <Grid variant="model-settings-fields">
                     {data.tuneBasicFields.map((item, i) => (
                       <Stack key={i} variant="model-setting-field">
@@ -286,7 +299,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                       <Text variant="muted">Unloading frees memory after the reply but makes the next request slower.</Text>
                     </Stack>
                   </Card>
-                  <Text variant="muted">Context must fit the model and your hardware. Long attachments and app workflows may need more room. Internal research keeps deterministic sampling and a stricter reply limit.</Text>
+                  <Text variant="muted">Context must fit the model and your hardware. Long conversations and app workflows may need more room. Internal research keeps deterministic sampling and a stricter reply limit.</Text>
                   <Row variant="model-settings-footer">
                     <Button onClick={() => onAction("llm-save")} variant="primary" disabled={data.tuneBusy}>Save model settings</Button>
                     <Button onClick={() => onAction("models")} disabled={data.tuneBusy}>Back to models</Button>

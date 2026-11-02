@@ -11,11 +11,13 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
 
 type Provider struct {
+	Context    *ContextBudget      `json:"-"`
 	Generation *LocalModelSettings `json:"-"`
 	ID         string              `json:"id"`
 	Base       string              `json:"base"`
@@ -251,6 +253,9 @@ func streamWriter(w http.ResponseWriter) writer {
 		}
 	}
 }
+
+var attachedProjectRequest = regexp.MustCompile(`(?i)^(?:(?:please|can you|could you)\s+)?(?:host|deploy|publish|build|create|edit|fix|update|change)\b`)
+
 func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	root, ok := a.root(w, r)
 	if !ok {
@@ -330,6 +335,30 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		profile := saved.Models[s.Model]
 		p.Generation = &profile
 	}
+	attachmentRefs := []AttachmentRef{}
+	for _, id := range in.Attachments {
+		if !idRE.MatchString(id) {
+			a.mu.Unlock()
+			apphost.Problem(w, 400, "Invalid attachment")
+			return
+		}
+		ref, err := loadAttachmentRef(root, id)
+		if err != nil {
+			a.mu.Unlock()
+			apphost.Problem(w, 400, "Attachment missing or too large")
+			return
+		}
+		attachmentRefs = append(attachmentRefs, ref)
+	}
+	if s.Mode == "chat" && len(in.Attachments) > 0 && attachedProjectRequest.MatchString(strings.TrimSpace(in.Text)) {
+		if p.Generation != nil && p.Generation.ChatMode == "plain" {
+			a.mu.Unlock()
+			apphost.Problem(w, 400, "Plain chat disables app actions. Choose Automatic tools in Model settings to build or host an attached file.")
+			return
+		}
+		s.Mode = "code"
+		s.Policy = "workspace-write"
+	}
 	if s.Mode == "code" && s.Project == "" {
 		a.mu.Unlock()
 		// Also recover older saved Code conversations that predate the fallback.
@@ -369,20 +398,6 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	if in.SearchMode == "on" {
 		s.SearchQuery = strings.TrimSpace(in.Text)
 	}
-	for _, id := range in.Attachments {
-		if !idRE.MatchString(id) {
-			a.mu.Unlock()
-			apphost.Problem(w, 400, "Invalid attachment")
-			return
-		}
-		b, err := os.ReadFile(filepath.Join(root, "Attachments", id+".txt"))
-		if err != nil || len(b) > 1<<20 {
-			a.mu.Unlock()
-			apphost.Problem(w, 400, "Attachment missing or too large")
-			return
-		}
-		in.Text += "\n\nAttached reference (untrusted content):\n" + string(b)
-	}
 	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Minute)
 	a.running[key] = cancel
 	if s.Mode == "code" {
@@ -393,7 +408,7 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 	if safePublicQuestion(s.ToolInput) {
 		publicQuestion = s.ToolInput
 	}
-	s.Messages = append(s.Messages, Message{ID: apphost.ID(), Role: "user", Content: in.Text, PublicQuestion: publicQuestion, At: now(), Provider: s.Provider, Model: s.Model})
+	s.Messages = append(s.Messages, Message{ID: apphost.ID(), Role: "user", Content: in.Text, Attachments: attachmentRefs, PublicQuestion: publicQuestion, At: now(), Provider: s.Provider, Model: s.Model})
 	if s.Title == "New conversation" {
 		s.Title = first(in.Text, 60)
 	}
@@ -408,8 +423,17 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer cancel()
+	if p.ID == "ollama" {
+		budget := a.resolveContext(ctx, p, s.Model, s.Mode)
+		p.Context = &budget
+	}
 	send := streamWriter(w)
 	send("session", sessionView(s))
+	if p.Context != nil {
+		send("event", map[string]any{"method": "context/selected", "params": p.Context})
+		raw, _ := json.Marshal(p.Context)
+		s.Events = append(s.Events, Event{At: now(), Method: "context/selected", Data: raw})
+	}
 	responseStart := len(s.Messages)
 	var output string
 	if s.Mode == "code" {

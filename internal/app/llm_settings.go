@@ -13,16 +13,17 @@ import (
 )
 
 type LocalModelSettings struct {
-	ContextTokens   *int     `json:"contextTokens,omitempty"`
-	MaxOutputTokens *int     `json:"maxOutputTokens,omitempty"`
-	Temperature     *float64 `json:"temperature,omitempty"`
-	TopP            *float64 `json:"topP,omitempty"`
-	TopK            *int     `json:"topK,omitempty"`
-	RepeatPenalty   *float64 `json:"repeatPenalty,omitempty"`
-	Seed            *int     `json:"seed,omitempty"`
-	BatchSize       *int     `json:"batchSize,omitempty"`
-	KeepAlive       string   `json:"keepAlive,omitempty"`
-	ChatMode        string   `json:"chatMode,omitempty"`
+	ContextTokens     *int     `json:"contextTokens,omitempty"`
+	CodeContextTokens *int     `json:"codeContextTokens,omitempty"`
+	MaxOutputTokens   *int     `json:"maxOutputTokens,omitempty"`
+	Temperature       *float64 `json:"temperature,omitempty"`
+	TopP              *float64 `json:"topP,omitempty"`
+	TopK              *int     `json:"topK,omitempty"`
+	RepeatPenalty     *float64 `json:"repeatPenalty,omitempty"`
+	Seed              *int     `json:"seed,omitempty"`
+	BatchSize         *int     `json:"batchSize,omitempty"`
+	KeepAlive         string   `json:"keepAlive,omitempty"`
+	ChatMode          string   `json:"chatMode,omitempty"`
 }
 type localSettingsFile struct {
 	Schema int                           `json:"schema"`
@@ -35,7 +36,7 @@ func (s LocalModelSettings) validate() error {
 		p      *int
 		lo, hi int
 	}{
-		{"Context size", s.ContextTokens, 512, 131072}, {"Reply limit", s.MaxOutputTokens, 16, 32768}, {"Top K", s.TopK, 0, 200}, {"Seed", s.Seed, 0, 2147483647}, {"Prompt batch size", s.BatchSize, 1, 2048},
+		{"Context size", s.ContextTokens, 512, 1048576}, {"Code context size", s.CodeContextTokens, 512, 1048576}, {"Reply limit", s.MaxOutputTokens, 16, 32768}, {"Top K", s.TopK, 0, 200}, {"Seed", s.Seed, 0, 2147483647}, {"Prompt batch size", s.BatchSize, 1, 2048},
 	} {
 		if v.p != nil && (*v.p < v.lo || *v.p > v.hi) {
 			return fmt.Errorf("%s must be between %d and %d", v.name, v.lo, v.hi)
@@ -57,6 +58,9 @@ func (s LocalModelSettings) validate() error {
 	}
 	if s.ChatMode != "" && s.ChatMode != "auto" && s.ChatMode != "plain" {
 		return errors.New("Choose Automatic tools or Plain chat")
+	}
+	if s.CodeContextTokens != nil && s.MaxOutputTokens != nil && *s.MaxOutputTokens >= *s.CodeContextTokens {
+		return errors.New("Reply limit must be smaller than Code context size")
 	}
 	switch s.KeepAlive {
 	case "", "0", "2m", "5m", "15m":
