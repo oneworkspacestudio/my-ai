@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "myAI": "0.1.0-preview.19",
+  "manager": "0.3.0-preview.110",
+  "protectedAppOnlyUpdateComplete": true,
+  "unrelatedAppContractsRetained": 34,
+  "locationsIdentityAndCredentialContentsRetained": true,
+  "providerCredentialContentsRetained": true,
+  "existingModelPreferencesRetained": true,
+  "transactionComplete": true,
+  "unselectedPayloadBytesRetained": 286,
+  "registeredPayloadsVerified": [
+    "myai",
+    "myai-LICENSE",
+    "myai-NOTICE",
+    "myai-THIRD-PARTY-LICENSES.txt"
+  ],
+  "baselineHealth": "ok",
+  "currentFailedApps": [],
+  "myAIHealthy": true,
+  "secondPCInstalled": false,
+  "ownerUsedAsFunctionalFixture": false,
+  "liveOwnerSiteDeployedByAgent": false,
+  "servedBootstrapVersion": "0.1.0-preview.19",
+  "servedAssetsMatchBuild": [
+    "index-B0veHvrq.js",
+    "index-gfmkwG4Q.css"
+  ],
+  "anonymousContextSettingsAndAppConnectionDenied": true,
+  "publicSourceCommit": "4eada576bee4e2b3652ba2cef703892a6b0250d6",
+  "publicChannelCommit": "540ded3",
+  "verifiedReleaseAssets": 9,
+  "anonymousChannelAndChecksumVerified": true,
+  "recovery": {
+    "schema": 3,
+    "manifestSHA256Verified": true,
+    "fileSHA256Verified": 11,
+    "retainedRecoveryID": "update-20261102T220433-47672d42bcfc"
+  },
+  "defaultModelRootEntriesRetained": 0,
+  "configuredModelLibraryBeforeAfterAudited": false,
+  "modelLibraryMutationRequested": false,
+  "configuredModelsAvailableAfter": 19
+}

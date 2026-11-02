@@ -1,4 +1,6 @@
-# Dynamic context and attachment files — in progress
+# Dynamic context and attachment files — delivered on primary
+
+Current outcome: public19, channel540ded3, primary protected app-only install complete on retained Workspace110. Secondary remains pending. See final outcome below.
 
 User asks editable and model/hardware-aware context, larger Code context, files
 read only as needed, and how other assistants handle attachments. Standing chat
@@ -124,3 +126,36 @@ upgrade passed, including old profile and legacy attachment retention. Actual
 managed suite fresh setup was not rerun; existing nine-payload contract unchanged.
 Sanitized acceptance is docs/context-files19-acceptance.json. Candidate native SHA
 cfa599fe9acdaf068144cc7fc169feb5de3655f1df3ce8d15c46043180923669.
+
+## Final published and installed outcome
+
+Immutable public19 source4eada576bee4e2b3652ba2cef703892a6b0250d6; all9 assets
+size/digest verified, anonymous checksum/managed manifest verified. Standard
+public channel540ded3 adds only MyAI19, preserves every old row/withholding and
+other builder pins; MyAI builder pin refreshed. No suite/Android release required.
+Primary normal protected app-only updater complete on retained Workspace110.
+Four registered payloads match public metadata; served19 JS/CSS match finalbuild,
+all34 services running, anonymous context/settings/app-connect routes denied.
+34 other app contracts and286 unselected payload contracts/bytes unchanged;
+locations/identity, decrypted protected credential contents and existing model
+preferences unchanged. Schema3 scoped recovery manifest and11 files independently
+hashed; native cleanup completed, retired1 older eligible backup (~1872MB), retained
+newest usable recovery. No active operation repeated or cancelled. Evidence:
+docs/context-files19-delivery.json. Secondary not installed by this task.
+
+Correction to model audit scope: pre/post snapshot checked only default home model
+folder (empty); actual OLLAMA_MODELS root was not independently audited before/after.
+No Ollama update/model mutation requested. Current configured inventory read-only
+count is recorded in delivery evidence. Do not claim all model bytes were compared.
+
+Final source preserved in I:/Projects/my-ai-context19-final (Git worktree) and Git
+objects/public source before any C cleanup. Original dirty I:/Projects/my-ai and
+earlier I:/Projects/my-ai-context implementation remain preserved. The loopback UI
+fixture/node server stopped and fresh preview tab closed;390px override reset.
+Native fixture processes stopped. Automatic approval review rejected both guarded
+and literal-path recursive deletion of context19-native/context19-tmp as blocked
+by policy; these synthetic C roots, C source/dependencies and task artifacts remain.
+Do not silently retry cleanup through another shell/API. Original owner data and
+recovery untouched. No live owner inference/deployment, physical-phone or reboot
+acceptance. General docs describe literal file search (not vector RAG), UTF8-only
+1MiB support, no compaction, cloud/legacy transport unchanged and memory estimates.
