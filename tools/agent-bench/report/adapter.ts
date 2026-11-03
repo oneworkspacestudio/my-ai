@@ -1,0 +1,11 @@
+import React from 'react';
+const h=React.createElement;
+type P=Record<string,any>;
+const box=(tag:string,name:string)=>(p:P)=>h(tag,{className:name+(p.variant?' '+p.variant:'')},p.children);
+export const Page=box('main','page'), Stack=box('div','stack'),Row=box('div','row'), Grid=box('div','grid'),Section=box('section','section');
+export const Card=(p:P)=>p.variant==='disclosure'?h('details',{className:'card disclosure'},h('summary',{},React.Children.toArray(p.children)[0]),React.Children.toArray(p.children).slice(1)):h('div',{className:'card'},p.children);
+export const Heading=(p:P)=>h('h'+(p.level||2),{},p.children);
+export const Text=(p:P)=>h(p.variant==='pre'?'pre':'p',{className:p.variant||''},p.children);
+export const Button=(p:P)=>h('button',{type:'button',disabled:!!p.disabled,onClick:p.onClick},p.children);
+export const Link=(p:P)=>h('a',{href:p.href,rel:'noopener noreferrer'},p.children);
+export const Alert=box('aside','recommendation');

@@ -1,0 +1,1 @@
+{"name":"my-ai-agent-benchmark-report","version":"1.1.0","private":true,"type":"module","scripts":{"build":"node build.mjs","check":"tsc --noEmit"},"dependencies":{"@codedia/parser":"0.2.1","react":"19.3.1","react-dom":"19.3.1"},"devDependencies":{"vite":"8.3.4","typescript":"5.9.3","@types/react":"19.0.0","@types/react-dom":"19.0.0"}}

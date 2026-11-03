@@ -1,0 +1,91 @@
+Page Benchmark
+  Stack variant=hero
+    Row variant=eyebrow
+      Text "ONE WORKSPACE / MY AI LAB"
+      Text "$date"
+    Heading level=1 "Small models. Real task checks."
+    Text variant=intro "Which local model can edit files, use Git and finish a deployment? Measured on your hardware, with every synthetic trace available."
+    Text "Real local model inference · isolated simulated tools · this report deployed through My Git and My Hosting"
+    Grid variant=stats
+      Card
+        Text "COMPLETED SAMPLES"
+        Heading level=2 "$sampleCount"
+      Card
+        Text "TESTED MODELS"
+        Heading level=2 "$modelCount"
+      Card
+        Text "TEST MACHINE"
+        Heading level=2 "$hardwareLabel"
+        Text "$ramLabel RAM · Ollama $ollama"
+    Alert "$recommendation"
+  Section
+    Row variant=section
+      Heading level=2 "The leaderboard"
+      Button action=score "Sort by success"
+      Button action=size "Sort by size"
+      Button action=speed "Sort by time"
+    Text "Passes require the requested file state and verified simulator receipts. Hosted URLs in test traces use the reserved .example domain."
+    Row variant=tablehead
+      Text "MODEL / EXACT LOCAL ARTIFACT"
+      Text "OVERALL"
+      Text "DEPLOY TASKS"
+      Text "GUARDRAILS"
+      Text "DISK"
+      Text "MEDIAN TASK"
+    For each=$models
+      Row variant=tablerow
+        Stack
+          Text variant=model "$item.model"
+          Text variant=muted "$item.subtitle"
+        Stack
+          Text variant=score "$item.percent"
+          Text variant=muted "$item.score"
+        Text "$item.deployment"
+        Text "$item.safety"
+        Text "$item.size"
+        Text "$item.latency"
+    For each=$notBenchmarked
+      Alert "$item.model: $item.reason"
+  Section
+    Heading level=2 "Where each model succeeds"
+    Text "Seeds: $seedLabel. Expand a model for per-scenario outcomes and the exact artifact digest."
+    For each=$models
+      Card variant=disclosure
+        Heading level=3 "$item.model · $item.score"
+        Text variant=pre "$item.digest"
+        Grid variant=cases
+          For each=$item.cases
+            Row variant=case
+              Text "$item.label"
+              Text variant=score "$item.score"
+  Section
+    Row variant=section
+      Heading level=2 "Inspect the evidence"
+      Button action=all "All samples"
+      Button action=failures "Failures only"
+    Text "$sampleFilter"
+    For each=$samples
+      Card variant=disclosure
+        Heading level=3 "$item.title"
+        Text variant=muted "$item.status"
+        Text variant=pre "$item.finalText"
+        Link href=$item.traceLink "Open complete synthetic traces JSON"
+    Row variant=section
+      Button action=previous disabled=$noPrevious "Previous samples"
+      Button action=next disabled=$noNext "Next samples"
+  Section
+    Heading level=2 "How this was measured"
+    Text "$configurationLabel"
+    Text "Full suite: exact attachment-to-project copy and hosting; surgical edit and deployment; JSON file creation; conflict recovery; pending job polling; failed deployment honesty; edit-only scope; current time and arithmetic; malicious instructions inside a file; read-only scope; 180 archived-note distractors; exact saved commit deployment."
+    For each=$limitations
+      Text variant=limitation "$item"
+    Row variant=section
+      Link href="summary.json" "Measured summary JSON"
+      Link href="samples.json" "All synthetic traces"
+      Link href="verification.json" "Receipt replay verification"
+      Link href="benchmark-source.zip" "Download runnable benchmark"
+  Section
+    Heading level=2 "Primary references"
+    For each=$sources
+      Link href=$item.url "$item.title"
+  Text variant=footer "A small, reproducible benchmark for this workflow. Keep Git, permissions and publication verification in application code. A model's promise is not a deployment receipt."
