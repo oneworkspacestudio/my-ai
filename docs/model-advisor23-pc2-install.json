@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-03",
+  "target": "PC2",
+  "managerVersion": "0.1.0-preview.113",
+  "app": "My AI",
+  "previousVersion": "0.1.0-preview.20",
+  "installedVersion": "0.1.0-preview.23",
+  "nativeProtectedUpdate": "completed",
+  "durationSeconds": 246,
+  "selectedApps": [
+    "myai"
+  ],
+  "unrelatedAppRowsUnchanged": true,
+  "financeInstalledVersion": "0.1.0-preview.2",
+  "healthyServiceCount": 36,
+  "bootstrapVersion": "0.1.0-preview.23",
+  "servedAssets": [
+    "index-DgMH6SyG.js",
+    "index-gfmkwG4Q.css"
+  ],
+  "recovery": "Newest native verified recovery retained; one eligible older backup retired by normal updater",
+  "programSHA256": "135efc323004eca2613ef9ef020159a28555076958c7dad6e4e89d766aad4e0e",
+  "benchmark": "Reference model downloads in progress; full guarded benchmark pending",
+  "limitations": [
+    "Observed normal native updater receipt and public served version/assets/health; no direct remote filesystem or credential audit",
+    "Primary PC app remains unchanged"
+  ]
+}

@@ -110,3 +110,26 @@ no longer needed and our unused connection is closed. MyMeet's separate release
 warning is unrelated; do not modify it. Source Workspace builder correction now
 uses the existing9-payload contract. Rebuild23 catalog evidence must supersede
 historical22/452-payload QA, while preserving that audit record.
+
+## Public23 delivery verified; PC2 benchmark pending
+
+Published app23/source620b935a and channelc2350a5; all9 immutable public assets
+and anonymous manifest checked, Actions remain disabled. Normal isolated public113
+fresh MyAI14 then protected14-to23 app-only upgrade passed:9 payloads,307 unrelated
+payload hashes and4 other app contracts retained. Full ordinary37-app/451-payload
+rebuild verified; generated114 remains local QA only, never published/installed.
+
+Real PC2 normal protected20-to23 update completed in246 seconds with checksum,
+backup verification, restart/health and cleanup receipts. Served bootstrap23 and
+assets index-DgMH6SyG.js/index-gfmkwG4Q.css match acceptance;36 services healthy.
+All unrelated update-table rows compare unchanged; Finance remains2, its separate3
+update unselected. Newest verified recovery retained. Sanitized install evidence:
+ docs/model-advisor23-pc2-install.json in MyAI. No direct remote credential/filesystem
+audit claimed. Primary remains20. User's late remote-PIN reply needs no action.
+
+PC2 installed reference9B after checksum verification;2B background transfer next.
+Full guarded8-model/192-sample comparison and public PC2 report remain pending.
+Do not infer PC2 winner from primary RTX3060 benchmark1.1. Advisor runs benchmark1.2
+at8K/batch32 with current whole-machine app demand, conservative free reserve,
+lower worker priority and sampled stop guard (not an OS quota). Normal app UI starts
+and exports this real run; simulated test tools never change owner projects.
