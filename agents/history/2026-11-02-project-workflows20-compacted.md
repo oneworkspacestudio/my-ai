@@ -1,4 +1,6 @@
-# Project build/deployment workflow20 — in progress
+# Project build/deployment workflow20 — delivered on both machines
+
+Current outcome: public20 and channel446fd93; both existing machines on MyAI20 with retained Workspace110/Hosting2. See final delivery below.
 
 User reports a follow-up deploy request still returns capability disclaimers and
 manual Git/Hosting instructions instead of building/saving/deploying a project.
@@ -76,3 +78,70 @@ Normal app APIs/security guards not weakened for any harness issue. Own runtime
 stopped normally after proof; loopback Caddy preview9080 and five app ports tracked.
 Future fixture runs should rebase Caddy to a separate port before startup. The
 public20 normal14→20 managed upgrade and primary19→20 install remain pending.
+
+## Public publication and upgrade complete; owner delivery underway
+
+Immutable public20 source08ce192af47445e298a9891b16f54e786bd80a9c; all9 assets
+size/digest verified and anonymous checksums/managed manifest verified. Standard
+channel446fd93 adds only MyAI20, retains all earlier rows/withholdings and other
+pins, refreshes only MyAI builder pin. No suite/Android release. Public110 fresh
+fixture restored exact bundled14 payloads/metadata, then normal protected public
+MyAI-only14→20 update passed. All9 MyAI payloads and199 unrelated payloads verified;
+identity/credentials unchanged; original Git project/job retained, native follow-up
+made no mutation and still served exact bytes. Caddy preview rebased to39730 for
+this post-upgrade check. Own fixture stopped normally after post-upgrade checks.
+No model inference or owner fixture. Evidence fixture20-post-upgrade.json in artifacts.
+
+Scope correction: active user Chrome MyAI tab is workspace-2; its normal Updates
+UI showsMyAI18/Workspace110/Hosting2. Earlier explicit authorization covers both
+machines, so this task is now installing20 on both, stated to user. Authorized peer
+reports no primary maintenance reservation and Hosting3 only built/unpublished.
+Primary19→20 normal protected updater currently running (install20-primary.py,
+unified exec43865). It snapshots configured OLLAMA_MODELS metadata (unlike19's
+empty-default-folder-only audit), credentials/settings in RAM and all unselected
+payload bytes. Do not rerun apply while active. Secondary browser tab
+secondaryUpdateTab (Chrome3) at https://workspace-2.m8e.co.uk/updates; clicked Check
+after publication, waiting refreshed20 offer, no secondary apply submitted yet.
+Normal UI only, select MyAI20 alone, preserve every other app. Do not use owner
+chat/site as acceptance fixture. Browser native synthetic proof saved in artifacts,
+proof tab closed. Native screenshot URL was9080 before its port was rebased; actual
+post-upgrade39730 source/bytes were verified, not a physical-phone/public-DNS claim.
+
+Still needed: finish both installs and evidence, final source/workspace handoffs,
+normal private fixture services already stopped; source preserved I:/Projects/
+my-ai-project20-final and public Git. C source/native/temp directories remain;
+previous policy rejection forbids bypassing recursive cleanup through another API.
+
+## Final delivery — both machines complete (verified Nov03 UTC)
+
+Primary normal protected19→20 complete, transactioncomplete, cleanupfinished;
+34 other app contracts and286 package contracts/bytes retained, installation
+locations/identity and decrypted installation/provider credentials retained,
+existing model profiles unchanged. Configured OLLAMA_MODELS metadata25 files
+compared successfully (not full model-byte hashing). Four registered MyAI payloads
+match public20, served20/B0veHvrq/gfmkwG4Q match tested build; all34 services healthy.
+Anonymous context/settings/app-connect denied. Initial anonymous verification reset
+once; immediate rerun passed all exact checks. Independent scoped recovery schema3
+manifest and11 files hashed. Newest usable recovery kept; normal cleanup retired
+one eligible old recovery (~59.8MB). No operation repeated or cancelled.
+
+Secondary normal owner Updates UI selected only MyAI20,18→20, finished3m56s with
+all9 native update/recovery stages complete. Recovery77.4MB copied/verified; latest
+usable copy retained; native cleanup retired1 eligible old backup (~1905.5MB).
+Fresh Check shows20 Up to date;32 other displayed groups unchanged, Workspace110
+and Hosting2 retained. Browser DOM from real /myai/api/bootstrap reports20; real
+/healthz reports34 running, no failed services. No independent remote filesystem/
+credential audit claimed. Screenshot secondary20-installed.png in task artifacts;
+no owner conversation/site was used as a fixture or deployed by the agent.
+
+Public source and final evidence/handoff pushed; immutable release tag stays08ce192.
+Delivery evidence docs/project-workflows20-delivery.json. Original dirty I checkout
+and earlier WIP worktrees preserved. I:/Projects/my-ai-project20-final is final
+source mirror; C source/native/temp roots retained because earlier recursive
+cleanup was policy-blocked (do not bypass). All task-owned fixture runtimes/Caddy
+and browser preview/verification/update tabs stopped/closed. User's original tabs
+remain. No new suite/Android release, model inference, owner gameplay, physical
+phone, public-DNS or reboot acceptance claimed. Existing imported/partial/multi-file
+and configured framework Hosting limitations are documented. For the owner to run
+the old refused request, refresh MyAI and send the deployment directive again;
+software update itself did not replay an owner's pending chat mutation.
