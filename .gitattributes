@@ -1,1 +1,2 @@
 THIRD-PARTY-LICENSES.txt -whitespace
+internal/app/skills/*.md text eol=lf
