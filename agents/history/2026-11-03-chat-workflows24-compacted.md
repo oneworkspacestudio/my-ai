@@ -57,3 +57,25 @@ No owner conversation/inference/deployment used as a fixture.
 Final checks: production build/browser fixture/audit0 and full Go+SearXNG/vet pass. Native standalone fresh24 and23-to24 restart upgrade pass with login, branch route, unchanged original, CSRF, revision conflict and cross-account denial; model profiles preserved. Candidate SHA2560fba570a5defb1581277b5388b399128432e7b116f6c6502de21a06754938c7d. Exact8K request-construction regression passes; no real-model/cloud claim. Native test roots chat24-native and chat24-native-r2 are synthetic and their owned processes stopped.22 new/changed production dependency licence notices collected, missing monorepo notices fetched by npm gitHead from official source. Version24 set; publication pending. All private test logs remain outside Git.
 
 Release-build correction: clean checkout initially exposed mixed embedded Python/skill EOLs and missing generated icon. Canonical LF attributes/build normalization added; build now derives default version from compatibility.json and uses the existing pinned rsrc generator. Native fresh/upgrade tests rerun against final SHA256f1395d02eec24382bd1c3cad2721cc47b3d006f5e0ee7da3ad1324ad44ffbedd, identical to independent clean build. This supersedes prior candidate SHA. Full tests/vet pass again; govulncheck0 reachable/package findings (1 unused required-module advisory). Native r3 processes stopped. PC2 another-task update was observed and allowed to finish; no MyAI24 apply yet.
+
+Delivery completed 2026-11-03: source/tag c936d8674585982a4a4a3db3ccdb90ea501b9453,
+public v0.1.0-preview.24; nine uploaded assets and anonymous checksums verified.
+Workspace channel ab551a1 promoted24, preserving unrelated rows/pins/withholdings.
+Actions disabled. Immutable public assets were not replaced. Primary updated20
+to24 on manager114; PC2 updated23 to24 on manager113, each through one normal
+protected MyAI-only apply. Both report healthy apps and completed recovery/startup
+checks. Primary retains36 other app contracts, unselected payload bytes, identity,
+credential contents, model preferences/inventory. Its schema3 recovery manifest,
+12 files and2 directories independently verified. Audit helper initially treated
+directories as files; corrected read-only audit passed without repeating apply.
+PC2 native controller verified its recovery; remote backup bytes were not audited
+independently. Both served tested JS/CSS byte hashes and bootstrap version24.
+PC2 Voice6/Slicer7/manager113 retained. No owner conversation or inference used as
+a fixture. Browser network inspection stopped; synthetic native processes stopped.
+
+Earlier PC2 benchmark checkpoint is superseded only as to run state: before this
+update its API reported completed, so no benchmark was interrupted. Results and
+ranking were not evaluated by this chat-formatting task. Preserve pending advisor
+report/benchmark edits, including bench.py, safe_bench.py and summarize.py that
+appeared while delivering24. No real-model quality or full Codex parity claim.
+See docs/chat-workflows24-delivery.json for concise installation evidence.
