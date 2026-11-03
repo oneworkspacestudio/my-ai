@@ -323,6 +323,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               <Text>Find a model that can finish your tasks while One Workspace stays responsive. The server owner starts tests; everyone can view the latest result.</Text>
               <Alert>{data.benchmarkStatus}</Alert>
               <Text variant="muted">{data.benchmarkNotice}</Text>
+              <Text>{data.benchmarkProfile}</Text>
               <Text>{data.benchmarkReserve}</Text>
               <Text>{data.benchmarkBaseline}</Text>
               {data.isOwner ? (
@@ -331,7 +332,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                     <Button onClick={() => onAction("benchmark-stop")}>Stop test</Button>
                   ) : (
                     <>
-                      <Select name="benchmarkProfile" options={data.benchmarkProfiles} label="Test depth" />
+                      <Select name="benchmarkProfile" options={data.benchmarkProfiles} label="Next test depth" />
                       <Card variant="disclosure">
                         <Heading level={3}>Optional test settings</Heading>
                         <Input name="benchmarkModels" label="Specific models, optional" placeholder="Automatic: suitable installed local models" />

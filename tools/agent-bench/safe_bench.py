@@ -32,7 +32,7 @@ def main():
     with urllib.request.urlopen(a.base+'/api/tags',timeout=15) as r:tags={m['name']:m for m in json.load(r)['models']}
     if any(name not in tags or not 0<tags[name].get('size',0)<=12*GiB for name in a.models):raise ValueError('Choose installed model tags, each at most12GiB')
     probe=Probe(a.health);probe.sample();time.sleep(1);baseline=probe.sample();policy=reserve(baseline,a.reserve_gb)
-    result={'schema':1,'benchmarkVersion':'1.2.0','startedUTC':dt.datetime.now(dt.timezone.utc).isoformat(),'baseline':baseline,'policy':policy,'models':[],'status':'running','notice':'Real local inference with simulated tools. Current whole-machine demand includes Workspace apps. Reserve estimates and a sampled stop guard reduce risk; they are not an OS-enforced memory or GPU quota. Unknown GPU telemetry uses CPU-only. Model defaults are unchanged.'}
+    result={'schema':1,'benchmarkVersion':'1.2.0','profile':'quick' if a.quick else 'full','contextTokens':8192,'batchSize':32,'startedUTC':dt.datetime.now(dt.timezone.utc).isoformat(),'baseline':baseline,'policy':policy,'models':[],'status':'running','notice':'Real local inference with simulated tools. Current whole-machine demand includes Workspace apps. Reserve estimates and a sampled stop guard reduce risk; they are not an OS-enforced memory or GPU quota. Unknown GPU telemetry uses CPU-only. Model defaults are unchanged.'}
     save(a.out/'resource-results.json',result);emit('baseline',baseline=baseline,policy=policy)
     for name in a.models:
         time.sleep(1) # CPU deltas need a real sampling interval before preflight.
@@ -63,6 +63,7 @@ def main():
                     if issue and bad[issue]>=(10 if issue.startswith('CPU') else 2):abort=issue;proc.terminate();break
                     if time.monotonic()-started>45*60:abort='45 minute per-model limit reached';proc.terminate();break
                     if entry['monitorSamples']%5==0:
+                        entry['seconds']=round(time.monotonic()-started,2)
                         save(a.out/'resource-results.json',result);emit('testing',model=name,seconds=round(time.monotonic()-started),resource=s)
                 try:proc.wait(timeout=10)
                 except subprocess.TimeoutExpired:proc.kill();proc.wait()

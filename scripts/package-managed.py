@@ -25,7 +25,7 @@ app.update(version=version, source='https://github.com/' + repo + '/releases/tag
 mapping = {'myai': ('MyAI.exe', 'MyAI.exe'), 'myai-contract': ('docs/MyAI/compatibility.json', 'compatibility.json')}
 for name in ['LICENSE', 'NOTICE', 'THIRD-PARTY-LICENSES.txt']:
     mapping['myai-' + name] = ('licenses/MyAI-' + name, name)
-for name in ['SETUP.md', 'SUPPORT.md', 'ADR-001-architecture.md', 'SECURITY-CHECKS.md', 'MODEL-ADVISOR.md']:
+for name in ['SETUP.md', 'SUPPORT.md', 'ADR-001-architecture.md', 'SECURITY-CHECKS.md']:
     mapping['myai-doc-' + name] = ('docs/MyAI/' + name, 'docs/' + name)
 packages = {}
 with zipfile.ZipFile(out / asset) as archive:

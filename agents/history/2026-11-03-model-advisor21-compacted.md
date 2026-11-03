@@ -86,3 +86,27 @@ replacement and regression checks; do not claim legacy-pin changes alone update
 fresh bundles. New synthetic113/MyAI14 installation is the supported public
 upgrade baseline for22. PC2 remains offline publicly; existing Remote Desktop
 host is online but needs the user to enter its PIN there. Never request it in chat.
+
+##23: compatible update contract and visible profile
+
+21/22's new untracked MODEL-ADVISOR guide was rejected by public113's exact
+optional-document allowlist before apply. No owner or synthetic update applied.
+23 retains the established9 managed payloads, incorporating its guide in
+SUPPORT.md; the separate guide remains in portable/source output. Published
+21/22 assets are immutable. Real candidate22 is rejected by the new SDK preflight
+with the observed package ownership error;23 must pass before tag/publish.
+RELEASING.md documents the actual candidate/default+full-layout validation gate.
+Full-catalog validation alone did not detect this independent update mismatch.
+
+23 also persists/displays actual full/quick profile,8Kcontext,batch32 and elapsed
+monitoring, separate from next-test controls. Final desktop and390×844 visual
+checks pass with no horizontal dialog overflow; no physical phone claim. Native
+included-runtime lifecycle/permissions/stop/restart tests and17 Python regressions
+pass. Final23 EXE SHA256 135efc323004eca2613ef9ef020159a28555076958c7dad6e4e89d766aad4e0e.
+Fresh public113/MyAI14 synthetic installation is healthy; normal public23 app-only
+upgrade and actual PC2 run remain next. PC2 returned after Books113 deployment;
+36 services healthy per its delivery handoff, withMyAI20 retained. Remote PIN is
+no longer needed and our unused connection is closed. MyMeet's separate release
+warning is unrelated; do not modify it. Source Workspace builder correction now
+uses the existing9-payload contract. Rebuild23 catalog evidence must supersede
+historical22/452-payload QA, while preserving that audit record.

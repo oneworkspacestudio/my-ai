@@ -228,6 +228,7 @@ Page Workspace variant=$theme
         Text "Find a model that can finish your tasks while One Workspace stays responsive. The server owner starts tests; everyone can view the latest result."
         Alert "$benchmarkStatus"
         Text variant=muted "$benchmarkNotice"
+        Text "$benchmarkProfile"
         Text "$benchmarkReserve"
         Text "$benchmarkBaseline"
         If condition=$isOwner
@@ -235,7 +236,7 @@ Page Workspace variant=$theme
             If condition=$benchmarkRunning
               Button action=benchmark-stop "Stop test"
             Else
-              Select name=benchmarkProfile options=$benchmarkProfiles label="Test depth"
+              Select name=benchmarkProfile options=$benchmarkProfiles label="Next test depth"
               Card variant=disclosure
                 Heading level=3 "Optional test settings"
                 Input name=benchmarkModels label="Specific models, optional" placeholder="Automatic: suitable installed local models"
