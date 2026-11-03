@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "version": "0.1.0-preview.24",
+  "binarySHA256": "0fba570a5defb1581277b5388b399128432e7b116f6c6502de21a06754938c7d",
+  "syntheticOnly": true,
+  "ownerDataAsFixture": false,
+  "noModelInference": true,
+  "freshAndRestartUpgrade": {
+    "old23": {
+      "version": "0.1.0-preview.23",
+      "profileSaved": true
+    },
+    "upgrade24": {
+      "version": "0.1.0-preview.24",
+      "nativeLogin": true,
+      "branchRoute": true,
+      "originalPreserved": true,
+      "csrf": true,
+      "revisionConflict": true,
+      "crossAccountDenied": true,
+      "embeddedChatAssets": true
+    },
+    "fresh24": {
+      "version": "0.1.0-preview.24",
+      "nativeLogin": true,
+      "branchRoute": true,
+      "originalPreserved": true,
+      "csrf": true,
+      "revisionConflict": true,
+      "crossAccountDenied": true,
+      "embeddedChatAssets": true
+    }
+  },
+  "managedSuiteFreshSetupRetested": false
+}

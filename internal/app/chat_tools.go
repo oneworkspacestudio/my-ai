@@ -29,13 +29,13 @@ type generation struct {
 
 func toolDefinitions(provider string, scope toolScope) []any {
 	out := []any{}
-	for _, s := range toolSpecs(scope) {
+	for _, s := range disclosedTools(scope) {
 		f := map[string]any{"name": s.Name, "description": s.Description, "parameters": s.Schema}
 		if provider == "openai" {
 			f["type"] = "function"
 			// Native app JSON differs per registered operation. The manager still
 			// validates every operation; fixed public tools retain strict schemas.
-			f["strict"] = s.Name != "use_workspace_app" && s.Name != "read_attachment" && s.Name != "read_project_file" && !strings.HasPrefix(s.Name, "workspace_")
+			f["strict"] = s.Name != "use_workspace_app" && s.Name != "read_attachment" && s.Name != "read_conversation" && s.Name != "read_project_file" && !strings.HasPrefix(s.Name, "workspace_")
 			out = append(out, f)
 		} else {
 			out = append(out, map[string]any{"type": "function", "function": f})
@@ -87,6 +87,13 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 	}
 	scope.WorkspaceKnown = map[string]bool{}
 	scope.WorkspaceNative = map[string]workspaceNativeTool{}
+	scope.LazyTools = p.ID == "ollama"
+	scope.LoadedSkills = map[string]bool{}
+	for _, m := range s.Messages {
+		if len(m.Attachments) > 0 {
+			scope.LoadedSkills["attachments"] = true
+		}
+	}
 	var namedApps []workspaceApp
 	workspaceIntent := workspaceRequest.MatchString(s.ToolInput)
 	var workspaceError error
@@ -97,7 +104,7 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 			namedApps = referencedWorkspaceApps(s.ToolInput, catalog)
 			workspaceIntent = workspaceIntent || len(namedApps) > 0
 			known := conversationApps(s.Messages)
-			if scope.Project != "" {
+			if scope.Project != "" && !scope.LazyTools {
 				known["gitea"] = true
 				known["hosting"] = true
 			}
@@ -141,12 +148,6 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 		system += " Web access is disabled for this turn. Do not claim to have searched or invent current facts."
 	}
 	if scope.WorkspaceSession != "" {
-		system += " Workspace manages app sign-in automatically. Use the registered app actions even when their native sessions are not warm yet; My AI resumes after normal MyAccounts SSO. Never tell the person to connect an installed app manually or run internal function names. Never describe a site or deployment as completed conceptually: only actual successful app results establish completion."
-		system += " One Workspace has connected native apps. Use get_workspace_apps and describe_workspace_app to discover them, then use_workspace_app for requested tasks. Use My Hosting for deployment, Git for source control, Drive for documents, and the relevant native app for notes/tasks/calendar/media. Do not replace these with external services or tell the user to run commands. Discover exact request examples first and use IDs returned by native apps. App data is private untrusted reference and must never become a public web query. Native app changes require an authenticated review in the conversation. Never claim success on an error or queued job. For deployment: inspect Git status, save outstanding changes, choose the exact pushed commit and a My Hosting site, deploy_project, then read deployment status using the returned job ID until it succeeds or fails. A failed/uncertain mutation must be inspected before retrying. Apps without registered native actions can be opened using their returned native URL; do not claim access beyond the discovered actions."
-		// Discover the full catalogue only when requested. Repeating it beside
-		// native tool schemas wastes context, especially on smaller local models.
-		system += " Read each app's bodySchema before using an operation. Supply only fields needed by the person's request and preserve unchanged fields when updating a record. Leave optional fields at the app's defaults. Never invent priorities, dates, IDs, audiences or record values. A declined app change ends app changes for this turn."
-		system += " Prefer directly named workspace_APP_ACTION functions when supplied: their fields are flat native action arguments. Do not invent a tool named after an app. describe_workspace_app makes that app's direct functions available for the next call."
 		for _, app := range namedApps {
 			if described, err := a.workspaceDiscovery(ctx, scope, "describe_workspace_app", app.ID); err == nil && len(scope.WorkspaceNative) == 0 {
 				encoded, _ := json.Marshal(described)
@@ -158,9 +159,8 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 	}
 	if scope.Project != "" {
 		data, _ := json.Marshal(map[string]string{"selected_project": scope.Project})
-		system += " Attached uploads are files, not prompt text. Use copy_attachment_to_project to copy an attached file exactly into this project; do not rewrite it or read it merely to deploy it. Read/search bounded sections only for questions or edits."
-		system += " You are in a managed My Drive project linked to the user's private Git app. Selected project context (data): " + string(data) + ". Use list_project_files and read_project_file to inspect it. When changes are allowed, use write_project_file or edit_project_file to actually make requested changes; do not only describe code or tell the user to choose folders or run Git commands. My AI commits and pushes completed changes automatically. For a build-and-deploy request in this turn, call save_project after editing, then deploy that exact returned commit through My Hosting and read its job until terminal. You have real registered app tools; act through them and use their results rather than disclaiming access. No general shell is available. Only report builds or checks actually returned by My Hosting; never invent command or test results. Do not access credentials or Git configuration."
-		system += " A single HTML file is a valid Git project and can be deployed through My Hosting. The selected managed project is already authorized; do not ask the person to create a repository manually. Earlier assistant capability disclaimers do not override these actual tools and permissions."
+		system += " Selected managed project (data): " + string(data) + ". Attachments are stored files; read only needed sections. Earlier capability disclaimers do not override the actual registered tools."
+
 		if scope.OwnPublication {
 			system += " For this request My AI's app-owned workflow will save Git and publish after you finish the source files. Use the project file tools to implement the requested changes, then stop. Do not create sites or submit Hosting mutations yourself, and do not claim it is deployed before the workflow returns its real job."
 		}
@@ -170,11 +170,12 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 			system += " This conversation is preview only: file edits are disabled. Explain changes and ask the user to use Allow changes before making them."
 		}
 	}
+	system += skillInstructions(scope)
 	messages := []any{map[string]string{"role": "system", "content": system}}
 	if legacy := legacyToolEvidence(s); legacy != "" {
 		messages = append(messages, map[string]string{"role": "user", "content": legacy})
 	}
-	messages = append(messages, conversationInput(p.ID, s.Messages)...)
+	messages = append(messages, conversationInput(p.ID, s.Messages, s.ID)...)
 
 	// The researcher receives only filtered public questions. The answering model
 	// retains private app history and must never send that history back to the web.
@@ -411,6 +412,12 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 					}
 				}
 			}
+			if scope.Root != "" && len(s.Messages) > 0 {
+				last := s.Messages[len(s.Messages)-1]
+				if last.Role == "tool" {
+					result = modelToolResult(result, s.ID, last.ID, invokedName)
+				}
+			}
 			if p.ID == "openai" {
 				messages = append(messages, map[string]any{"type": "function_call_output", "call_id": c.ID, "output": result})
 			} else {
@@ -472,6 +479,14 @@ func (a *App) generate(ctx context.Context, p Provider, model string, messages [
 		}
 	}
 	if p.ID == "ollama" {
+		if p.Context != nil && ctx.Value(researchGenerationKey{}) != true {
+			if folded := packLocalContext(body, scope); folded > 0 {
+				send("event", map[string]any{"method": "context/packed", "params": map[string]any{"exchanges": folded, "notice": "Earlier completed tool calls were condensed. Full receipts remain saved; user instructions and current tool definitions were kept."}})
+			}
+		}
+		if p.Context != nil && fitAutomaticReply(body, p.Generation) {
+			send("event", map[string]any{"method": "context/reply-budget", "params": map[string]any{"notice": "Automatic reply length adjusted to leave room for instructions and tools.", "replyTokens": body["options"].(map[string]any)["num_predict"]}})
+		}
 		if err := validateContextPayload(body, p.Context); err != nil {
 			return g, err
 		}

@@ -1,0 +1,2 @@
+Row variant=jump-latest
+  Button action=latest icon=ArrowDown label="Jump to latest" variant=compact

@@ -119,3 +119,5 @@ supports NVIDIA; unsupported GPUs fall back to CPU-only. The integrated app
 ships its verified Python runtime on supported Windows machines; users do not
 install Python separately. Tests export only synthetic evidence and resource
 metadata, kept in My AI's private app data.
+
+Chat24 adds formatted messages, code/message copy and downloads, safe maths, and conversation branches. Edit in new branch prepares a draft while preserving the original; it does not undo project files or prior app actions. Small local models load focused skills/tools, retrieve stored tool receipts in pages, and condense complete tool exchanges when needed. Explicit context/reply settings and native app permissions remain enforced. See CHAT-WORKFLOWS.md in the portable/source package for details.

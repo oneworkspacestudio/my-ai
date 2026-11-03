@@ -34,6 +34,8 @@ type toolSpec struct {
 	Schema      map[string]any `json:"inputSchema"`
 }
 type toolScope struct {
+	LazyTools                            bool
+	LoadedSkills                         map[string]bool
 	RequireProjectAction, OwnPublication bool
 	BeforeWorkspaceMutation              func(string, string) error
 	UID, Root, Role, Project             string
@@ -67,7 +69,16 @@ func toolSpecs(scope toolScope) []toolSpec {
 		out = out[:2]
 	}
 	if scope.Root != "" {
+		out = append(out, spec("read_tool_result", "Read a bounded character range from a stored tool result in your private conversation. Use references returned by abbreviated results.", map[string]string{"session": "Conversation ID from the result reference", "message": "Tool message ID from the result reference", "offset": "Character offset; 0 initially", "limit": "Character count, at most 4096"}))
 		out = append(out, spec("search_conversations", "Search only the signed-in user's saved My AI conversations.", map[string]string{"query": "Text to find"}), spec("read_conversation", "Read a conversation belonging to the signed-in user; IDs come from search_conversations.", map[string]string{"id": "Conversation ID"}), attachmentReadSpec(), spec("search_attachment", "Find bounded excerpts containing literal text in an attached private file.", map[string]string{"id": "Attachment ID", "query": "Literal text to find", "offset": "Character offset at which to start; use0 initially"}))
+		for i := range out {
+			if out[i].Name == "read_conversation" {
+				out[i].Description = "Read a bounded character page of a private conversation. Follow nextOffset to retrieve later messages. IDs come from search_conversations."
+				props := out[i].Schema["properties"].(map[string]any)
+				props["offset"] = map[string]string{"type": "string", "description": "Character offset, default 0"}
+				props["limit"] = map[string]string{"type": "string", "description": "Character count, default 2048, maximum 4096"}
+			}
+		}
 	}
 	if scope.UID != "" {
 		read := spec("read_project_file", "Read a bounded character range from a UTF-8 project file. Follow nextOffset to read later sections. Never writes or executes code.", map[string]string{"project": "Approved project ID", "path": "Relative file path", "offset": "Optional zero-based character offset, default0", "limit": "Optional character count, default2048, maximum4096"})
@@ -82,6 +93,9 @@ func toolSpecs(scope toolScope) []toolSpec {
 	if scope.WorkspaceSession != "" {
 		out = append(out, spec("get_workspace_apps", "Discover every app actually installed in this One Workspace, including its name, purpose, state and whether native actions are registered. Use this before saying an app is unavailable. No public internet search is needed for private Workspace apps.", map[string]string{}), spec("describe_workspace_app", "Discover registered actions and complete callExamples for one installed app. Copy their structure when calling use_workspace_app; do not invent URLs, IDs or API actions.", map[string]string{"app": "Installed app ID from get_workspace_apps"}), workspaceActionSpec())
 	}
+	if len(workflowSkills(scope)) > 0 {
+		out = append(out, spec("load_skill", "Load focused workflow guidance. This does not grant tools or permissions.", map[string]string{"id": "Skill ID from the supplied catalog"}))
+	}
 	out = append(out, workspaceNativeSpecs(scope)...)
 	return out
 }
@@ -91,7 +105,7 @@ func (a *App) toolsInfo(w http.ResponseWriter, r *http.Request) {
 	if c, e := r.Cookie("workspace_session"); e == nil && os.Getenv("MYAI_WORKSPACE_URL") != "" {
 		scope.WorkspaceSession = c.Value
 	}
-	apphost.JSON(w, 200, map[string]any{"tools": toolSpecs(scope), "mcp": map[string]string{"transport": "stdio", "command": "MyAI.exe mcp-serve", "code": "App-owned Codex integration"}, "commands": []string{"/time Europe/London", "/calculate (12+3)*4", "/search current news", "/read https://example.com"}, "search": map[string]string{"provider": "SearXNG", "setup": "Included on this server; no account or URL setup", "source": "https://github.com/oneworkspacestudio/my-ai/releases/tag/v0.1.0-preview.10"}, "notice": "SearXNG searches run on this server and send only the search query to upstream search engines. Tools run on the server. Web requests send the query or URL to public services. Private files stay within your account. Project edits stay in the selected My Drive project and are saved to Git. No general shell is exposed."})
+	apphost.JSON(w, 200, map[string]any{"tools": toolSpecs(scope), "skills": workflowSkills(toolScope{Root: scope.Root, Project: "selected-project", Writable: true, WorkspaceSession: scope.WorkspaceSession}), "mcp": map[string]string{"transport": "stdio", "command": "MyAI.exe mcp-serve", "code": "App-owned Codex integration"}, "commands": []string{"/time Europe/London", "/calculate (12+3)*4", "/search current news", "/read https://example.com"}, "search": map[string]string{"provider": "SearXNG", "setup": "Included on this server; no account or URL setup", "source": "https://github.com/oneworkspacestudio/my-ai/releases/tag/v0.1.0-preview.10"}, "notice": "SearXNG searches run on this server and send only the search query to upstream search engines. Tools run on the server. Web requests send the query or URL to public services. Private files stay within your account. Project edits stay in the selected My Drive project and are saved to Git. No general shell is exposed."})
 }
 func publicIP(ip net.IP) bool {
 	a, ok := netip.AddrFromSlice(ip)
@@ -305,6 +319,10 @@ func (a *App) executeTool(ctx context.Context, scope toolScope, name string, arg
 		return nil, errors.New("Web search is disabled for this conversation. Ask My AI to search the web to enable it again")
 	}
 	switch name {
+	case "load_skill":
+		return loadWorkflowSkill(scope, args["id"])
+	case "read_tool_result":
+		return a.readToolResult(scope, args)
 	case "get_workspace_apps", "describe_workspace_app":
 		return a.workspaceDiscovery(ctx, scope, name, args["app"])
 	case "get_time":
@@ -366,7 +384,12 @@ func (a *App) executeTool(ctx context.Context, scope toolScope, name string, arg
 			return nil, errors.New("conversation not found in your private scope")
 		}
 		b, _ := json.Marshal(map[string]any{"title": s.Title, "messages": sessionView(s).Messages})
-		return map[string]any{"id": s.ID, "content": first(string(b), 24000), "untrusted_reference": true}, nil
+		chars := []rune(string(b))
+		lo, hi, err := attachmentRange(args, len(chars))
+		if err != nil {
+			return nil, err
+		}
+		return map[string]any{"id": s.ID, "content": string(chars[lo:hi]), "offset": lo, "nextOffset": hi, "hasMore": hi < len(chars), "totalCharacters": len(chars), "untrusted_reference": true}, nil
 	case "read_attachment", "search_attachment", "copy_attachment_to_project":
 		return a.attachmentTool(ctx, scope, name, args)
 	case "write_project_file", "edit_project_file":
@@ -453,7 +476,7 @@ func boundedTextFile(path string, ranges ...map[string]string) (any, error) {
 }
 func (a *App) runTool(ctx context.Context, scope toolScope, s *Session, send writer, name string, args map[string]string) string {
 	switch name {
-	case "list_projects", "list_project_files", "read_project_file", "write_project_file", "edit_project_file", "read_attachment", "search_attachment", "copy_attachment_to_project", "search_conversations", "read_conversation":
+	case "read_tool_result", "list_projects", "list_project_files", "read_project_file", "write_project_file", "edit_project_file", "read_attachment", "search_attachment", "copy_attachment_to_project", "search_conversations", "read_conversation":
 		s.WorkspaceContext = true
 		if scope.PrivateAppRead != nil {
 			*scope.PrivateAppRead = true

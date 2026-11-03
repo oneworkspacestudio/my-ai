@@ -1,26 +1,33 @@
 {
   "name": "@oneworkspacestudio/my-ai",
   "private": true,
-  "version": "0.1.0-preview.23",
+  "version": "0.1.0-preview.24",
   "type": "module",
   "scripts": {
     "generate": "node scripts/generate.mjs",
-    "build": "npm run generate && tsc --noEmit && vite build"
+    "build": "npm run generate && tsc --noEmit && vite build",
+    "test:chat": "node tests/chat-ui.mjs"
   },
   "dependencies": {
     "@codedia/parser": "0.2.1",
+    "lucide-react": "0.577.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "lucide-react": "0.577.0",
     "react-markdown": "10.1.0",
-    "remark-gfm": "4.0.1"
+    "rehype-highlight": "7.0.2",
+    "rehype-katex": "7.0.1",
+    "remark-gfm": "4.0.1",
+    "remark-math": "6.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@types/node": "^24.0.0",
     "typescript": "^5.9.3",
-    "vite": "8.3.4",
-    "@playwright/test": "^1.64.1"
+    "vite": "8.3.4"
+  },
+  "overrides": {
+    "katex": "0.18.2"
   }
 }

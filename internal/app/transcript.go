@@ -121,7 +121,7 @@ func (a *App) recordToolResult(scope toolScope, s *Session, send writer, result 
 // Reconstruct the real call/result transcript for each provider. Tool results
 // remain private account data and never acquire system-instruction authority.
 // A stopped call gets an explicit unknown outcome, never an invented success.
-func conversationInput(provider string, history []Message) []any {
+func conversationInput(provider string, history []Message, sessions ...string) []any {
 	out := []any{}
 	groups := map[string]bool{}
 	for i, m := range history {
@@ -190,6 +190,9 @@ func conversationInput(provider string, history []Message) []any {
 			result := `{"error":"The prior turn stopped before a result was recorded. Outcome is unconfirmed; inspect the native app before retrying a change."}`
 			if r, ok := results[c.ID]; ok {
 				result = r.Content
+				if len(sessions) > 0 {
+					result = modelToolResult(result, sessions[0], r.ID, r.ToolName)
+				}
 			}
 			if len(result) > 12000 {
 				b, _ := json.Marshal(map[string]string{"notice": "Historical tool output shortened; read the native record again for complete current evidence", "excerpt": first(result, 10000)})

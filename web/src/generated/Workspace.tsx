@@ -67,7 +67,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
         {data.hasActiveDownloads && (
           <Button onClick={() => onAction("models")} icon="Download" variant="download-banner">{data.downloadSummary}</Button>
         )}
-        <Stack variant="conversation">
+        <Stack variant="conversation" conversationId={data.conversationId}>
           {data.empty && (
             <Stack variant="welcome">
               <Card variant="welcome-icon"><Icon name="Sparkles" size={34} /></Card>
@@ -89,7 +89,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                 <Spacer />
                 <Text variant="muted">{item.model}</Text>
               </Row>
-              <Text variant="markdown">{item.content}</Text>
+              <Text variant="markdown" messageId={item.id}>{item.content}</Text>
               {item.attachments.map((item, i) => (
                 <Row key={i} variant="attachment">
                   <Icon name="Paperclip" size={16} />
@@ -100,6 +100,16 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               {item.status && (
                 <Text variant="muted">{item.status}</Text>
               )}
+              <Row variant="message-actions">
+                <Button onClick={() => onAction("copy-message")} item={item.id} icon="Copy" label="Copy text" variant="compact" />
+                <Button onClick={() => onAction("copy-markdown")} item={item.id} icon="FileCode" label="Copy Markdown" variant="compact" />
+                <Button onClick={() => onAction("download-message")} item={item.id} icon="Download" label="Download" variant="compact" />
+                {item.isUser ? (
+                  <Button onClick={() => onAction("edit-message")} item={item.id} icon="Pencil" label="Edit in new branch" variant="compact" disabled={data.busy} />
+                ) : (
+                  <Button onClick={() => onAction("branch-message")} item={item.id} icon="GitBranch" label="Branch here" variant="compact" disabled={data.busy} />
+                )}
+              </Row>
             </Card>
           ))}
           {data.streaming && (
@@ -517,6 +527,14 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                   <Text variant="muted">{item.description}</Text>
                   <Text variant="status">{item.capabilityLabel}</Text>
                   <Link href={item.url}>Open app ↗</Link>
+                </Card>
+              ))}
+              <Heading level={3}>Workflow skills</Heading>
+              <Text>My AI loads focused guidance when needed. Skills use the tools and permissions available in this conversation.</Text>
+              {data.skillList.map((item, i) => (
+                <Card key={i} variant="tool-card">
+                  <Text variant="author">{item.name}</Text>
+                  <Text variant="muted">{item.description}</Text>
                 </Card>
               ))}
               <Heading level={3}>Web search</Heading>

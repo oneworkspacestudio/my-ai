@@ -1,0 +1,8 @@
+Row CodeActions variant=code-actions
+  Text variant=code-language "$language"
+  Spacer
+  Button action=wrap label=$wrapLabel icon=WrapText variant=compact pressed=$wrapped
+  Button action=download label="Download code" icon=Download variant=compact
+  Button action=copy label=$copyLabel icon=Copy variant=compact
+  If condition=$error
+    Text variant=status "$error"
