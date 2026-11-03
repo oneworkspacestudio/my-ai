@@ -80,3 +80,22 @@ func TestBenchmarkEndpointRejectsRemoteAndCredentialledURLs(t *testing.T) {
 		t.Fatal(base, err)
 	}
 }
+
+func TestBenchmarkRechecksMaintenanceAfterModelDiscovery(t *testing.T) {
+	a := &App{H: &apphost.Host{Config: apphost.Config{Data: t.TempDir()}}, ollamaUpdate: &ollamaUpgrade{}, running: map[string]context.CancelFunc{}}
+	if err := a.initBenchmark(); err != nil {
+		t.Fatal(err)
+	}
+	a.client = &http.Client{Transport: benchRoundTrip(func(r *http.Request) (*http.Response, error) {
+		// Another owner tab begins maintenance while tag discovery is in flight.
+		a.ollamaUpdate.mu.Lock()
+		a.ollamaUpdate.Busy = true
+		a.ollamaUpdate.mu.Unlock()
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`{"models":[{"name":"qwen3.5:9b","size":6500000000}]}`)), Header: http.Header{}}, nil
+	})}
+	w := httptest.NewRecorder()
+	a.benchmarkStart(w, httptest.NewRequest("POST", "/api/model-benchmark", strings.NewReader(`{"models":["qwen3.5:9b"]}`)))
+	if w.Code != 409 || a.benchmarkBusy() {
+		t.Fatal("benchmark overlapped a confirmed runtime upgrade", w.Code)
+	}
+}

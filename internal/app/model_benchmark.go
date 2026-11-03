@@ -181,6 +181,10 @@ func (a *App) benchmarkStart(w http.ResponseWriter, r *http.Request) {
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if a.ollamaMaintenanceBusy() {
+		apphost.Problem(w, 409, "Wait for the Ollama upgrade to finish")
+		return
+	}
 	if len(a.running) > 0 || (a.downloads != nil && a.downloads.busy()) {
 		apphost.Problem(w, 409, "Wait for active requests and model downloads before testing")
 		return

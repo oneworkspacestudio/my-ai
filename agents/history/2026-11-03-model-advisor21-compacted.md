@@ -11,7 +11,7 @@ my-ai-model-advisor-20261103, isolated C-cache NTFS roots only. No owner project
 conversations, app files or credentials used as functional fixtures. Incidental
 local model metadata listed in the standalone UI is not benchmark evidence.
 
-MyAI21 includes benchmark1.2.0 in Models â†’ Test this PC. Owner-only start/stop,
+MyAI21 includes benchmark1.2.0 in Models Ã¢â€ â€™ Test this PC. Owner-only start/stop,
 authenticated shared latest result/export, CSRF/identity normal apphost guards.
 Server-owned background job persists state and continues after navigation; a
 restart marks interruption without loading models automatically. Normal local
@@ -38,7 +38,7 @@ model at a time,lower worker priority,45minute/model deadline. Sampled RAM/VRAM,
 telemetry/health/latency,storage and sustained CPU pressure stops the run. This is
 not an OS quota or a guarantee for future load, larger contexts or concurrency.
 Only complete resource-safe runs with90% task/deployment and every guardrail pass
-qualify; otherwise no recommendation. Full12tasksÃ—2seeds,quick6tasks preliminary.
+qualify; otherwise no recommendation. Full12tasksÃƒâ€”2seeds,quick6tasks preliminary.
 
 Python's atomic JSON replace initially failed under concurrent Windows Go readers.
 Fixed bounded PermissionError retry, preserving atomic snapshots; meaningful
@@ -53,9 +53,9 @@ Verification so far:17 Python grading/resource/supervisor tests, full Go tests
 with real bundled SearXNG gate,vet,reachable govulncheck,production npm audit/build.
 Isolated native included-runtime QA covers owner/member/CSRF,duplicate rejection,
 shared progress,health failure stopping inference,ZIP,stop/unload and restart.
-Final desktop discovery/navigation/download-confirmation and390×844 visual check
+Final desktop discovery/navigation/download-confirmation and390Ã—844 visual check
 passed; no physical-phone functional claim. Public release/channel, protected synthetic
-20â†’21 update, PC2 install and full real benchmark are pending. Do not claim them
+20Ã¢â€ â€™21 update, PC2 install and full real benchmark are pending. Do not claim them
 from source implementation or previous research results.
 
 Workspace channel checkout fetched/fast-forwarded854920d containing new Voice/
@@ -68,3 +68,21 @@ for this independent app; any suite release requires signed Android publisher.
 
 Final accepted21 executable SHA256 3c3d1b7ed44fe14baa489394613e0f4f1a28f83dc8a7fce5c8b6fdbf5ff106a1.
 Native final isolated run uses synthetic transport; real PC2 model ranking is pending.
+
+## Follow-up22 before target installation
+
+21 is immutable/public at cb8d32e; channel be0a63d. Final concurrency review found
+maintenance can begin while model discovery is in flight.22 rechecks maintenance
+under the same application lock used by upgrade/start, with a deterministic
+regression. Full Go/SearXNG/vet and native included-runtime checks pass;17 Python
+checks and identical accepted frontend retained. Final22 EXE SHA256:
+11089d8805d3dbbb40191fe1317c098a97f48e57173aa72bb75882c07a132f6d.
+
+The normal isolated110 updater refused the current channel because Books113 needs
+a newer installer integration guard; no apply occurred. Fresh verified public113
+Setup installed MyAI14, not20: the managed-seed organization builder ignored the
+legacy MyAI pin. Correcting that shared builder with a verified MyAI namespace
+replacement and regression checks; do not claim legacy-pin changes alone update
+fresh bundles. New synthetic113/MyAI14 installation is the supported public
+upgrade baseline for22. PC2 remains offline publicly; existing Remote Desktop
+host is online but needs the user to enter its PIN there. Never request it in chat.
