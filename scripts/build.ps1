@@ -1,6 +1,12 @@
-param([string]$Go='go',[string]$Out='dist',[string]$Version='0.1.0-preview.14')
+param([string]$Go='go',[string]$Out='dist',[string]$Version='')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
+if(-not $Version){$Version=(Get-Content -Raw (Join-Path $root 'compatibility.json')|ConvertFrom-Json).version}
+# Canonical embedded text also supports existing Windows checkouts made before
+# the eol attributes were introduced. This touches repository sources only.
+$embedded=@('tools/agent-bench/bench.py','tools/agent-bench/summarize.py','tools/agent-bench/resources.py','tools/agent-bench/safe_bench.py')|ForEach-Object{Join-Path $root $_}
+$embedded+=Get-ChildItem -LiteralPath (Join-Path $root 'internal/app/skills') -Filter '*.md' -File|Select-Object -ExpandProperty FullName
+foreach($path in $embedded){$text=[IO.File]::ReadAllText($path);[IO.File]::WriteAllText($path,$text.Replace("`r`n","`n"),[Text.UTF8Encoding]::new($false))}
 npm --prefix (Join-Path $root 'web') ci --no-audit --no-fund
 if($LASTEXITCODE){throw 'Frontend dependencies failed'}
 npm --prefix (Join-Path $root 'web') run build

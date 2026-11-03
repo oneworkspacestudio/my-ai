@@ -1,2 +1,6 @@
 THIRD-PARTY-LICENSES.txt -whitespace
 internal/app/skills/*.md text eol=lf
+tools/agent-bench/bench.py text eol=lf
+tools/agent-bench/summarize.py text eol=lf
+tools/agent-bench/resources.py text eol=lf
+tools/agent-bench/safe_bench.py text eol=lf
