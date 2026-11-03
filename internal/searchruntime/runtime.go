@@ -34,6 +34,7 @@ type Connection struct{ URL, Token string }
 type Runtime struct {
 	mu         sync.Mutex
 	root, work string
+	binaries   string
 	connection Connection
 	cmd        *exec.Cmd
 	done       chan struct{}
@@ -79,6 +80,7 @@ func (r *Runtime) Connection(ctx context.Context) (Connection, error) {
 		return Connection{}, errors.New("The included SearXNG runtime could not be prepared. Reinstall My AI")
 	}
 	work, err := os.MkdirTemp(r.root, "process-")
+	r.binaries = binaries
 	if err != nil {
 		return Connection{}, err
 	}
@@ -142,6 +144,19 @@ func (r *Runtime) Connection(ctx context.Context) (Connection, error) {
 	}
 	stop(cmd)
 	return Connection{}, errors.New("The included SearXNG runtime could not start. Restart My AI or reinstall it")
+}
+
+// Python returns the already verified app-owned interpreter.
+func (r *Runtime) Python(ctx context.Context) (string, error) {
+	if _, err := r.Connection(ctx); err != nil {
+		return "", err
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.closed || r.binaries == "" {
+		return "", errors.New("Included runtime is unavailable")
+	}
+	return filepath.Join(r.binaries, "python.exe"), nil
 }
 
 func prepare(root string) (string, error) {

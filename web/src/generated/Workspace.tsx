@@ -308,8 +308,70 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
               )}
             </>
           )}
+          {data.modelDownloadView && (
+            <>
+              <Text>Download {data.confirmedPullTag} into this server’s shared Ollama library?</Text>
+              <Text>The download continues when you leave My AI and becomes available to every user on this server. Check the model licence, disk and memory requirements first.</Text>
+              <Row gap="sm">
+                <Button onClick={() => onAction("models")}>Back to models</Button>
+                <Button onClick={() => onAction("confirm-pull")} variant="primary">Confirm download</Button>
+              </Row>
+            </>
+          )}
+          {data.benchmarkView && (
+            <>
+              <Text>Find a model that can finish your tasks while One Workspace stays responsive. The server owner starts tests; everyone can view the latest result.</Text>
+              <Alert>{data.benchmarkStatus}</Alert>
+              <Text variant="muted">{data.benchmarkNotice}</Text>
+              <Text>{data.benchmarkReserve}</Text>
+              <Text>{data.benchmarkBaseline}</Text>
+              {data.isOwner ? (
+                <Stack>
+                  {data.benchmarkRunning ? (
+                    <Button onClick={() => onAction("benchmark-stop")}>Stop test</Button>
+                  ) : (
+                    <>
+                      <Select name="benchmarkProfile" options={data.benchmarkProfiles} label="Test depth" />
+                      <Card variant="disclosure">
+                        <Heading level={3}>Optional test settings</Heading>
+                        <Input name="benchmarkModels" label="Specific models, optional" placeholder="Automatic: suitable installed local models" />
+                        <Text variant="muted">Leave blank for automatic selection. Advanced users can enter up to8 installed tags separated by commas. Download new models in Models before starting.</Text>
+                        <Input name="benchmarkReserve" type="number" min={4} max={1024} label="Extra RAM reserve in GB, optional" placeholder="Automatic: at least4GB and25% of RAM" />
+                        <Text variant="muted">The measured free memory already reflects running Workspace apps. The reserve adds spare room for Windows, incoming requests and other work. Increasing it makes the test more conservative.</Text>
+                      </Card>
+                      <Button onClick={() => onAction("benchmark-start")} variant="primary">Start resource-safe test</Button>
+                    </>
+                  )}
+                </Stack>
+              ) : (
+                <Text>Ask the server owner to start a test.</Text>
+              )}
+              <Alert>{data.benchmarkRecommendation}</Alert>
+              {data.benchmarkModels.map((item, i) => (
+                <Card key={i} variant="model-card">
+                  <Stack gap="sm">
+                    <Text variant="author">{item.title}</Text>
+                    <Text>{item.score}</Text>
+                    <Text variant="muted">{item.detail}</Text>
+                    <Text>{item.reason}</Text>
+                    <Text variant="muted">{item.resourceLabel}</Text>
+                  </Stack>
+                </Card>
+              ))}
+              {data.benchmarkHasResults && (
+                <Button onClick={() => onAction("benchmark-export")}>Download full evidence</Button>
+              )}
+              <Button onClick={() => onAction("models")}>Back to models</Button>
+              <Text variant="muted">Results apply to the tested context and workload. A quick scan is preliminary. No benchmark can reserve resources against every future workload; rerun after changing hardware, active apps or model settings.</Text>
+            </>
+          )}
           {data.modelsView && (
             <>
+              <Card variant="sources">
+                <Heading level={3}>Find the best model for this PC</Heading>
+                <Text>Compare task reliability while keeping resources available for One Workspace. Tests run on this server and continue when you leave the page.</Text>
+                <Button onClick={() => onAction("benchmark")} icon="Gauge">Test this PC</Button>
+              </Card>
               <Row>
                 <Text>Models run on the machine hosting My AI.</Text>
                 <Spacer />

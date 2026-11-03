@@ -10,6 +10,11 @@ Choose a provider and model in each conversation. Models shows local models firs
 
 Tune local models with the sliders button beside a model. Adjust context size, reply length and sampling, or start with the low-memory preset. See [model settings](docs/MODEL-SETTINGS.md). Workspace app actions use [automatic MyAccounts sign-in](docs/WORKSPACE-SSO.md), with separate review before app changes.
 
+Use **Models → Test this PC** to compare installed models on your own hardware
+while leaving room for running Workspace apps. Tests continue in the background
+and show task success, memory headroom and server health. See the
+[model advisor](docs/MODEL-ADVISOR.md) for protection limits and the portable runner.
+
 In Code, choose your project above the message box or select New project. You can also start typing and send: My AI uses your private General project automatically. Your draft stays with you while choosing or creating a project.
 
 Ask My AI to use your Workspace apps: save a document in Drive, organise tasks and notes, inspect Git, or deploy a saved project with My Hosting. It discovers installed apps automatically and shows app changes for review. See [supported app actions](docs/workspace-apps.md) for the available connections.

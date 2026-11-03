@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "version": "0.1.0-preview.21",
+  "ownerDataAsFixture": false,
+  "syntheticTransportOnly": true,
+  "includedVerifiedPythonExecuted": true,
+  "backgroundSharedProgress": true,
+  "ownerOnlyStartStop": true,
+  "csrfChecked": true,
+  "duplicateRunRejected": true,
+  "managerAppFailureStopsInference": true,
+  "stoppedModelNotRecommended": true,
+  "evidenceZIP": true,
+  "explicitStopAndUnload": true,
+  "abruptRestartDoesNotResume": true,
+  "binarySHA256": "3c3d1b7ed44fe14baa489394613e0f4f1a28f83dc8a7fce5c8b6fdbf5ff106a1",
+  "pythonRegressionTestsPassed": 17,
+  "fullGoAndBundledSearchTestsPassed": true,
+  "goVetPassed": true,
+  "reachableGovulncheckPassed": true,
+  "npmProductionAuditPassed": true,
+  "productionAUITypeScriptViteBuildPassed": true,
+  "desktopAdvisorDiscoveryAndNavigationPassed": true,
+  "inAppDownloadConfirmationAndBackPassed": true,
+  "mobileVisualViewport": {
+    "width": 390,
+    "height": 844,
+    "horizontalDialogOverflow": false
+  },
+  "physicalPhoneTested": false,
+  "publicManagedUpgradePending": true,
+  "pc2InstallationAndBenchmarkPending": true
+}

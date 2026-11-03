@@ -218,7 +218,51 @@ Page Workspace variant=$theme
           Row variant=model-settings-footer
             Button action=llm-save variant=primary disabled=$tuneBusy "Save model settings"
             Button action=models disabled=$tuneBusy "Back to models"
+      If condition=$modelDownloadView
+        Text "Download $confirmedPullTag into this server’s shared Ollama library?"
+        Text "The download continues when you leave My AI and becomes available to every user on this server. Check the model licence, disk and memory requirements first."
+        Row gap=sm
+          Button action=models "Back to models"
+          Button action=confirm-pull variant=primary "Confirm download"
+      If condition=$benchmarkView
+        Text "Find a model that can finish your tasks while One Workspace stays responsive. The server owner starts tests; everyone can view the latest result."
+        Alert "$benchmarkStatus"
+        Text variant=muted "$benchmarkNotice"
+        Text "$benchmarkReserve"
+        Text "$benchmarkBaseline"
+        If condition=$isOwner
+          Stack
+            If condition=$benchmarkRunning
+              Button action=benchmark-stop "Stop test"
+            Else
+              Select name=benchmarkProfile options=$benchmarkProfiles label="Test depth"
+              Card variant=disclosure
+                Heading level=3 "Optional test settings"
+                Input name=benchmarkModels label="Specific models, optional" placeholder="Automatic: suitable installed local models"
+                Text variant=muted "Leave blank for automatic selection. Advanced users can enter up to8 installed tags separated by commas. Download new models in Models before starting."
+                Input name=benchmarkReserve type=number min=4 max=1024 label="Extra RAM reserve in GB, optional" placeholder="Automatic: at least4GB and25% of RAM"
+                Text variant=muted "The measured free memory already reflects running Workspace apps. The reserve adds spare room for Windows, incoming requests and other work. Increasing it makes the test more conservative."
+              Button action=benchmark-start variant=primary "Start resource-safe test"
+        Else
+          Text "Ask the server owner to start a test."
+        Alert "$benchmarkRecommendation"
+        For each=$benchmarkModels
+          Card variant=model-card
+            Stack gap=sm
+              Text variant=author "$item.title"
+              Text "$item.score"
+              Text variant=muted "$item.detail"
+              Text "$item.reason"
+              Text variant=muted "$item.resourceLabel"
+        If condition=$benchmarkHasResults
+          Button action=benchmark-export "Download full evidence"
+        Button action=models "Back to models"
+        Text variant=muted "Results apply to the tested context and workload. A quick scan is preliminary. No benchmark can reserve resources against every future workload; rerun after changing hardware, active apps or model settings."
       If condition=$modelsView
+        Card variant=sources
+          Heading level=3 "Find the best model for this PC"
+          Text "Compare task reliability while keeping resources available for One Workspace. Tests run on this server and continue when you leave the page."
+          Button action=benchmark icon=Gauge "Test this PC"
         Row
           Text "Models run on the machine hosting My AI."
           Spacer

@@ -321,6 +321,10 @@ func (a *App) turn(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 409, "Ollama is upgrading; retry when the upgrade finishes")
 		return
 	}
+	if !task.PublishOnly && p.ID == "ollama" {
+		a.cancelBenchmark("Paused for a normal My AI request. Start a new test when the server is quiet")
+		a.waitBenchmark()
+	}
 	if !task.PublishOnly && !modelRE.MatchString(s.Model) {
 		a.mu.Unlock()
 		apphost.Problem(w, 400, "Choose a model first")
@@ -510,6 +514,8 @@ func (a *App) pull(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 400, message)
 		return
 	}
+	a.cancelBenchmark("Stopped for a model library download; rerun after downloads finish")
+	a.waitBenchmark()
 	job, e := a.downloads.add(model)
 	if e != nil {
 		apphost.Problem(w, 503, "The server could not persist the download job")
@@ -534,6 +540,8 @@ func (a *App) deleteModel(w http.ResponseWriter, r *http.Request) {
 		apphost.Problem(w, 400, "Confirm model removal first")
 		return
 	}
+	a.cancelBenchmark("Stopped for a confirmed model removal")
+	a.waitBenchmark()
 	a.mu.Lock()
 	busy := len(a.running) > 0 || a.downloads.busy()
 	a.mu.Unlock()

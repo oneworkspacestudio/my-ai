@@ -7,11 +7,13 @@ import argparse, ast, datetime as dt, hashlib, json, operator, os, platform, re
 import statistics, subprocess, time, urllib.request
 from pathlib import Path, PurePosixPath
 
-VERSION = '1.1.0'
+VERSION = '1.2.0'
+GENERATION_OPTIONS = {}
+COOLDOWN = 0.0
 
 def hardware():
     """Observe the execution host, without hostname, accounts or private paths."""
-    try:gpu=subprocess.run(['nvidia-smi','--query-gpu=name,memory.total,driver_version','--format=csv,noheader'],capture_output=True,text=True,timeout=15).stdout.strip()
+    try:gpu=subprocess.run(['nvidia-smi','--query-gpu=name,memory.total,driver_version','--format=csv,noheader'],capture_output=True,text=True,timeout=15,**({'creationflags':0x08000000} if os.name=='nt' else {})).stdout.strip()
     except (OSError,subprocess.TimeoutExpired):gpu='GPU details unavailable'
     ram=None
     try:
@@ -204,7 +206,8 @@ def sample(base,model,case,seed,now,context):
         for round_no in range(16):
             remaining=180-(time.monotonic()-start)
             if remaining<=0:raise TimeoutError('180 second sample budget')
-            r=api(base,'/api/chat',{'model':model,'messages':msgs,'tools':TOOLS,'stream':False,'think':False,'keep_alive':'3m','options':{'num_ctx':context,'num_predict':768,'temperature':0.2,'seed':seed}},timeout=min(75,remaining))
+            if COOLDOWN:time.sleep(COOLDOWN)
+            r=api(base,'/api/chat',{'model':model,'messages':msgs,'tools':TOOLS,'stream':False,'think':False,'keep_alive':'3m','options':{'num_ctx':context,'num_predict':768,'temperature':0.2,'seed':seed,**GENERATION_OPTIONS}},timeout=min(75,remaining))
             if r.get('error'):raise RuntimeError(r['error'])
             m=r['message'];m.pop('thinking',None);msgs.append(m);transcript.append(m)
             metrics.append({k:r.get(k,0) for k in ['total_duration','load_duration','prompt_eval_count','prompt_eval_duration','eval_count','eval_duration']})
@@ -225,7 +228,10 @@ def sample(base,model,case,seed,now,context):
     return result
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--models',nargs='+',required=True);p.add_argument('--out',type=Path,required=True);p.add_argument('--base',default='http://127.0.0.1:11434');p.add_argument('--seeds',nargs='+',type=int,default=[17,29]);p.add_argument('--cases',nargs='+',default=CASES,choices=CASES);p.add_argument('--context',type=int,default=8192);args=p.parse_args()
+    global GENERATION_OPTIONS,COOLDOWN
+    p=argparse.ArgumentParser();p.add_argument('--models',nargs='+',required=True);p.add_argument('--out',type=Path,required=True);p.add_argument('--base',default='http://127.0.0.1:11434');p.add_argument('--seeds',nargs='+',type=int,default=[17,29]);p.add_argument('--cases',nargs='+',default=CASES,choices=CASES);p.add_argument('--context',type=int,default=8192);p.add_argument('--threads',type=int,default=0);p.add_argument('--gpu-layers',type=int,default=-1);p.add_argument('--cooldown',type=float,default=0);args=p.parse_args()
+    if args.threads:GENERATION_OPTIONS={'num_thread':args.threads,'num_gpu':args.gpu_layers,'num_batch':32}
+    COOLDOWN=max(0,args.cooldown)
     args.out.mkdir(parents=True,exist_ok=True);path=args.out/'samples.jsonl'
     old=[json.loads(l) for l in path.read_text(encoding='utf-8').splitlines()] if path.exists() else []
     done={(r['model'],r['case'],r['seed']) for r in old}
@@ -239,10 +245,11 @@ def main():
         if model not in tags:print('SKIP not installed '+model,flush=True);continue
         tag=tags[model];show=api(args.base,'/api/show',{'model':model})
         meta['models'][model]={k:tag.get(k) for k in ['digest','size','details']};meta['models'][model]['capabilities']=show.get('capabilities',[])
+        meta['models'][model]['resourceOptions']=GENERATION_OPTIONS;meta['models'][model]['cooldownSeconds']=COOLDOWN
         metadata_path.write_text(json.dumps(meta,indent=2)+'\n',encoding='utf-8')
         warm=time.monotonic()
         try:
-            api(args.base,'/api/chat',{'model':model,'messages':[{'role':'user','content':'Reply ready.'}],'think':False,'keep_alive':'3m','stream':False,'options':{'num_ctx':args.context,'num_predict':4}},timeout=90)
+            api(args.base,'/api/chat',{'model':model,'messages':[{'role':'user','content':'Reply ready.'}],'think':False,'keep_alive':'3m','stream':False,'options':{'num_ctx':args.context,'num_predict':4,**GENERATION_OPTIONS}},timeout=90)
             meta['models'][model]['warmupError']=None
         except Exception as e:
             meta['models'][model]['warmupError']=str(e);print('Warmup '+model+': '+str(e),flush=True)

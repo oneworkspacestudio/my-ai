@@ -7,14 +7,16 @@ state machine. App-owned native deployment in My AI20 is intentionally a
 separate integration layer and is not scored by this model benchmark.
 
 ```powershell
-python -m unittest -v test_bench
+python -m unittest -v test_bench test_resources test_safe_bench
 python pull.py qwen3.5:9b ministral-3:3b granite4:3b
-python bench.py --out results --models qwen3.5:4b qwen3.5:9b ministral-3:3b granite4:3b
+python safe_bench.py --out results --models qwen3.5:4b qwen3.5:9b ministral-3:3b granite4:3b
 python summarize.py results
 python verify_results.py results
 ```
 
-Resume with the same command: samples are keyed by model/case/seed. Use a new
+Use a fresh directory for every guarded run. The low-level research bench.py
+can resume keyed model/case/seed samples, but does not provide the supervisor
+resource guard. Use a new
 output directory if model bytes, benchmark code, budgets, prompt or settings
 change. Never merge unlike configurations. `run.json` records exact digests,
 size/quantization, inference version, parameters and system-independent hardware.
@@ -43,8 +45,9 @@ python package_report.py results published
 Only synthetic data, measured metadata and benchmark source enter the published
 directory. No accounts, cookies, API keys, native app private paths or owner
 conversations are used. The final directory can be committed to My Git and
-deployed as a native static site through My Hosting. This tool is not a new
-managed Workspace app and does not change My AI preferences or executable.
+deployed as a native static site through My Hosting. The guarded runner is also included in My AI21 under Models → Test this PC.
+It does not change model preferences. See docs/MODEL-ADVISOR.md for resource
+reserves, platform support and the limits of sampled protection.
 
 The benchmark measures the model plus its installed Ollama parser. The time
 tool is a fixed run-start UTC snapshot for replay, and all other tools are

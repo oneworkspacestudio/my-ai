@@ -17,6 +17,7 @@ import (
 )
 
 type App struct {
+	benchmark                *modelBenchmark
 	contextProbe             func(context.Context, Provider, string) (modelContextFacts, hostMemory)
 	upgradeClient            *http.Client
 	upgradeInstall           func(context.Context, string) error
@@ -103,6 +104,13 @@ func New(h *apphost.Host) (*App, error) {
 	}
 	a := &App{ollamaUpdate: &ollamaUpgrade{Phase: "Ready to check for an Ollama upgrade"}, upgradeContext: context.Background(), downloads: q, H: h, client: &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, projectTurns: map[string]bool{}, running: map[string]context.CancelFunc{}, agents: map[string]*Agent{}}
 	h.Mux.HandleFunc("GET /api/ollama/upgrade", h.Owner(a.ollamaUpgradeStatus))
+	if e = a.initBenchmark(); e != nil {
+		return nil, e
+	}
+	h.Mux.HandleFunc("GET /api/model-benchmark", h.Require(a.benchmarkStatus))
+	h.Mux.HandleFunc("POST /api/model-benchmark", h.Owner(a.benchmarkStart))
+	h.Mux.HandleFunc("POST /api/model-benchmark/stop", h.Owner(a.benchmarkStop))
+	h.Mux.HandleFunc("GET /api/model-benchmark/export", h.Require(a.benchmarkExport))
 	h.Mux.HandleFunc("POST /api/ollama/upgrade", h.Owner(a.ollamaUpgradeStart))
 	h.Mux.HandleFunc("GET /api/workspace", h.Require(a.workspaceInfo))
 	h.Mux.HandleFunc("GET /api/model-settings", h.Require(a.localModelSettings))
@@ -126,6 +134,8 @@ func (a *App) Run(ctx context.Context) error {
 	done := make(chan struct{})
 	go func() { a.downloads.run(ctx); close(done) }()
 	<-ctx.Done()
+	a.cancelBenchmark("Server stopped; run again when ready")
+	a.waitBenchmark()
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	for _, c := range a.running {

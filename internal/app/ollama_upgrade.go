@@ -120,6 +120,8 @@ func (a *App) ollamaUpgradeStart(w http.ResponseWriter, r *http.Request) {
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	a.cancelBenchmark("Stopped for a confirmed Ollama upgrade")
+	a.waitBenchmark()
 	active := len(a.running) > 0
 	a.downloads.mu.Lock()
 	downloading := a.downloads.active != ""

@@ -41,3 +41,10 @@ My AI distinguishes Ollama model-format/version failures, insufficient memory, m
 For newer community model formats, update Ollama on the server using its official installer, then retry the same downloaded model. Existing models stay in place. Bonsai2 testing targets official Ollama 0.40.11; a basic isolated CPU test also passed on 0.40.7. A successful pull on an older runtime does not establish inference compatibility.
 
 Preview7 native checks: included patched Python3.13.18 and SearXNG return live documentation sources; anonymous runtime access is refused. Official Codex discovers all four public MCP tools in an isolated home without a provider key/global login. Chat and managed-project forced-search/privacy/failure regression tests pass. Discovery is not a full Codex model or shell turn.
+
+## Model advisor
+
+My AI21 adds Models → Test this PC with an included runtime, owner-controlled
+background tests, synthetic file/Git/Hosting tasks and whole-machine resource
+reserves. See [model advisor](MODEL-ADVISOR.md). This is a sampled guard, not an
+OS quota or a guarantee for larger contexts and concurrent workloads.

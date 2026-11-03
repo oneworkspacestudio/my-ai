@@ -25,7 +25,7 @@ app.update(version=version, source='https://github.com/' + repo + '/releases/tag
 mapping = {'myai': ('MyAI.exe', 'MyAI.exe'), 'myai-contract': ('docs/MyAI/compatibility.json', 'compatibility.json')}
 for name in ['LICENSE', 'NOTICE', 'THIRD-PARTY-LICENSES.txt']:
     mapping['myai-' + name] = ('licenses/MyAI-' + name, name)
-for name in ['SETUP.md', 'SUPPORT.md', 'ADR-001-architecture.md', 'SECURITY-CHECKS.md']:
+for name in ['SETUP.md', 'SUPPORT.md', 'ADR-001-architecture.md', 'SECURITY-CHECKS.md', 'MODEL-ADVISOR.md']:
     mapping['myai-doc-' + name] = ('docs/MyAI/' + name, 'docs/' + name)
 packages = {}
 with zipfile.ZipFile(out / asset) as archive:
@@ -37,4 +37,4 @@ with zipfile.ZipFile(out / asset) as archive:
         packages[key] = {'file': target, 'size': len(payload), 'sha256': hashlib.sha256(payload).hexdigest(), 'asset': asset, 'member': archive_member}
 manifest = {'schema': 2, 'integration': 3, 'repository': repo, 'tag': tag, 'minimumManager': json.loads((out / 'package/compatibility.json').read_text(encoding='utf-8'))['minimumWorkspaceVersion'], 'apps': [app], 'packages': packages}
 (out / 'workspace-update.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
-print('Verified and emitted managed-update metadata for all9 My AI payloads')
+print('Verified and emitted managed-update metadata for all'+str(len(packages))+' My AI payloads')
