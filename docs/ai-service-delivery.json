@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "appSourceCommit": "8423bf7f9bec83e0e80077f6f91862c7eaff6ca5",
+  "appRelease": "https://github.com/oneworkspacestudio/my-ai/releases/tag/v0.1.0-preview.25",
+  "appReleaseAssetsVerified": 10,
+  "suiteSourceCommit": "e59bb1103ba54a0efda139a10cabed397bf50cda",
+  "suiteRelease": "https://github.com/oneworkspacestudio/one-workspace/releases/tag/v0.3.0-preview.118",
+  "suiteAssetsVerified": 543,
+  "signedAndroidCompanion": "0.1.0-preview.15",
+  "anonymousInstallerAndPublicChannelVerified": true,
+  "normalCompleteCatalog": {
+    "apps": 41,
+    "packages": 525
+  },
+  "managedAcceptance": {
+    "schema": 1,
+    "passed": true,
+    "installerSHA256": "0269e3a38b63a6b2b4ff83f8bab1563153e2a6deb657d591323852a5d7e29355",
+    "bundleSHA256": "32d54d277083e504968138d3601635d9aaeaf0d76e0d04f1356a1daf7a7da82d",
+    "upgradeFrom": "0.3.0-preview.117",
+    "checks": [
+      {
+        "label": "setup-selection",
+        "aiServiceOfferedByDefault": true
+      },
+      {
+        "label": "fresh",
+        "workspace": "0.3.0-preview.118",
+        "service": "0.1.0-preview.25",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      },
+      {
+        "label": "restart",
+        "workspace": "0.3.0-preview.118",
+        "service": "0.1.0-preview.25",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      },
+      {
+        "label": "independent-update",
+        "workspace": "0.3.0-preview.118",
+        "service": "0.1.0-preview.26-test",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      },
+      {
+        "label": "rollback",
+        "workspace": "0.3.0-preview.118",
+        "service": "0.1.0-preview.25",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      },
+      {
+        "label": "omitted",
+        "runtimeNamespaceOmitted": true,
+        "requiredLicencesRetained": true
+      },
+      {
+        "label": "upgrade-default-discovery",
+        "workspace": "0.3.0-preview.118",
+        "service": "0.1.0-preview.25",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      }
+    ],
+    "managedMyAILocalInferenceUsesService": true,
+    "modelCalls": 1,
+    "oldControllerRejectsBeforeMutation": true,
+    "ownerDataUsed": false,
+    "physicalPhone": false,
+    "reboot": false
+  },
+  "primaryInstallation": {
+    "schema": 1,
+    "target": "primary",
+    "aiServiceActivation": "Owner control pending",
+    "workspace": "0.3.0-preview.118",
+    "aiService": "0.1.0-preview.25",
+    "myAI": "0.1.0-preview.25",
+    "transaction": "complete",
+    "verifiedCoupledAIPayloads": 14,
+    "aiCredentialAndPreferenceFilesPreserved": 0,
+    "existingOllamaInventoryRetained": true,
+    "managerMatchesPublicRelease": true,
+    "unselectedAppsAndPackagesPreserved": true,
+    "identitiesAndExistingCredentialsPreserved": true,
+    "locationsPreserved": true,
+    "verifiedRecoveryRetained": true,
+    "cleanupFinished": "2026-11-06T10:01:50.429587Z",
+    "runningAppCount": 40,
+    "baselineFailures": [],
+    "newFailures": [],
+    "finished": "2026-11-06T10:02:02.7306388Z"
+  },
+  "servedAssetVerification": {
+    "schema": 1,
+    "workspace": "0.3.0-preview.118",
+    "aiServiceVersion": "0.1.0-preview.25",
+    "servedFrontendAssetsMatchTestedRelease": true,
+    "assets": [
+      {
+        "app": "myai",
+        "path": "./assets/index-DUWkRglf.js",
+        "sha256": "bec5ceabcc6232b9016da67839753115360687db2c3ebc6b900fd1c9bb64eadd",
+        "bytes": 1512130
+      },
+      {
+        "app": "myai",
+        "path": "./assets/index-O2pV00An.css",
+        "sha256": "15c257fa4d504ca3c1e5240d5702b581307c8fca361ccc9730558082a5528eb6",
+        "bytes": 51747
+      },
+      {
+        "app": "myai",
+        "path": "./logo.svg",
+        "sha256": "e6c0765abe24a1bcf4d2d35f6461bbc42e7bf6969ede67c0cbe4bba7d3cdecc4",
+        "bytes": 914
+      },
+      {
+        "app": "aiservice",
+        "path": "./assets/index-DUWkRglf.js",
+        "sha256": "bec5ceabcc6232b9016da67839753115360687db2c3ebc6b900fd1c9bb64eadd",
+        "bytes": 1512130
+      },
+      {
+        "app": "aiservice",
+        "path": "./assets/index-O2pV00An.css",
+        "sha256": "15c257fa4d504ca3c1e5240d5702b581307c8fca361ccc9730558082a5528eb6",
+        "bytes": 51747
+      },
+      {
+        "app": "aiservice",
+        "path": "./ai-service.svg",
+        "sha256": "3c0f671e15b488194f45ce1a8f66aed2351b075acd7b23ffcf6d46f5432d4e81",
+        "bytes": 443
+      }
+    ],
+    "workspaceBrandingSHA256": "3c0f671e15b488194f45ce1a8f66aed2351b075acd7b23ffcf6d46f5432d4e81",
+    "anonymousPrivateAPIsDenied": true,
+    "publicProxyPrivateAPIDenied": true,
+    "ownerActivationRequired": true,
+    "model": "",
+    "ownerInferenceUsedAsFixture": false
+  },
+  "secondPCInstalled": false,
+  "ownerDataUsedAsFixture": false,
+  "activationNote": "Owner must choose and enable a model. Browser use is disabled in Work settings; no authorization bypass or direct settings mutation was used."
+}
