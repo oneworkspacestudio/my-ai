@@ -22,9 +22,12 @@ repo = 'oneworkspacestudio/my-ai'
 asset = 'my-ai-' + version + '-windows-amd64.zip'
 app = json.loads((root / 'integration/workspace-app.json').read_text(encoding='utf-8'))
 app.update(version=version, source='https://github.com/' + repo + '/releases/tag/' + tag)
-mapping = {'myai': ('MyAI.exe', 'MyAI.exe'), 'myai-contract': ('docs/MyAI/compatibility.json', 'compatibility.json')}
+service=json.loads((root/'integration/aiservice-app.json').read_text(encoding='utf-8'));service.update(version=version,source='https://github.com/'+repo+'/releases/tag/'+tag)
+mapping = {'aiservice':('AIService.exe','AIService.exe'),'aiservice-contract':('docs/AIService/compatibility.json','aiservice-compatibility.json'),'myai': ('MyAI.exe', 'MyAI.exe'), 'myai-contract': ('docs/MyAI/compatibility.json', 'compatibility.json')}
 for name in ['LICENSE', 'NOTICE', 'THIRD-PARTY-LICENSES.txt']:
     mapping['myai-' + name] = ('licenses/MyAI-' + name, name)
+for name in ['LICENSE','NOTICE','THIRD-PARTY-LICENSES.txt']:
+    mapping['aiservice-'+name]=('licenses/AIService-'+name,name)
 for name in ['SETUP.md', 'SUPPORT.md', 'ADR-001-architecture.md', 'SECURITY-CHECKS.md']:
     mapping['myai-doc-' + name] = ('docs/MyAI/' + name, 'docs/' + name)
 packages = {}
@@ -35,6 +38,6 @@ with zipfile.ZipFile(out / asset) as archive:
         archive_member = 'MyAI/' + member
         assert archive.read(archive_member) == payload, archive_member
         packages[key] = {'file': target, 'size': len(payload), 'sha256': hashlib.sha256(payload).hexdigest(), 'asset': asset, 'member': archive_member}
-manifest = {'schema': 2, 'integration': 3, 'repository': repo, 'tag': tag, 'minimumManager': json.loads((out / 'package/compatibility.json').read_text(encoding='utf-8'))['minimumWorkspaceVersion'], 'apps': [app], 'packages': packages}
+manifest = {'schema': 2, 'integration': 3, 'repository': repo, 'tag': tag, 'minimumManager': json.loads((out / 'package/compatibility.json').read_text(encoding='utf-8'))['minimumWorkspaceVersion'], 'apps': [app,service], 'packages': packages}
 (out / 'workspace-update.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
 print('Verified and emitted managed-update metadata for all'+str(len(packages))+' My AI payloads')

@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "aiService": {
+    "schema": 1,
+    "passed": true,
+    "binarySHA256": "c5043774b85e4502cb61a6582f9e9c7c5c26b20d73d6ad7df3ea0aedd20c6d2f",
+    "checks": [
+      "native fresh disabled",
+      "authentication, owner and CSRF boundaries",
+      "installed model selection and residency",
+      "multiple delegated users share one serial queue",
+      "per-app credentials, multiple apps and revocation",
+      "exact native logout cancels queued browser inference",
+      "restart preserves owner model and activation",
+      "turn off unloads selected model and rejects inference"
+    ],
+    "maxConcurrentModelRequests": 1,
+    "ownerUsedAsFixture": false,
+    "realModelAccuracyTested": false
+  },
+  "myAI": {
+    "schema": 1,
+    "version": "0.1.0-preview.25",
+    "binarySHA256": "66511d0740931a9c72398e4ba73872305ea7daa2e49b7217631444f6678c9cb4",
+    "syntheticOnly": true,
+    "ownerDataAsFixture": false,
+    "noModelInference": true,
+    "freshAndRestartUpgrade": {
+      "old24": {
+        "version": "0.1.0-preview.24",
+        "profileSaved": true
+      },
+      "upgrade25": {
+        "version": "0.1.0-preview.25",
+        "nativeLogin": true,
+        "branchRoute": true,
+        "originalPreserved": true,
+        "csrf": true,
+        "revisionConflict": true,
+        "crossAccountDenied": true,
+        "embeddedChatAssets": true
+      },
+      "fresh25": {
+        "version": "0.1.0-preview.25",
+        "nativeLogin": true,
+        "branchRoute": true,
+        "originalPreserved": true,
+        "csrf": true,
+        "revisionConflict": true,
+        "crossAccountDenied": true,
+        "embeddedChatAssets": true
+      }
+    },
+    "managedSuiteFreshSetupRetested": false
+  },
+  "browserDesktopAnd390pxPassed": true,
+  "fullGoWithIncludedSearXNGPassed": true,
+  "goVetPassed": true,
+  "npmProductionAudit": 0,
+  "govulncheckReachable": 0,
+  "managedLifecyclePending": true,
+  "physicalPhoneTested": false,
+  "rebootTested": false
+}

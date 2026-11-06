@@ -428,6 +428,9 @@ func (a *App) chatWithTools(ctx context.Context, p Provider, s *Session, send wr
 	return answer.String(), errors.New("Tool round limit reached; continue with a narrower request")
 }
 func (a *App) generate(ctx context.Context, p Provider, model string, messages []any, scope toolScope, useTools bool, send writer) (g generation, err error) {
+	if p.User == "" {
+		p.User = scope.UID
+	}
 	body := map[string]any{"model": model, "stream": true}
 	path := "/chat/completions"
 	if p.ID == "openai" {

@@ -24,3 +24,6 @@ Chat includes real clock/timezone, arithmetic, public web search/page reading, p
 Just ask your question. My AI plans public searches, reads source pages and refines weak results before answering with source links. It checks quotations and citations before displaying researched answers. Every turn receives server time and your timezone, so relative dates refer to the requested day; undated event questions ask for the latest relevant result. You can follow up normally, ask it to search, or say “don’t search the web.” Search engines and source sites can fail or omit information; My AI reports uncertainty rather than treating missing results as proof that an event did not happen.
 
 This is an evaluation preview. Read the [setup guide](docs/SETUP.md), [feature support and acceptance](docs/SUPPORT.md) and [architecture decision](docs/ADR-001-architecture.md). For help, [open an issue](https://github.com/oneworkspacestudio/my-ai/issues).
+
+
+AI Service is My AI’s companion app for sharing a local model. Choose an installed model, keep it ready in memory, and serve queued requests from multiple people and apps. Workspace connects My AI automatically. The owner enables the service after installation; host Ollama is required. See [setup and API guidance](docs/SUPPORT.md#ai-service-my-ai25).

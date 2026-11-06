@@ -1,0 +1,28 @@
+{
+  "id": "aiservice",
+  "name": "AI Service",
+  "description": "Keep a local AI model ready and queue private requests from users and apps",
+  "version": "VERSION",
+  "kind": "process",
+  "package": "aiservice",
+  "executable": "AIService.exe",
+  "port": 9042,
+  "route": "/aiservice",
+  "stripPrefix": true,
+  "health": "/healthz",
+  "depends": [
+    "accounts"
+  ],
+  "oidc": true,
+  "callback": "/aiservice/auth/callback",
+  "args": [
+    "--data",
+    "${DATA}/aiservice",
+    "--listen",
+    "127.0.0.1:${PORT}",
+    "--origin",
+    "${ORIGIN}/aiservice",
+    "--no-browser"
+  ],
+  "source": "SOURCE"
+}

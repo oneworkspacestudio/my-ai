@@ -4,6 +4,7 @@ Page Workspace variant=$theme
     For each=$rail
       Button action=navigate item=$item.action icon=$item.icon label=$item.label variant=$item.variant
     Spacer
+    Link href=$aiServiceURL "AI Service"
     Button action=theme icon=SunMoon label="Change theme" variant=rail
     Button action=account icon=CircleUserRound label="Your account" variant=rail
   Stack variant=sidebar
@@ -219,6 +220,7 @@ Page Workspace variant=$theme
                   Input name=$item.name label=$item.label type=number min=$item.min max=$item.max step=$item.step placeholder="Automatic" disabled=$tuneBusy
                   Text variant=muted "$item.help"
             Stack variant=model-setting-field
+              Text variant=muted "AI Service controls memory retention when connected. Individual retention settings apply to standalone Ollama."
               Text variant=field-label "Keep model in memory"
               Select name=llm_keepAlive options=$tuneMemoryOptions label="Keep model in memory" disabled=$tuneBusy
               Text variant=muted "Unloading frees memory after the reply but makes the next request slower."

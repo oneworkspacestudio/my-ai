@@ -9,6 +9,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
           <Button key={i} onClick={() => onAction("navigate")} item={item.action} icon={item.icon} label={item.label} variant={item.variant} />
         ))}
         <Spacer />
+        <Link href={data.aiServiceURL}>AI Service</Link>
         <Button onClick={() => onAction("theme")} icon="SunMoon" label="Change theme" variant="rail" />
         <Button onClick={() => onAction("account")} icon="CircleUserRound" label="Your account" variant="rail" />
       </Stack>
@@ -304,6 +305,7 @@ export function Workspace({ data, onAction }: { data: any; onAction: (name: stri
                       ))}
                     </Grid>
                     <Stack variant="model-setting-field">
+                      <Text variant="muted">AI Service controls memory retention when connected. Individual retention settings apply to standalone Ollama.</Text>
                       <Text variant="field-label">Keep model in memory</Text>
                       <Select name="llm_keepAlive" options={data.tuneMemoryOptions} label="Keep model in memory" disabled={data.tuneBusy} />
                       <Text variant="muted">Unloading frees memory after the reply but makes the next request slower.</Text>

@@ -1,0 +1,57 @@
+Page AIService variant=service
+  Row
+    Image src="./ai-service.svg" width=48 height=48 alt="AI Service"
+    Stack
+      Text variant=eyebrow "ONE WORKSPACE"
+      Heading level=1 "AI Service"
+    Spacer
+    Link href=$workspaceURL variant=apps "Apps"
+    Link href=$myaiURL "My AI"
+    Button action=logout "Sign out"
+  Text "One local model. A shared queue for your people and apps."
+  If condition=$message
+    Alert "$message"
+  Grid
+    Card
+      Text variant=eyebrow "MODEL"
+      Heading level=2 "$phase"
+      Text "$modelLabel"
+      Text "$dependency"
+    Card
+      Text variant=eyebrow "REQUESTS"
+      Heading level=2 "$queueLabel"
+      Text "$activeLabel"
+      Text "$finishedLabel"
+  If condition=$owner
+    Card
+      Heading level=2 "Keep a model ready"
+      Text "Choose a model already installed in Ollama. Enabling keeps it in memory until you turn the service off."
+      Text "Shared inference uses this model for every user and app. Turn off to cancel active and waiting requests and release the model."
+      Text "Active model"
+      Select name=model label="Active model" options=$modelOptions disabled=$busy
+      Row variant=service-actions
+        Button action=enable variant=primary disabled=$busy "Save and turn on"
+        Button action=disable disabled=$busy "Turn off and unload"
+        Button action=refresh disabled=$busy "Refresh models"
+  Card
+    Heading level=2 "Shared request queue"
+    Text "$queuePolicy"
+    Text "Up to 64 waiting requests and 8 per app/user. Replies stream as they arrive. Prompts and replies are never saved by AI Service."
+    Text "In My AI, choose the active local model. My AI sends local chat and coding requests through this queue automatically. Cloud providers keep their existing settings."
+  If condition=$owner
+    Card
+      Heading level=2 "Connected apps"
+      Text "$managedLabel"
+      Text "Other server apps can receive a separate credential. Copy it once into that app's private settings. Never put it in a browser or a public file."
+      Input name=clientID label="App ID" placeholder="App ID, for example my-workflow"
+      Button action=createClient disabled=$busy "Create app credential"
+      If condition=$newKey
+        Text variant=pre "$newKey"
+        Button action=copyKey "Copy credential"
+        Button action=dismissKey "Hide credential"
+      For each=$clients
+        Row
+          Text "$item.id"
+          Spacer
+          Button action=revoke item=$item disabled=$busy "Revoke"
+      Text "Connect server apps using the API described in the AI Service setup guide. Credentials can be revoked here at any time."

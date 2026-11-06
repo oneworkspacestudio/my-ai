@@ -16,6 +16,7 @@ import (
 )
 
 type Provider struct {
+	User       string              `json:"-"`
 	Context    *ContextBudget      `json:"-"`
 	Generation *LocalModelSettings `json:"-"`
 	ID         string              `json:"id"`
@@ -117,6 +118,7 @@ func (a *App) provider(uid, id string) (Provider, error) {
 			if !allowedEndpoint(p) {
 				return p, errors.New("provider URL is not approved")
 			}
+			p.User = uid
 			return p, nil
 		}
 	}
@@ -131,13 +133,34 @@ func request(ctx context.Context, p Provider, method, path string, body any) (*h
 		}
 		in = bytes.NewReader(b)
 	}
-	req, e := http.NewRequestWithContext(ctx, method, p.Base+path, in)
+	target := p.Base + path
+	shared := p.ID == "ollama" && os.Getenv("MYAI_SERVICE_URL") != "" && (path == "/api/chat" || path == "/api/tags" || path == "/api/show" || path == "/api/ps" || path == "/api/version")
+	if shared {
+		endpoint := strings.TrimRight(os.Getenv("MYAI_SERVICE_URL"), "/")
+		u, err := url.Parse(endpoint)
+		if err != nil || u.Scheme != "http" || u.Hostname() != "127.0.0.1" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Path != "" {
+			return nil, errors.New("Invalid managed AI Service endpoint")
+		}
+		if path == "/api/chat" {
+			target = endpoint + "/_internal/chat"
+		} else if path == "/api/tags" {
+			target = endpoint + "/_internal/models"
+		} else {
+			target = endpoint + "/_internal/" + strings.TrimPrefix(path, "/api/")
+		}
+	}
+	req, e := http.NewRequestWithContext(ctx, method, target, in)
 	if e != nil {
 		return nil, e
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if p.Key != "" {
 		req.Header.Set("Authorization", "Bearer "+p.Key)
+	}
+	if shared {
+		req.Header.Set("Authorization", "Bearer "+os.Getenv("MYAI_SERVICE_TOKEN"))
+		req.Header.Set("X-AI-App", "myai")
+		req.Header.Set("X-AI-User", p.User)
 	}
 	client := http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	resp, e := client.Do(req)
@@ -146,6 +169,9 @@ func request(ctx context.Context, p Provider, method, path string, body any) (*h
 			return nil, errors.New("Generation stopped or timed out")
 		}
 		if p.ID == "ollama" {
+			if shared {
+				return nil, errors.New("AI Service is unavailable. Open AI Service from Apps and check that it is running")
+			}
 			return nil, errors.New("The local Ollama server is unavailable. Ask the server owner to start Ollama, then try again")
 		}
 		return nil, errors.New("The AI provider is unavailable. Try again shortly")
@@ -153,6 +179,14 @@ func request(ctx context.Context, p Provider, method, path string, body any) (*h
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		resp.Body.Close()
+		if shared {
+			var problem struct {
+				Error string `json:"error"`
+			}
+			if json.Unmarshal(raw, &problem) == nil && problem.Error != "" {
+				return nil, errors.New(problem.Error)
+			}
+		}
 		return nil, providerFailure(p.ID, resp.StatusCode, raw)
 	}
 	return resp, nil

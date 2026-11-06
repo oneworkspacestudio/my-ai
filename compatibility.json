@@ -2,9 +2,9 @@
   "schema": 1,
   "id": "myai",
   "name": "My AI",
-  "version": "0.1.0-preview.24",
-  "workspaceInstallerIntegration": 3,
-  "minimumWorkspaceVersion": "0.3.0-preview.93",
+  "version": "0.1.0-preview.25",
+  "workspaceInstallerIntegration": 12,
+  "minimumWorkspaceVersion": "0.3.0-preview.118",
   "route": "/myai",
   "executable": "MyAI.exe",
   "health": "/healthz",
@@ -14,7 +14,7 @@
   "sessionSchema": 1,
   "runtimeDependencies": [
     "Workspace MyAccounts, My Drive and Git for managed projects",
-    "Existing Ollama service for local inference",
+    "AI Service for managed local inference; existing host Ollama service for standalone inference",
     "Optional official Codex executable for the separate legacy transport"
   ],
   "embeddedFrontend": true

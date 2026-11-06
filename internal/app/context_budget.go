@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/oneworkspacestudio/one-workspace/pkg/apphost"
@@ -202,7 +203,17 @@ func (a *App) contextFacts(ctx context.Context, p Provider, model string) (model
 }
 func (a *App) resolveContext(ctx context.Context, p Provider, model, mode string) ContextBudget {
 	facts, mem := a.contextFacts(ctx, p, model)
-	return contextChoice(facts, mem, p.Generation, mode)
+	b := contextChoice(facts, mem, p.Generation, mode)
+	if p.ID == "ollama" && os.Getenv("MYAI_SERVICE_URL") != "" {
+		b.AutomaticChat = min(b.AutomaticChat, 32768)
+		b.AutomaticCode = min(b.AutomaticCode, 32768)
+		b.Chat = min(b.Chat, 32768)
+		b.Code = min(b.Code, 32768)
+		b.Selected = min(b.Selected, 32768)
+		b.Reply = min(b.Reply, max(128, b.Selected/2))
+		b.Notice += " AI Service limits shared requests to32768 context tokens."
+	}
+	return b
 }
 func (a *App) localModelContext(w http.ResponseWriter, r *http.Request) {
 	model := r.URL.Query().Get("model")
@@ -219,7 +230,7 @@ func (a *App) localModelContext(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s := saved.Models[model]
-	p := Provider{ID: "ollama", Base: defaults()[2].Base, Generation: &s}
+	p := Provider{ID: "ollama", Base: defaults()[2].Base, Generation: &s, User: uid}
 	mode := r.URL.Query().Get("mode")
 	if mode != "code" {
 		mode = "chat"

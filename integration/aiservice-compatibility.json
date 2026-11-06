@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "id": "aiservice",
+  "name": "AI Service",
+  "version": "0.1.0-preview.25",
+  "workspaceInstallerIntegration": 12,
+  "minimumWorkspaceVersion": "0.3.0-preview.118",
+  "route": "/aiservice",
+  "executable": "AIService.exe",
+  "health": "/healthz",
+  "oidc": true,
+  "defaultPort": 9042,
+  "portOffset": 52,
+  "embeddedFrontend": true,
+  "runtimeDependencies": [
+    "Existing host Ollama at http://127.0.0.1:11434; owner installs and starts it separately"
+  ],
+  "queue": {
+    "concurrency": 1,
+    "waiting": 64,
+    "perAppUser": 8,
+    "persistent": false
+  },
+  "activation": "Owner must enable; no inference is started on fresh install"
+}

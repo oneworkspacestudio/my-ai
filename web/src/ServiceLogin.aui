@@ -1,0 +1,14 @@
+Page ServiceLogin variant=login
+  Card variant=login
+    Image src="./ai-service.svg" width=64 height=64 alt="AI Service"
+    Text variant=eyebrow "ONE WORKSPACE"
+    Heading level=1 "Your shared local AI"
+    Text "Manage the active model and share a private request queue across users and apps."
+    If condition=$oidc
+      Button action=oidc variant=primary "Continue with MyAccounts"
+    Else
+      Input name=email type=email placeholder="Email address"
+      Input name=password type=password placeholder="Password"
+      Button action=login variant=primary "Sign in"
+    If condition=$error
+      Alert "$error"
