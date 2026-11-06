@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "appSourceCommit": "ddb2b15886780b233fe3026b9747fda51ea0bff9",
+  "appRelease": "https://github.com/oneworkspacestudio/my-ai/releases/tag/v0.1.0-preview.26",
+  "appReleaseAssetsVerified": 10,
+  "suiteSourceCommit": "a78bc7be03e06852ec25014e6f2530291c483ed4",
+  "suiteRelease": "https://github.com/oneworkspacestudio/one-workspace/releases/tag/v0.3.0-preview.119",
+  "suiteReleaseAssetsVerified": 543,
+  "signedAndroidCompanion": "0.1.0-preview.16",
+  "anonymousInstallerAndPublicChannelVerified": true,
+  "normalCompleteCatalog": {
+    "apps": 41,
+    "packages": 525
+  },
+  "managedAcceptance": {
+    "schema": 1,
+    "passed": true,
+    "installerSHA256": "e1daf3a8ff0b8373f45254210b96ed5fe0e536678e48bb191ca13272fdaeb5e9",
+    "bundleSHA256": "e229ccbb98a7aa65fb2b984931a914899a87448b7c17d0499f982b2488b4fd99",
+    "upgradeFrom": "0.3.0-preview.117",
+    "checks": [
+      {
+        "label": "setup-selection",
+        "aiServiceOfferedByDefault": true
+      },
+      {
+        "label": "fresh",
+        "workspace": "0.3.0-preview.119",
+        "service": "0.1.0-preview.26",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      },
+      {
+        "label": "restart",
+        "workspace": "0.3.0-preview.119",
+        "service": "0.1.0-preview.26",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      },
+      {
+        "label": "independent-update",
+        "workspace": "0.3.0-preview.119",
+        "service": "0.1.0-preview.27-test",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      },
+      {
+        "label": "rollback",
+        "workspace": "0.3.0-preview.119",
+        "service": "0.1.0-preview.26",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      },
+      {
+        "label": "omitted",
+        "runtimeNamespaceOmitted": true,
+        "requiredLicencesRetained": true
+      },
+      {
+        "label": "upgrade-default-discovery",
+        "workspace": "0.3.0-preview.119",
+        "service": "0.1.0-preview.26",
+        "oidc": true,
+        "ownerBinding": true,
+        "sharedPicker": true,
+        "privateApiDenied": true,
+        "settingsRetained": true
+      }
+    ],
+    "managedMyAILocalInferenceUsesService": true,
+    "managedRemoteCapabilityAPI": true,
+    "modelCalls": 2,
+    "oldControllerRejectsBeforeMutation": true,
+    "ownerDataUsed": false,
+    "physicalPhone": false,
+    "reboot": false
+  },
+  "primaryInstallation": {
+    "schema": 1,
+    "target": "primary",
+    "aiServiceActivation": "Owner control pending",
+    "workspace": "0.3.0-preview.119",
+    "aiService": "0.1.0-preview.26",
+    "myAI": "0.1.0-preview.26",
+    "transaction": "complete",
+    "verifiedCoupledAIPayloads": 14,
+    "aiCredentialAndPreferenceFilesPreserved": 0,
+    "existingOllamaInventoryRetained": true,
+    "aiServiceSettingsAndAppCredentialsPreserved": true,
+    "managerMatchesPublicRelease": true,
+    "unselectedAppsAndPackagesPreserved": true,
+    "identitiesAndExistingCredentialsPreserved": true,
+    "locationsPreserved": true,
+    "verifiedRecoveryRetained": true,
+    "cleanupFinished": "2026-11-06T13:17:12.4115912Z",
+    "runningAppCount": 40,
+    "baselineFailures": [],
+    "newFailures": [],
+    "finished": "2026-11-06T13:17:27.2728580Z"
+  },
+  "servedAssetsAndAuthorizationVerified": true,
+  "publicRemoteRouteNodeFetchVerified": true,
+  "ownerServiceActivationRequired": true,
+  "ownerInferenceUsedAsFixture": false,
+  "physicalAndroidTested": false,
+  "rebootTested": false,
+  "wonderpal": {
+    "version": "0.2.0",
+    "webAndAndroidBuilt": true,
+    "nativeRemoteServiceRelayAndRevocationPassed": true,
+    "privateGitPushed": false,
+    "liveHostingDeployed": false,
+    "blocker": "Browser tool still reports disabled after user enabled access and the tool session was reset; no cached private Git credential",
+    "paidCloudCredentialsTested": false,
+    "defaultLocalModelFactualAccuracyValidated": false
+  }
+}
