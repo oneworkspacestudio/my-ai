@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"net/url"
@@ -363,15 +364,33 @@ func (s *Service) infer(w http.ResponseWriter, r *http.Request, app, user string
 	body["model"] = settings.Model
 	body["keep_alive"] = -1
 	// GPU/host resource controls belong to the owner, not arbitrary API clients.
-	if options, ok := body["options"].(map[string]any); ok {
-		delete(options, "num_gpu")
-		delete(options, "main_gpu")
-		delete(options, "num_thread")
-		if v, ok := options["num_ctx"].(float64); ok && v > 32768 {
-			apphost.Problem(w, 400, "Shared model context is limited to 32768 tokens")
+	options, exists := body["options"].(map[string]any)
+	if !exists {
+		if body["options"] != nil {
+			apphost.Problem(w, 400, "Model options must be an object")
 			return
 		}
+		options = map[string]any{}
 	}
+	delete(options, "num_gpu")
+	delete(options, "main_gpu")
+	delete(options, "num_thread")
+	for key, bounds := range map[string][2]float64{"num_ctx": {512, 32768}, "num_predict": {1, 32768}, "num_batch": {1, 512}, "num_keep": {0, 32768}} {
+		if raw, ok := options[key]; ok {
+			v, number := raw.(float64)
+			if !number || math.Trunc(v) != v || v < bounds[0] || v > bounds[1] {
+				apphost.Problem(w, 400, "Shared model limits: context512–32768, output1–32768, batch1–512 and kept tokens0–32768")
+				return
+			}
+		}
+	}
+	if options["num_ctx"] == nil {
+		options["num_ctx"] = 8192
+	}
+	if options["num_predict"] == nil {
+		options["num_predict"] = 4096
+	}
+	body["options"] = options
 	resp, e := s.backendRequest(t.ctx, "POST", "/api/chat", body)
 	if e != nil {
 		apphost.Problem(w, 503, "Host Ollama could not serve the request")

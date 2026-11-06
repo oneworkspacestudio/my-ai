@@ -3,7 +3,7 @@
   "aiService": {
     "schema": 1,
     "passed": true,
-    "binarySHA256": "c5043774b85e4502cb61a6582f9e9c7c5c26b20d73d6ad7df3ea0aedd20c6d2f",
+    "binarySHA256": "4ccfdc1b4bd5fcf05169733ccd1b66c51d92c8ba3489368808a6da7c4fab9424",
     "checks": [
       "native fresh disabled",
       "authentication, owner and CSRF boundaries",
@@ -60,5 +60,6 @@
   "govulncheckReachable": 0,
   "managedLifecyclePending": true,
   "physicalPhoneTested": false,
-  "rebootTested": false
+  "rebootTested": false,
+  "boundedDefaultContextAndOutputTested": true
 }

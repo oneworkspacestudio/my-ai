@@ -128,6 +128,11 @@ func TestInferencePinsModelAndStreamsWithoutPersisting(t *testing.T) {
 	if w := request(`{"model":"other:9b"}`); w.Code != 409 {
 		t.Fatal(w.Code)
 	}
+	for _, body := range []string{`{"options":{"num_ctx":-1}}`, `{"options":{"num_ctx":"32768"}}`, `{"options":{"num_batch":90000000}}`, `{"options":{"num_predict":-1}}`} {
+		if w := request(body); w.Code != 400 {
+			t.Fatal("unsafe resource options accepted", w.Code)
+		}
+	}
 	s.settings.Enabled = false
 	if w := request(`{"model":"fixture:9b"}`); w.Code != 503 {
 		t.Fatal(w.Code)
@@ -157,4 +162,26 @@ func TestRevocationCancelsWaitingRequest(t *testing.T) {
 		t.Fatal("revocation did not cancel queued inference")
 	}
 	awaitQueue(t, s, 0)
+}
+
+func TestOmittedOptionsUseBoundedDefaults(t *testing.T) {
+	s := fixture()
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		json.NewDecoder(r.Body).Decode(&body)
+		options := body["options"].(map[string]any)
+		if options["num_ctx"] != float64(8192) || options["num_predict"] != float64(4096) {
+			t.Error("unbounded host defaults", options)
+		}
+		w.Write([]byte("{\"done\":true}\n"))
+	}))
+	defer backend.Close()
+	s.backend = backend.URL
+	s.client = backend.Client()
+	r := httptest.NewRequest("POST", "/api/chat", strings.NewReader(`{"messages":[]}`))
+	w := httptest.NewRecorder()
+	s.infer(w, r, "app", "alice", func() bool { return true })
+	if w.Code != 200 {
+		t.Fatal(w.Code, w.Body.String())
+	}
 }
