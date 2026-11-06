@@ -65,6 +65,9 @@ func New(h *apphost.Host) (*Service, error) {
 	if _, e := h.DB.Exec(`CREATE TABLE IF NOT EXISTS ai_service_settings(id INTEGER PRIMARY KEY CHECK(id=1),value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS ai_service_clients(id TEXT PRIMARY KEY, hash TEXT NOT NULL);`); e != nil {
 		return nil, e
 	}
+	if _, e := h.DB.Exec(`CREATE TABLE IF NOT EXISTS ai_service_remote_clients(id TEXT PRIMARY KEY REFERENCES ai_service_clients(id) ON DELETE CASCADE)`); e != nil {
+		return nil, e
+	}
 	var raw string
 	if e := h.DB.QueryRow(`SELECT value FROM ai_service_settings WHERE id=1`).Scan(&raw); e == nil {
 		if e = json.Unmarshal([]byte(raw), &s.settings); e != nil {
@@ -100,6 +103,7 @@ func New(h *apphost.Host) (*Service, error) {
 		})
 	}))
 	h.Mux.HandleFunc("POST /_internal/chat", s.internalChat)
+	h.Mux.HandleFunc("POST /api/client/chat", s.remoteChat)
 	h.Mux.HandleFunc("GET /_internal/models", s.internalModels)
 	h.Mux.HandleFunc("GET /_internal/version", s.metadata)
 	h.Mux.HandleFunc("GET /_internal/ps", s.metadata)
@@ -454,6 +458,32 @@ func (s *Service) internalChat(w http.ResponseWriter, r *http.Request) {
 	}
 	s.infer(w, r, app, r.Header.Get("X-AI-User"), func() bool { _, ok := s.clientAuthorized(r); return ok })
 }
+
+// Remote credentials are explicit owner grants. Existing local and managed My AI
+// credentials never gain remote access. Server apps relay requests; browser
+// origins/cookies are neither credentials nor an accepted client transport here.
+func (s *Service) remoteAuthorized(r *http.Request) (string, bool) {
+	if r.Header.Get("Origin") != "" || !strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") {
+		return "", false
+	}
+	key := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if len(key) < 32 || len(key) > 200 {
+		return "", false
+	}
+	var id string
+	e := s.H.DB.QueryRow(`SELECT c.id FROM ai_service_clients c JOIN ai_service_remote_clients x ON x.id=c.id WHERE c.hash=?`, apphost.Hash(key)).Scan(&id)
+	return id, e == nil
+}
+func (s *Service) remoteChat(w http.ResponseWriter, r *http.Request) {
+	app, ok := s.remoteAuthorized(r)
+	if !ok {
+		apphost.Problem(w, 401, "Use an owner-issued remote app credential from a server app")
+		return
+	}
+	// All requests sharing a remote capability share one quota. Caller supplied
+	// user/app headers cannot manufacture additional admission slots.
+	s.infer(w, r, app, "remote-client", func() bool { id, ok := s.remoteAuthorized(r); return ok && id == app })
+}
 func (s *Service) internalModels(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.clientAuthorized(r); !ok {
 		apphost.Problem(w, 401, "Use an authorized app credential")
@@ -511,24 +541,30 @@ func (s *Service) metadata(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, io.LimitReader(resp.Body, 4<<20))
 }
 func (s *Service) clients(w http.ResponseWriter, r *http.Request) {
-	rows, e := s.H.DB.Query(`SELECT id FROM ai_service_clients ORDER BY id`)
+	rows, e := s.H.DB.Query(`SELECT c.id, x.id IS NOT NULL FROM ai_service_clients c LEFT JOIN ai_service_remote_clients x ON x.id=c.id ORDER BY c.id`)
 	if e != nil {
 		s.H.DBError(w, e)
 		return
 	}
 	defer rows.Close()
 	ids := []string{}
+	remote := []string{}
 	for rows.Next() {
 		var id string
-		if rows.Scan(&id) == nil {
+		var enabled bool
+		if rows.Scan(&id, &enabled) == nil {
 			ids = append(ids, id)
+			if enabled {
+				remote = append(remote, id)
+			}
 		}
 	}
-	apphost.JSON(w, 200, map[string]any{"clients": ids, "myaiManaged": s.managed["myai"] != ""})
+	apphost.JSON(w, 200, map[string]any{"clients": ids, "remoteClients": remote, "myaiManaged": s.managed["myai"] != ""})
 }
 func (s *Service) createClient(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		ID string `json:"id"`
+		ID     string `json:"id"`
+		Remote bool   `json:"remote"`
 	}
 	if !apphost.Decode(w, r, &in) {
 		return
@@ -538,16 +574,46 @@ func (s *Service) createClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	key := apphost.ID() + apphost.ID()
-	if _, e := s.H.DB.Exec(`INSERT INTO ai_service_clients(id,hash)VALUES(?,?)`, in.ID, apphost.Hash(key)); e != nil {
+	tx, e := s.H.DB.Begin()
+	if e != nil {
+		s.H.DBError(w, e)
+		return
+	}
+	defer tx.Rollback()
+	if _, e := tx.Exec(`INSERT INTO ai_service_clients(id,hash)VALUES(?,?)`, in.ID, apphost.Hash(key)); e != nil {
 		apphost.Problem(w, 409, "That app already has a credential. Revoke it before issuing a replacement")
 		return
 	}
+	if in.Remote {
+		if _, e := tx.Exec(`INSERT INTO ai_service_remote_clients(id)VALUES(?)`, in.ID); e != nil {
+			s.H.DBError(w, e)
+			return
+		}
+	}
+	if e := tx.Commit(); e != nil {
+		s.H.DBError(w, e)
+		return
+	}
 	s.H.Audit(apphost.Current(r).User.ID, "ai-service-client-create", in.ID)
-	apphost.JSON(w, 201, map[string]string{"id": in.ID, "key": key})
+	apphost.JSON(w, 201, map[string]any{"id": in.ID, "key": key, "remote": in.Remote})
 }
 func (s *Service) deleteClient(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	if _, e := s.H.DB.Exec(`DELETE FROM ai_service_clients WHERE id=?`, id); e != nil {
+	tx, e := s.H.DB.Begin()
+	if e != nil {
+		s.H.DBError(w, e)
+		return
+	}
+	defer tx.Rollback()
+	if _, e := tx.Exec(`DELETE FROM ai_service_remote_clients WHERE id=?`, id); e != nil {
+		s.H.DBError(w, e)
+		return
+	}
+	if _, e := tx.Exec(`DELETE FROM ai_service_clients WHERE id=?`, id); e != nil {
+		s.H.DBError(w, e)
+		return
+	}
+	if e := tx.Commit(); e != nil {
 		s.H.DBError(w, e)
 		return
 	}

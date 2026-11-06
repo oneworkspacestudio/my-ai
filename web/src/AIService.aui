@@ -44,6 +44,8 @@ Page AIService variant=service
       Text "$managedLabel"
       Text "Other server apps can receive a separate credential. Copy it once into that app's private settings. Never put it in a browser or a public file."
       Input name=clientID label="App ID" placeholder="App ID, for example my-workflow"
+      Select name=remote label="Connection scope" options=$clientScopes disabled=$busy
+      Text "For WonderPal, choose Remote server app, then enter this Workspace's AI Service URL and the new token in WonderPal's parent settings. Existing local app tokens remain local only."
       Button action=createClient disabled=$busy "Create app credential"
       If condition=$newKey
         Text variant=pre "$newKey"
@@ -51,7 +53,7 @@ Page AIService variant=service
         Button action=dismissKey "Hide credential"
       For each=$clients
         Row
-          Text "$item.id"
+          Text "$item.label"
           Spacer
           Button action=revoke item=$item disabled=$busy "Revoke"
       Text "Connect server apps using the API described in the AI Service setup guide. Credentials can be revoked here at any time."

@@ -58,6 +58,8 @@ export function AIService({ data, onAction }: { data: any; onAction: (name: stri
           <Text>{data.managedLabel}</Text>
           <Text>Other server apps can receive a separate credential. Copy it once into that app's private settings. Never put it in a browser or a public file.</Text>
           <Input name="clientID" label="App ID" placeholder="App ID, for example my-workflow" />
+          <Select name="remote" label="Connection scope" options={data.clientScopes} disabled={data.busy} />
+          <Text>For WonderPal, choose Remote server app, then enter this Workspace's AI Service URL and the new token in WonderPal's parent settings. Existing local app tokens remain local only.</Text>
           <Button onClick={() => onAction("createClient")} disabled={data.busy}>Create app credential</Button>
           {data.newKey && (
             <>
@@ -68,7 +70,7 @@ export function AIService({ data, onAction }: { data: any; onAction: (name: stri
           )}
           {data.clients.map((item, i) => (
             <Row key={i}>
-              <Text>{item.id}</Text>
+              <Text>{item.label}</Text>
               <Spacer />
               <Button onClick={() => onAction("revoke")} item={item} disabled={data.busy}>Revoke</Button>
             </Row>
